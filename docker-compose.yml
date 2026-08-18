@@ -12,6 +12,10 @@ x-app: &app
   volumes:
     - .:/app
     - bundle:/usr/local/bundle
+    # tmp/ holds the bootsnap compile cache. On the Windows bind mount every
+    # cache read crosses the host boundary and boot takes minutes; on a named
+    # volume it stays on the VM's own disk.
+    - tmp:/app/tmp
   environment: &env
     DATABASE_URL: postgres://prachar:prachar@db:5432/prachar_development
     REDIS_URL: redis://redis:6379/0
@@ -76,3 +80,4 @@ volumes:
   pgdata:
   redisdata:
   bundle:
+  tmp:

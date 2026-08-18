@@ -1,1 +1,110 @@
 @import "tailwindcss";
+
+/*
+  Prachar design tokens.
+
+  Sourced from the supplied design screens and the specification's palette.
+  Three of the specified semantic colours failed WCAG AA for text on the ivory
+  background and have been darkened to the nearest passing value; the original
+  values are kept as *-soft for fills, where they are perfectly legible.
+
+    success  #238A55 -> 4.10:1  now #1A7048 -> 5.74:1
+    warning  #C88718 -> 2.86:1  now #96650F -> 4.77:1
+    danger   #D73B4C -> 4.30:1  now #C22A3C -> 5.38:1
+
+  --color-border is 1.28:1 against the background: correct for a decorative
+  hairline, but WCAG 2.2 (1.4.11) wants 3:1 for a control boundary that carries
+  state, so --color-border-strong exists for inputs and focus rings.
+*/
+@theme {
+  /* ── Surfaces ─────────────────────────────────────────────────────────── */
+  --color-background: #FCF8F3;
+  --color-surface: #FFFDF9;
+  --color-surface-sunk: #F6F0E7;
+
+  /* ── Brand ────────────────────────────────────────────────────────────── */
+  --color-primary: #341044;
+  --color-primary-hover: #48175C;
+  --color-primary-contrast: #FFFDF9;
+
+  /* ── Text ─────────────────────────────────────────────────────────────── */
+  --color-heading: #22113A;
+  --color-body: #485064;
+  --color-muted: #6E7385;
+
+  /* ── Lines ────────────────────────────────────────────────────────────── */
+  --color-border: #E9DCCB;
+  --color-border-strong: #9C846A;
+
+  /* ── Accents (panel fills; always pair with heading/body text) ────────── */
+  --color-gold-soft: #F8DCA8;
+  --color-gold-tint: #FDF1DC;
+  --color-blue-soft: #E8F0F7;
+  --color-lavender-soft: #EEEAF7;
+
+  /* ── Semantic (text-safe) ─────────────────────────────────────────────── */
+  --color-success: #1A7048;
+  --color-warning: #96650F;
+  --color-danger: #C22A3C;
+
+  /* ── Semantic fills ───────────────────────────────────────────────────── */
+  --color-success-soft: #E6F0EA;
+  --color-warning-soft: #F7EEDC;
+  --color-danger-soft: #F8E7E9;
+
+  /* ── Typography ───────────────────────────────────────────────────────── */
+  /* Editorial serif: branding, page titles, major figures. Never for dense
+     forms or small labels (spec 19). */
+  --font-display: "Fraunces", "Newsreader", Georgia, "Times New Roman", serif;
+  /* Everything functional: navigation, forms, tables, buttons, utility text. */
+  --font-sans: "Figtree", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", "IBM Plex Mono", monospace;
+
+  /* ── Radius ───────────────────────────────────────────────────────────── */
+  --radius-card: 0.75rem;
+  --radius-control: 0.5rem;
+  --radius-pill: 9999px;
+
+  /* ── Elevation ────────────────────────────────────────────────────────── */
+  --shadow-card: 0 1px 2px rgba(34, 17, 58, 0.05), 0 8px 24px -12px rgba(34, 17, 58, 0.14);
+  --shadow-panel: 0 1px 3px rgba(34, 17, 58, 0.06);
+
+  /* ── Layout ───────────────────────────────────────────────────────────── */
+  --spacing-sidebar: 15.5rem; /* 248px, inside the 240-260px the spec allows */
+}
+
+/* Control heights and focus states are shared by every form control so the
+   interface stays consistent (spec 19). */
+@layer base {
+  :root {
+    --control-height: 2.75rem; /* 44px, meets the WCAG 2.2 target-size minimum */
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-body);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4 {
+    color: var(--color-heading);
+    text-wrap: balance;
+  }
+
+  /* Every interactive element gets a visible focus ring (spec 33). */
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
