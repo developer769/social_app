@@ -1,0 +1,84 @@
+<% content_for :title, "Business setup" %>
+
+<%= render "onboarding/step_header",
+      title: "Business Setup",
+      subtitle: "Let's personalise your workspace to create content that truly represents your brand." %>
+
+<%= render "shared/flash" %>
+
+<%= form_with url: workspace_onboarding_business_path(workspace_slug: current_workspace.slug),
+              method: :patch, scope: :business_setup, model: @profile,
+              html: { multipart: true, novalidate: true } do |form| %>
+
+  <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem] xl:grid-cols-[minmax(0,1fr)_22rem]">
+    <div class="rounded-card border border-border bg-surface p-6 sm:p-7">
+      <h2 class="font-display text-xl font-normal">Basic information</h2>
+
+      <div class="mt-5 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+        <%= render FormFieldComponent.new(
+              form: form, attribute: :business_name, label: "Business name", required: true,
+              placeholder: "Anaya Bakes", value: current_workspace.name) %>
+
+        <%= render FormFieldComponent.new(
+              form: form, attribute: :category, label: "Category",
+              placeholder: "Bakery", value: @profile.category) %>
+
+        <%= render FormFieldComponent.new(
+              form: form, attribute: :contact_email, label: "Business email", type: :email_field,
+              placeholder: "hello@anayabakes.com", value: @profile.contact_email) %>
+
+        <%= render SelectFieldComponent.new(
+              form: form, attribute: :business_type, label: "Business type",
+              include_blank: "Select a type",
+              choices: BrandProfile::BUSINESS_TYPES.map { |type| [type.humanize, type] }) %>
+
+        <%= render FormFieldComponent.new(
+              form: form, attribute: :website_url, label: "Website URL", hint: "Optional",
+              placeholder: "www.anayabakes.com", value: @profile.website_url) %>
+
+        <%= render FormFieldComponent.new(
+              form: form, attribute: :phone, label: "Phone number", type: :telephone_field,
+              placeholder: "+91 98765 43210", value: @profile.phone) %>
+
+        <%= render FormFieldComponent.new(
+              form: form, attribute: :city, label: "City / location",
+              placeholder: "Delhi, India", value: @profile.city) %>
+
+        <%= render SelectFieldComponent.new(
+              form: form, attribute: :timezone, label: "Time zone",
+              choices: ActiveSupport::TimeZone.all.map { |zone| [zone.to_s, zone.tzinfo.identifier] },
+              include_blank: nil) %>
+      </div>
+
+      <h2 class="mt-8 font-display text-xl font-normal">Tell us about your business</h2>
+
+      <div class="mt-4 grid gap-5 lg:grid-cols-2">
+        <div>
+          <%= form.label :about, "About your business", class: "mb-1.5 block text-sm font-medium text-heading" %>
+          <%= form.text_area :about, rows: 5, maxlength: 500, value: @profile.about,
+                aria: { describedby: "about-counter" },
+                placeholder: "We create fresh, handcrafted bakes using premium ingredients...",
+                class: "w-full rounded-control border border-border bg-background px-3.5 py-2.5 text-sm text-heading placeholder:text-muted focus:border-border-strong focus:outline-none" %>
+          <p id="about-counter" class="mt-1.5 text-right text-xs text-muted">Up to 500 characters</p>
+        </div>
+
+        <%= render "onboarding/business/logo_field", profile: @profile %>
+      </div>
+
+      <%= render "onboarding/business/goals_and_tones",
+            selected_goals: @selected_goals, selected_tones: @selected_tones %>
+    </div>
+
+    <%= render "onboarding/business/help_panel" %>
+  </div>
+
+  <%= render StickyActionFooterComponent.new do |footer| %>
+    <% footer.with_note do %>
+      Your data is safe with us. We never share your information.
+    <% end %>
+    <% footer.with_primary do %>
+      <%= form.submit "Continue",
+            class: "h-11 cursor-pointer rounded-control bg-primary px-6 text-sm font-medium text-primary-contrast transition-colors hover:bg-primary-hover" %>
+    <% end %>
+  <% end %>
+<% end %>

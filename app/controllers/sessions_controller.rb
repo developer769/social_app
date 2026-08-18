@@ -19,7 +19,7 @@ class SessionsController < ApplicationController
       # tells an attacker which addresses have accounts.
       AuditEvent.record!(action: "user.sign_in_failed", metadata: { email: params[:email].to_s.first(120) }, ip_address: request.remote_ip)
       flash.now[:alert] = "That email and password do not match."
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
   end
 

@@ -1,0 +1,10 @@
+<div class="sticky bottom-0 z-10 -mx-5 mt-8 border-t border-border bg-surface/95 px-5 py-4 backdrop-blur sm:-mx-8 sm:px-8 lg:-mx-10 lg:px-10">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <div class="flex items-center gap-3">
+      <% if secondary? %><%= secondary %><% end %>
+      <% if note? %><div class="text-xs text-muted"><%= note %></div><% end %>
+    </div>
+
+    <% if primary? %><div class="ml-auto"><%= primary %></div><% end %>
+  </div>
+</div>

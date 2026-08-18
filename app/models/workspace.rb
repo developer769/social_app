@@ -3,6 +3,12 @@ class Workspace < ApplicationRecord
 
   belongs_to :owner_user, class_name: "User"
 
+  has_one :brand_profile, dependent: :destroy
+  has_many :brand_goals, dependent: :destroy
+  has_many :brand_tones, dependent: :destroy
+  has_many :products, dependent: :destroy
+  has_many :services, dependent: :destroy
+
   has_many :workspace_memberships, dependent: :destroy
   has_many :members, through: :workspace_memberships, source: :user
   has_many :audit_events, dependent: :nullify

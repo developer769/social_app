@@ -1,0 +1,18 @@
+<div class="flex items-center gap-4">
+  <span class="shrink-0 rounded-pill border border-border bg-surface px-3 py-1 text-xs font-medium text-body">
+    <%= label %>
+  </span>
+
+  <div class="flex flex-1 items-center gap-1.5"
+       role="progressbar"
+       aria-valuenow="<%= position %>"
+       aria-valuemin="1"
+       aria-valuemax="<%= total %>"
+       aria-label="Onboarding progress">
+    <% steps.each_with_index do |step, index| %>
+      <span class="<%= bar_classes(index) %>" title="<%= step[:label] %>"></span>
+    <% end %>
+  </div>
+</div>
+
+<p class="sr-only"><%= label %>: <%= steps[current_index][:label] %></p>

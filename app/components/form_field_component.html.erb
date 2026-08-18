@@ -1,0 +1,21 @@
+<div>
+  <%= form.label attribute, label, class: "mb-1.5 block text-sm font-medium text-heading" %>
+
+  <div class="relative">
+    <% if prefix.present? %>
+      <span aria-hidden="true" class="pointer-events-none absolute inset-y-0 left-0 flex w-9 items-center justify-center text-sm text-muted">
+        <%= prefix %>
+      </span>
+    <% end %>
+
+    <%= form.public_send(type, attribute, **input_options) %>
+  </div>
+
+  <% if hint.present? %>
+    <p id="<%= hint_id %>" class="mt-1.5 text-xs text-muted"><%= hint %></p>
+  <% end %>
+
+  <% if invalid? %>
+    <p id="<%= error_id %>" class="mt-1.5 text-xs text-danger"><%= errors.to_sentence.upcase_first %></p>
+  <% end %>
+</div>

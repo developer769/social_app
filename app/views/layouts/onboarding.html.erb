@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="<%= I18n.locale %>">
+  <head>
+    <title><%= content_for(:title) || "Set up Prachar" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+
+  <body class="min-h-dvh bg-background text-body antialiased">
+    <a href="#main-content"
+       class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-control focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:text-primary-contrast">
+      Skip to content
+    </a>
+
+    <div class="lg:grid lg:grid-cols-[var(--spacing-sidebar)_minmax(0,1fr)]">
+      <%= render "shared/sidebar" %>
+
+      <div class="flex min-h-dvh flex-col">
+        <main id="main-content" class="flex-1 px-5 py-6 sm:px-8 lg:px-10 lg:py-8">
+          <%= yield %>
+        </main>
+      </div>
+    </div>
+  </body>
+</html>

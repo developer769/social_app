@@ -1,0 +1,10 @@
+<%= render ContextualHelpPanelComponent.new(
+      title: "Why this matters",
+      summary: "This helps Prachar understand your business and create content that connects with your audience.") do |panel| %>
+  <% panel.with_point(title: "Smarter suggestions",
+        body: "Get content ideas, captions and templates tailored to your business.") %>
+  <% panel.with_point(title: "Audience connection",
+        body: "We help you create posts that resonate with your audience.") %>
+  <% panel.with_point(title: "Better performance",
+        body: "Personalised content leads to more engagement and growth.") %>
+<% end %>

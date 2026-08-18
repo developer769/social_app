@@ -18,7 +18,7 @@ class RegistrationsController < ApplicationController
       redirect_to workspace_root_path(workspace_slug: result.value.workspace.slug)
     else
       @user = result.error
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
   end
 

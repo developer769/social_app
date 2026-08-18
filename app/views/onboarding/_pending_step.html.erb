@@ -1,0 +1,25 @@
+<%#
+  An honest placeholder. This step is defined and routed but not yet built, and
+  says so plainly rather than showing invented data (spec 27).
+%>
+<div class="rounded-card border border-border bg-surface p-10 text-center">
+  <span aria-hidden="true" class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-lavender-soft text-primary">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="h-6 w-6">
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 7.5V12l3 2" stroke-linecap="round" stroke-linejoin="round" />
+    </svg>
+  </span>
+
+  <h2 class="font-display text-2xl font-normal"><%= title %></h2>
+  <p class="mx-auto mt-2 max-w-md text-sm text-body"><%= summary %></p>
+
+  <div class="mt-7 flex flex-wrap items-center justify-center gap-3">
+    <% if previous_key = OnboardingFlow.previous_key(current_step_key) %>
+      <%= link_to "Back", OnboardingFlow.path_for(previous_key, current_workspace),
+            class: "h-11 rounded-control border border-border px-5 text-sm font-medium leading-[2.75rem] text-body hover:bg-surface-sunk" %>
+    <% end %>
+
+    <%= link_to "Skip to dashboard", workspace_root_path(workspace_slug: current_workspace.slug),
+          class: "h-11 rounded-control bg-primary px-5 text-sm font-medium leading-[2.75rem] text-primary-contrast hover:bg-primary-hover" %>
+  </div>
+</div>

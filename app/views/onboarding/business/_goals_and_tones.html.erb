@@ -1,0 +1,34 @@
+<fieldset class="mt-8">
+  <legend class="font-display text-xl font-normal text-heading">Primary goals</legend>
+  <p class="mt-1 text-sm text-muted">What matters most to you right now?</p>
+
+  <div class="mt-4 grid gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
+    <% BrandGoal::GOALS.each do |goal| %>
+      <% label, description = BrandGoal::LABELS.fetch(goal) %>
+      <%= render SelectableChipComponent.new(
+            name: "goals[]", value: goal, label: label, description: description,
+            checked: selected_goals.include?(goal)) %>
+    <% end %>
+  </div>
+</fieldset>
+
+<fieldset class="mt-7">
+  <legend class="font-display text-xl font-normal text-heading">Brand tone</legend>
+  <p class="mt-1 text-sm text-muted">How should your content sound?</p>
+
+  <div class="mt-4 flex flex-wrap gap-2.5">
+    <% BrandTone::TONES.each do |tone| %>
+      <%= render SelectableChipComponent.new(
+            name: "tones[]", value: tone, label: tone.humanize,
+            checked: selected_tones.include?(tone)) %>
+    <% end %>
+  </div>
+</fieldset>
+
+<div class="mt-6 flex gap-3 rounded-control border border-border bg-gold-tint px-4 py-3.5">
+  <span aria-hidden="true" class="text-warning">&#10022;</span>
+  <p class="text-sm text-body">
+    <span class="font-medium text-heading">We'll use this to personalise your experience.</span>
+    Your goals and brand tone help us create content ideas, captions and templates that match your voice.
+  </p>
+</div>

@@ -1,0 +1,25 @@
+<div>
+  <%= form.label attribute, label, class: "mb-1.5 block text-sm font-medium text-heading" %>
+
+  <div class="relative">
+    <%= form.select attribute, choices,
+          { include_blank: include_blank },
+          required: required,
+          aria: { describedby: described_by, invalid: (invalid? ? "true" : nil) },
+          class: select_classes %>
+
+    <span aria-hidden="true" class="pointer-events-none absolute inset-y-0 right-0 flex w-10 items-center justify-center text-muted">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" class="h-4 w-4">
+        <path d="m6 8 4 4 4-4" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+    </span>
+  </div>
+
+  <% if hint.present? %>
+    <p id="<%= hint_id %>" class="mt-1.5 text-xs text-muted"><%= hint %></p>
+  <% end %>
+
+  <% if invalid? %>
+    <p id="<%= error_id %>" class="mt-1.5 text-xs text-danger"><%= errors.to_sentence.upcase_first %></p>
+  <% end %>
+</div>

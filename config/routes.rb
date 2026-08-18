@@ -15,6 +15,20 @@ Rails.application.routes.draw do
   # own accepted membership, so another workspace's slug simply 404s (spec 7).
   scope "/w/:workspace_slug", as: :workspace do
     root to: "dashboard#show", as: :root
+
+    # Resumable onboarding (spec 22). /onboarding redirects to wherever the
+    # owner stopped; each step has its own addressable URL.
+    get "onboarding", to: "onboarding/resume#show", as: :onboarding
+
+    scope "onboarding", as: :onboarding do
+      get   "business",    to: "onboarding/business#show",    as: :business
+      patch "business",    to: "onboarding/business#update"
+      get   "catalog",     to: "onboarding/catalog#show",     as: :catalog
+      get   "connections", to: "onboarding/connections#show", as: :connections
+      get   "analysis",    to: "onboarding/analysis#show",    as: :analysis
+      get   "health",      to: "onboarding/health#show",      as: :health
+      get   "plan",        to: "onboarding/plan#show",        as: :plan
+    end
   end
 
   get "up", to: "rails/health#show", as: :rails_health_check

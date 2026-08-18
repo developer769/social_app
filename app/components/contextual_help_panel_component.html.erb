@@ -1,0 +1,19 @@
+<aside class="<%= panel_classes %>">
+  <h2 class="font-display text-lg font-normal text-heading"><%= title %></h2>
+
+  <% if summary.present? %>
+    <p class="mt-2 text-sm text-body"><%= summary %></p>
+  <% end %>
+
+  <% if points.any? %>
+    <ul class="mt-5 space-y-4">
+      <% points.each do |point| %>
+        <%= point %>
+      <% end %>
+    </ul>
+  <% end %>
+
+  <% if content.present? %>
+    <div class="mt-5"><%= content %></div>
+  <% end %>
+</aside>
