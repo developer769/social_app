@@ -34,7 +34,9 @@
 
         <%= render FormFieldComponent.new(
               form: form, attribute: :website_url, label: "Website URL", hint: "Optional",
-              placeholder: "www.anayabakes.com", value: @profile.website_url) %>
+              prefix: "https://", prefix_size: :text,
+              placeholder: "anayabakes.com",
+              value: @profile.website_url&.sub(%r{\Ahttps?://}, "")) %>
 
         <%= render FormFieldComponent.new(
               form: form, attribute: :phone, label: "Phone number", type: :telephone_field,

@@ -1,5 +1,38 @@
-<% content_for :title, "Products & Services" %>
+<% content_for :title, "Products and services" %>
 
-<%= render "onboarding/step_header", title: "Products & Services", subtitle: "Add what your business offers so Prachar can create better content, ads and recommendations." %>
+<%= render "onboarding/step_header",
+      title: (@tab == "services" ? "Services" : "Products"),
+      subtitle: "Add what your business offers so Prachar can create better content, ads and recommendations." %>
 
-<%= render "onboarding/pending_step", title: "Products & Services", summary: "Adding products and services is next. The data model is in place; the forms arrive in the next step of the build." %>
+<%= render "shared/flash" %>
+
+<%= render "onboarding/catalog/tabs", tab: @tab %>
+
+<div class="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem] xl:grid-cols-[minmax(0,1fr)_22rem]">
+  <div class="space-y-6">
+    <% if @tab == "services" %>
+      <%= render "onboarding/catalog/service_form", service: @service %>
+      <%= render "onboarding/catalog/service_table", services: @services %>
+    <% else %>
+      <%= render "onboarding/catalog/product_form", product: @product %>
+      <%= render "onboarding/catalog/product_table", products: @products %>
+    <% end %>
+  </div>
+
+  <%= render "onboarding/catalog/help_panel", tab: @tab %>
+</div>
+
+<%= render StickyActionFooterComponent.new do |footer| %>
+  <% footer.with_secondary do %>
+    <%= link_to "Back", workspace_onboarding_business_path(workspace_slug: current_workspace.slug),
+          class: "flex h-11 items-center rounded-control border border-border px-5 text-sm font-medium text-body hover:bg-surface-sunk" %>
+  <% end %>
+  <% footer.with_note do %>
+    <%= pluralize(@products.size, "product") %> and <%= pluralize(@services.size, "service") %> so far.
+  <% end %>
+  <% footer.with_primary do %>
+    <%= button_to "Continue",
+          workspace_onboarding_catalog_complete_path(workspace_slug: current_workspace.slug),
+          class: "h-11 cursor-pointer rounded-control bg-primary px-6 text-sm font-medium text-primary-contrast hover:bg-primary-hover" %>
+  <% end %>
+<% end %>

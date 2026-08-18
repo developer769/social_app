@@ -1,0 +1,15 @@
+<div class="mt-6 border-t border-border pt-5">
+  <p class="text-sm font-medium text-heading">Quick add ideas</p>
+  <div class="mt-2.5 flex flex-wrap gap-2">
+    <% suggestions.each do |suggestion| %>
+      <button type="button"
+              data-controller="fill-field"
+              data-fill-field-target-value="<%= target %>"
+              data-fill-field-text-value="<%= suggestion %>"
+              data-action="fill-field#apply"
+              class="rounded-control border border-border bg-background px-3 py-1.5 text-xs text-body hover:border-border-strong hover:bg-surface-sunk">
+        <span aria-hidden="true">+</span> <%= suggestion %>
+      </button>
+    <% end %>
+  </div>
+</div>

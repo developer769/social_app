@@ -1,0 +1,23 @@
+<% if tab == "services" %>
+  <%= render ContextualHelpPanelComponent.new(
+        title: "Why this matters",
+        summary: "Adding your services helps Prachar highlight what you offer and attract the right customers.") do |panel| %>
+    <% panel.with_point(title: "Showcase your expertise",
+          body: "Let people know the services you specialise in.") %>
+    <% panel.with_point(title: "Attract the right audience",
+          body: "We suggest content and ads that bring in ideal customers.") %>
+    <% panel.with_point(title: "Drive more bookings",
+          body: "Make it easy for customers to enquire and place orders.") %>
+  <% end %>
+<% else %>
+  <%= render ContextualHelpPanelComponent.new(
+        title: "Why this matters",
+        summary: "Adding your products helps Prachar understand your offerings and create content that sells.") do |panel| %>
+    <% panel.with_point(title: "Smarter content ideas",
+          body: "We create posts, captions and reels that highlight your products.") %>
+    <% panel.with_point(title: "Better product-based ads",
+          body: "Generate ad creatives focused on your bestsellers.") %>
+    <% panel.with_point(title: "More relevant recommendations",
+          body: "Get personalised tips and templates tailored to your products.") %>
+  <% end %>
+<% end %>

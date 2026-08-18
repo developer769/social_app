@@ -2,7 +2,8 @@
 # together with aria-describedby so screen readers announce them (spec 33).
 class FormFieldComponent < ApplicationComponent
   def initialize(form:, attribute:, label:, type: :text_field, hint: nil, required: false,
-                 placeholder: nil, autocomplete: nil, maxlength: nil, prefix: nil, **input_options)
+                 placeholder: nil, autocomplete: nil, maxlength: nil, prefix: nil,
+                 prefix_size: :symbol, **input_options)
     @form = form
     @attribute = attribute
     @label = label
@@ -13,10 +14,11 @@ class FormFieldComponent < ApplicationComponent
     @autocomplete = autocomplete
     @maxlength = maxlength
     @prefix = prefix
+    @prefix_size = prefix_size
     @input_options = input_options
   end
 
-  attr_reader :form, :attribute, :label, :type, :hint, :required, :prefix
+  attr_reader :form, :attribute, :label, :type, :hint, :required, :prefix, :prefix_size
 
   def errors
     form.object.respond_to?(:errors) ? Array(form.object.errors[attribute]) : []
@@ -46,11 +48,16 @@ class FormFieldComponent < ApplicationComponent
     ).compact
   end
 
+  # A currency symbol needs a narrow gutter; a scheme like "https://" needs a
+  # wide one. Both are fixed classes so Tailwind can see them.
+  def prefix_width_class = (prefix_size == :text) ? "w-[4.25rem]" : "w-9"
+  def input_padding_class = (prefix_size == :text) ? "pl-[4.25rem] pr-3.5" : "pl-9 pr-3.5"
+
   def input_classes
     merge_classes(
       "h-11 w-full rounded-control border bg-background text-sm text-heading",
       "placeholder:text-muted focus:outline-none",
-      prefix.present? ? "pl-9 pr-3.5" : "px-3.5",
+      prefix.present? ? input_padding_class : "px-3.5",
       invalid? ? "border-danger" : "border-border focus:border-border-strong"
     )
   end

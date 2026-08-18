@@ -1,0 +1,69 @@
+<section class="rounded-card border border-border bg-surface p-6 sm:p-7">
+  <h2 class="font-display text-xl font-normal">Add service</h2>
+
+  <%= form_with model: service,
+                url: workspace_services_path(workspace_slug: current_workspace.slug),
+                method: :post, scope: :service,
+                html: { multipart: true, novalidate: true } do |form| %>
+    <div class="mt-5 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+      <%= render FormFieldComponent.new(form: form, attribute: :name, label: "Service name",
+            required: true, placeholder: "e.g. Custom Birthday Cake Service", maxlength: 120) %>
+
+      <%= render FormFieldComponent.new(form: form, attribute: :category, label: "Service category",
+            placeholder: "Custom Cakes") %>
+
+      <%= render FormFieldComponent.new(form: form, attribute: :starting_price, label: "Starting price",
+            prefix: current_workspace.currency == "INR" ? "\u20B9" : current_workspace.currency,
+            placeholder: "1999") %>
+
+      <%= render FormFieldComponent.new(form: form, attribute: :duration_min_days,
+            label: "Duration from (days)", type: :number_field, placeholder: "2", min: 1) %>
+
+      <%= render FormFieldComponent.new(form: form, attribute: :duration_max_days,
+            label: "Duration to (days)", type: :number_field, hint: "Leave blank for a fixed duration",
+            placeholder: "3", min: 1) %>
+
+      <%= render SelectFieldComponent.new(form: form, attribute: :availability_status,
+            label: "Availability status", include_blank: nil,
+            choices: Service::AVAILABILITY_STATUSES.map { |status| [status.humanize, status] }) %>
+    </div>
+
+    <div class="mt-5 grid gap-5 lg:grid-cols-2">
+      <div>
+        <%= form.label :description, "Short description", class: "mb-1.5 block text-sm font-medium text-heading" %>
+        <%= form.text_area :description, rows: 3, maxlength: 200,
+              aria: { describedby: "service-description-counter" },
+              placeholder: "Describe your service in a few words...",
+              class: "w-full rounded-control border border-border bg-background px-3.5 py-2.5 text-sm text-heading placeholder:text-muted focus:border-border-strong focus:outline-none" %>
+        <p id="service-description-counter" class="mt-1.5 text-right text-xs text-muted">Up to 200 characters</p>
+      </div>
+
+      <%= render "onboarding/catalog/image_field",
+            form: form, attribute: :cover_image, field_id: "service_cover_image",
+            label: "Upload cover image", accept: Service::IMAGE_CONTENT_TYPES %>
+    </div>
+
+    <div class="mt-5">
+      <%= render FormFieldComponent.new(form: form, attribute: :booking_url,
+            label: "Booking URL / website", hint: "Optional",
+            prefix: "https://", prefix_size: :text, placeholder: "yourwebsite.com/book") %>
+    </div>
+
+    <div class="mt-5 flex flex-wrap items-center justify-between gap-4">
+      <label class="flex cursor-pointer items-center gap-3">
+        <%= form.check_box :featured, class: "h-4 w-4 accent-[var(--color-primary)]" %>
+        <span class="text-sm">
+          <span class="block font-medium text-heading">Featured service</span>
+          <span class="block text-xs text-muted">Show this service prominently in your catalog.</span>
+        </span>
+      </label>
+
+      <%= form.submit "Add service",
+            class: "h-11 cursor-pointer rounded-control bg-primary px-5 text-sm font-medium text-primary-contrast hover:bg-primary-hover" %>
+    </div>
+
+    <%= render "onboarding/catalog/quick_add",
+          suggestions: ["Custom Cake Orders", "Dessert Table Setup", "Event Catering", "Corporate Gifting"],
+          target: "service_name" %>
+  <% end %>
+</section>

@@ -1,0 +1,15 @@
+<div class="inline-flex rounded-control border border-border bg-surface p-1" role="tablist">
+  <% [["products", "Products"], ["services", "Services"]].each do |key, label| %>
+    <% active = tab == key %>
+    <%= link_to workspace_onboarding_catalog_path(workspace_slug: current_workspace.slug, tab: key),
+          role: "tab",
+          aria: { selected: active.to_s, current: (active ? "page" : nil) },
+          class: class_names(
+            "rounded-[0.4rem] px-6 py-2 text-sm transition-colors",
+            "bg-primary font-medium text-primary-contrast" => active,
+            "text-body hover:bg-surface-sunk" => !active
+          ) do %>
+      <%= label %>
+    <% end %>
+  <% end %>
+</div>

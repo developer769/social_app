@@ -1,0 +1,70 @@
+<section class="rounded-card border border-border bg-surface p-6 sm:p-7">
+  <h2 class="font-display text-xl font-normal">
+    Your products <span class="text-base text-muted">(<%= products.size %>)</span>
+  </h2>
+
+  <% if products.empty? %>
+    <%= render EmptyStateComponent.new(
+          title: "No products yet",
+          body: "Add your first product above. Prachar uses these to write captions, build templates and suggest ads.") %>
+  <% else %>
+    <div class="mt-4 overflow-x-auto">
+      <table class="w-full min-w-[46rem] border-collapse text-sm">
+        <caption class="sr-only">Products in your catalog</caption>
+        <thead>
+          <tr class="border-b border-border text-left">
+            <th scope="col" class="py-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-muted">Product</th>
+            <th scope="col" class="py-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-muted">Category</th>
+            <th scope="col" class="py-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-muted">Description</th>
+            <th scope="col" class="py-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-muted">Price</th>
+            <th scope="col" class="py-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-muted">Featured</th>
+            <th scope="col" class="py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-muted">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% products.each do |product| %>
+            <tr class="border-b border-border last:border-0">
+              <th scope="row" class="py-3 pr-4 text-left font-medium text-heading">
+                <span class="flex items-center gap-3">
+                  <% if product.image.attached? %>
+                    <%= image_tag product.image.variant(resize_to_fill: [80, 80]), alt: "",
+                          class: "h-10 w-10 rounded-control object-cover" %>
+                  <% else %>
+                    <span aria-hidden="true" class="h-10 w-10 rounded-control bg-surface-sunk"></span>
+                  <% end %>
+                  <%= product.name %>
+                </span>
+              </th>
+              <td class="py-3 pr-4">
+                <% if product.category.present? %>
+                  <span class="rounded-pill bg-gold-tint px-2.5 py-1 text-xs text-heading"><%= product.category %></span>
+                <% end %>
+              </td>
+              <td class="py-3 pr-4 text-muted"><%= truncate(product.description, length: 60) %></td>
+              <td class="py-3 pr-4 tabular-nums text-heading">
+                <% if product.price %>
+                  <%= "Starting " if product.price_is_starting_from %><%= MoneyPresenter.new(product.price).full %>
+                <% else %>
+                  <span class="text-muted">&mdash;</span>
+                <% end %>
+              </td>
+              <td class="py-3 pr-4">
+                <%= render StatusBadgeComponent.new(
+                      label: product.featured? ? "Yes" : "No",
+                      tone: product.featured? ? :highlight : :neutral) %>
+              </td>
+              <td class="py-3 text-right">
+                <%= button_to workspace_product_path(workspace_slug: current_workspace.slug, id: product),
+                      method: :delete,
+                      form: { data: { turbo_confirm: "Delete #{product.name}? This cannot be undone." } },
+                      class: "cursor-pointer rounded-control px-2 py-1 text-xs font-medium text-danger hover:bg-danger-soft" do %>
+                  Delete<span class="sr-only"> <%= product.name %></span>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
+</section>

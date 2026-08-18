@@ -1,0 +1,18 @@
+<div>
+  <span class="mb-1.5 block text-sm font-medium text-heading"><%= label %></span>
+
+  <label for="<%= field_id %>"
+         class="flex cursor-pointer flex-col items-center justify-center rounded-control border border-dashed border-border-strong bg-background px-4 py-7 text-center hover:bg-surface-sunk">
+    <span aria-hidden="true" class="mb-2 text-muted">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="h-7 w-7">
+        <path d="M12 15V4m0 0L8.5 7.5M12 4l3.5 3.5" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" stroke-linecap="round" />
+      </svg>
+    </span>
+    <span class="text-sm text-body">
+      Drag &amp; drop or <span class="text-primary underline underline-offset-4">click to upload</span>
+    </span>
+    <span class="mt-1 text-xs text-muted">PNG, JPG or WebP (max 2MB)</span>
+    <%= form.file_field attribute, id: field_id, accept: accept.join(","), class: "sr-only" %>
+  </label>
+</div>

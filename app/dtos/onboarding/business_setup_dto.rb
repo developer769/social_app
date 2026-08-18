@@ -13,7 +13,7 @@ module Onboarding
       @business_type = business_type.to_s.strip.presence
       @contact_email = contact_email.to_s.strip.downcase.presence
       @phone = normalise_phone(phone)
-      @website_url = normalise_url(website_url)
+      @website_url = CatalogUrl.normalise(website_url)
       @city = city.to_s.strip.presence
       @timezone = timezone.to_s.strip.presence
       @about = about.to_s.strip.presence
@@ -29,15 +29,6 @@ module Onboarding
     def normalise_phone(value)
       digits = value.to_s.gsub(/[^\d+]/, "")
       digits.presence
-    end
-
-    # Owners type "anayabakes.com"; that is a valid intention, not a valid URL.
-    def normalise_url(value)
-      trimmed = value.to_s.strip
-      return if trimmed.blank?
-      return trimmed if trimmed.match?(%r{\Ahttps?://}i)
-
-      "https://#{trimmed}"
     end
   end
 end

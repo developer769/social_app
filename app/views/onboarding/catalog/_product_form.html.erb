@@ -1,0 +1,64 @@
+<section class="rounded-card border border-border bg-surface p-6 sm:p-7">
+  <h2 class="font-display text-xl font-normal">Add product</h2>
+
+  <%= form_with model: product,
+                url: workspace_products_path(workspace_slug: current_workspace.slug),
+                method: :post, scope: :product,
+                html: { multipart: true, novalidate: true } do |form| %>
+    <div class="mt-5 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+      <%= render FormFieldComponent.new(form: form, attribute: :name, label: "Product name",
+            required: true, placeholder: "e.g. Chocolate Truffle Cake", maxlength: 120) %>
+
+      <%= render FormFieldComponent.new(form: form, attribute: :category, label: "Category",
+            placeholder: "Cakes") %>
+
+      <%= render FormFieldComponent.new(form: form, attribute: :price, label: "Price",
+            prefix: current_workspace.currency == "INR" ? "\u20B9" : current_workspace.currency,
+            placeholder: "1549", hint: "Numbers only") %>
+
+      <%= render FormFieldComponent.new(form: form, attribute: :url, label: "Website / product URL",
+            hint: "Optional", prefix: "https://", prefix_size: :text,
+            placeholder: "yourwebsite.com/product") %>
+
+      <%= render SelectFieldComponent.new(form: form, attribute: :availability_status,
+            label: "Availability status", include_blank: nil,
+            choices: Product::AVAILABILITY_STATUSES.map { |status| [status.humanize, status] }) %>
+
+      <%= render SelectFieldComponent.new(form: form, attribute: :stock_status,
+            label: "Stock status", include_blank: nil,
+            choices: Product::STOCK_STATUSES.map { |status| [status.humanize, status] }) %>
+    </div>
+
+    <div class="mt-5 grid gap-5 lg:grid-cols-2">
+      <div>
+        <%= form.label :description, "Short description", class: "mb-1.5 block text-sm font-medium text-heading" %>
+        <%= form.text_area :description, rows: 3, maxlength: 200,
+              aria: { describedby: "product-description-counter" },
+              placeholder: "Describe your product in a few words...",
+              class: "w-full rounded-control border border-border bg-background px-3.5 py-2.5 text-sm text-heading placeholder:text-muted focus:border-border-strong focus:outline-none" %>
+        <p id="product-description-counter" class="mt-1.5 text-right text-xs text-muted">Up to 200 characters</p>
+      </div>
+
+      <%= render "onboarding/catalog/image_field",
+            form: form, attribute: :image, field_id: "product_image",
+            label: "Upload image / thumbnail", accept: Product::IMAGE_CONTENT_TYPES %>
+    </div>
+
+    <div class="mt-5 flex flex-wrap items-center justify-between gap-4">
+      <label class="flex cursor-pointer items-center gap-3">
+        <%= form.check_box :featured, class: "h-4 w-4 accent-[var(--color-primary)]" %>
+        <span class="text-sm">
+          <span class="block font-medium text-heading">Featured product</span>
+          <span class="block text-xs text-muted">Show this product prominently in your catalog.</span>
+        </span>
+      </label>
+
+      <%= form.submit "Add product",
+            class: "h-11 cursor-pointer rounded-control bg-primary px-5 text-sm font-medium text-primary-contrast hover:bg-primary-hover" %>
+    </div>
+
+    <%= render "onboarding/catalog/quick_add",
+          suggestions: ["Birthday Cakes", "Brownies", "Cookies", "Cupcakes", "Gift Boxes"],
+          target: "product_name" %>
+  <% end %>
+</section>
