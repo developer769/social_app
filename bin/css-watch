@@ -1,0 +1,26 @@
+#!/bin/sh
+# Rebuilds Tailwind whenever a source file changes.
+#
+# Tailwind v4's own --watch relies on inotify, and inotify events do not cross
+# the Windows bind mount, so the built stylesheet silently goes stale. This
+# polls modification times instead, which is slower but actually works.
+set -e
+
+signature() {
+  find app/assets/tailwind app/views app/components app/helpers app/javascript \
+    -type f 2>/dev/null -exec stat -c '%n %Y' {} + | sort | md5sum
+}
+
+echo "Watching for Tailwind source changes (polling every 2s)..."
+bin/rails tailwindcss:build
+last="$(signature)"
+
+while true; do
+  sleep 2
+  current="$(signature)"
+  if [ "$current" != "$last" ]; then
+    echo "Change detected, rebuilding..."
+    bin/rails tailwindcss:build
+    last="$current"
+  fi
+done

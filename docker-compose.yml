@@ -61,9 +61,13 @@ services:
 
   # Tailwind runs as its own process rather than through bin/dev, so Compose
   # restarts it independently and its output stays readable.
+  #
+  # bin/css-watch polls instead of using tailwindcss --watch: inotify events do
+  # not cross the Windows bind mount, so the built stylesheet goes stale without
+  # any error being reported.
   css:
     <<: *app
-    command: bin/rails tailwindcss:watch
+    command: bin/css-watch
 
   worker:
     <<: *app
