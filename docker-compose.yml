@@ -1,0 +1,78 @@
+name: prachar
+
+# PostgreSQL and Redis deliberately publish no host ports: this machine already
+# runs other database containers, and the app reaches them over the compose
+# network by service name anyway.
+
+x-app: &app
+  build:
+    context: .
+    dockerfile: Dockerfile.dev
+  image: prachar-dev
+  volumes:
+    - .:/app
+    - bundle:/usr/local/bundle
+  environment: &env
+    DATABASE_URL: postgres://prachar:prachar@db:5432/prachar_development
+    REDIS_URL: redis://redis:6379/0
+    RAILS_ENV: development
+    SMTP_HOST: mailcatcher
+    SMTP_PORT: "1025"
+  depends_on:
+    db:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: prachar
+      POSTGRES_PASSWORD: prachar
+      POSTGRES_DB: prachar_development
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U prachar"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  web:
+    <<: *app
+    command: bin/rails server -b 0.0.0.0 -p 3000
+    ports:
+      - "3000:3000"
+
+  # Tailwind runs as its own process rather than through bin/dev, so Compose
+  # restarts it independently and its output stays readable.
+  css:
+    <<: *app
+    command: bin/rails tailwindcss:watch
+
+  worker:
+    <<: *app
+    command: bundle exec sidekiq
+
+  # Invitation and notification mail is caught here in development.
+  # Web UI: http://localhost:1080
+  mailcatcher:
+    image: dockage/mailcatcher:0.9.0
+    ports:
+      - "1080:1080"
+
+volumes:
+  pgdata:
+  redisdata:
+  bundle:
