@@ -17,7 +17,13 @@ x-app: &app
     # volume it stays on the VM's own disk.
     - tmp:/app/tmp
   environment: &env
-    DATABASE_URL: postgres://prachar:prachar@db:5432/prachar_development
+    # Discrete variables, not DATABASE_URL: a single URL overrides
+    # database.yml entirely and would point the test suite at the
+    # development database.
+    POSTGRES_HOST: db
+    POSTGRES_USER: prachar
+    POSTGRES_PASSWORD: prachar
+    POSTGRES_DB_PREFIX: prachar
     REDIS_URL: redis://redis:6379/0
     RAILS_ENV: development
     SMTP_HOST: mailcatcher
@@ -34,7 +40,7 @@ services:
     environment:
       POSTGRES_USER: prachar
       POSTGRES_PASSWORD: prachar
-      POSTGRES_DB: prachar_development
+      POSTGRES_DB_PREFIX: prachar
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
