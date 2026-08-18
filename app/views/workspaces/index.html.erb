@@ -1,0 +1,21 @@
+<% content_for :title, "Choose a workspace" %>
+
+<div class="mx-auto max-w-lg py-16">
+  <h1 class="font-display text-3xl font-normal">Choose a workspace</h1>
+  <p class="mt-2 text-sm text-muted">You have access to more than one business.</p>
+
+  <ul class="mt-8 space-y-3">
+    <% @workspaces.each do |workspace| %>
+      <li>
+        <%= link_to workspace_root_path(workspace_slug: workspace.slug),
+              class: "flex items-center gap-3 rounded-card border border-border bg-surface px-4 py-3.5 hover:border-border-strong" do %>
+          <span aria-hidden="true"
+                class="flex h-9 w-9 items-center justify-center rounded-full bg-blue-soft text-xs font-semibold text-primary">
+            <%= workspace.name.split.first(2).map { |word| word[0] }.join.upcase %>
+          </span>
+          <span class="text-sm font-medium text-heading"><%= workspace.name %></span>
+        <% end %>
+      </li>
+    <% end %>
+  </ul>
+</div>

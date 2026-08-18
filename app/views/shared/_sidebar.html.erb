@@ -1,0 +1,50 @@
+<%#
+  Navigation order is fixed by the specification (21). The supplied Overview
+  screen showed a different order, renamed Home to "Overview", dropped Inbox and
+  added "Team / Users"; every other screen matches the order below, so the
+  specification wins.
+%>
+<aside class="border-b border-border bg-surface lg:sticky lg:top-0 lg:h-dvh lg:border-b-0 lg:border-r">
+  <div class="flex items-center justify-between px-5 py-4 lg:block lg:px-6 lg:py-7">
+    <%= link_to workspace_root_path(workspace_slug: current_workspace.slug), class: "inline-block" do %>
+      <%= render "shared/wordmark", classes: "text-2xl" %>
+    <% end %>
+
+    <button type="button"
+            data-action="click->nav-drawer#toggle"
+            aria-controls="primary-navigation"
+            aria-expanded="false"
+            class="rounded-control border border-border p-2 text-heading lg:hidden">
+      <span class="sr-only">Toggle navigation</span>
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-5 w-5">
+        <path d="M4 7h16M4 12h16M4 17h16" stroke-linecap="round" />
+      </svg>
+    </button>
+  </div>
+
+  <nav id="primary-navigation" data-nav-drawer-target="panel"
+       class="hidden flex-col px-3 pb-4 lg:flex lg:h-[calc(100dvh-8.5rem)] lg:px-3"
+       aria-label="Primary">
+    <ul class="flex flex-col gap-1">
+      <% Navigation.items.each do |item| %>
+        <% active = Navigation.active?(item, request.path, current_workspace) %>
+        <li>
+          <%= link_to Navigation.path_for(item, current_workspace),
+                aria: { current: (active ? "page" : nil) },
+                class: class_names(
+                  "flex items-center gap-3 rounded-control px-3 py-2.5 text-sm transition-colors",
+                  "bg-gold-soft font-medium text-heading" => active,
+                  "text-body hover:bg-surface-sunk" => !active
+                ) do %>
+            <span aria-hidden="true" class="shrink-0"><%= render "shared/icons/#{item[:icon]}" %></span>
+            <%= item[:label] %>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+
+    <div class="mt-auto pt-4">
+      <%= render "shared/workspace_switcher" %>
+    </div>
+  </nav>
+</aside>

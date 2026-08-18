@@ -19,7 +19,10 @@ Rails.application.configure do
   config.public_file_server.headers = { "cache-control" => "public, max-age=3600" }
 
   # Show full error reports.
-  config.consider_all_requests_local = true
+  # Render the real 404/422 pages rather than the debug page, so request
+  # specs can assert that error responses leak nothing. Non-rescuable
+  # exceptions still raise, so debugging is unaffected.
+  config.consider_all_requests_local = false
   config.cache_store = :null_store
 
   # Render exception templates for rescuable exceptions and raise for other exceptions.

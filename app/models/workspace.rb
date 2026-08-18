@@ -14,7 +14,7 @@ class Workspace < ApplicationRecord
   validates :name, presence: true, length: { maximum: 120 }
   validates :slug, presence: true, uniqueness: true, format: { with: /\A[a-z0-9][a-z0-9-]{1,62}\z/ }
   validates :currency, presence: true, length: { is: 3 }
-  validates :timezone, presence: true, inclusion: { in: -> (_) { ActiveSupport::TimeZone::MAPPING.values } }
+  validates :timezone, presence: true, inclusion: { in: ->(_) { ActiveSupport::TimeZone::MAPPING.values } }
   validates :country_code, presence: true, length: { is: 2 }
 
   before_validation :assign_slug, on: :create

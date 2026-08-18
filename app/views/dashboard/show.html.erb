@@ -1,0 +1,31 @@
+<% content_for :title, "#{current_workspace.name} on Prachar" %>
+
+<header class="mb-8">
+  <h1 class="font-display text-4xl font-normal">Home</h1>
+  <p class="mt-1.5 text-sm text-muted">
+    Track your content performance and grow your brand.
+  </p>
+</header>
+
+<div class="rounded-card border border-border bg-surface p-8 shadow-panel">
+  <h2 class="font-display text-2xl font-normal">Welcome, <%= current_user.name.split.first %>.</h2>
+  <p class="mt-2 max-w-prose text-sm text-body">
+    Your workspace is ready. Onboarding, the content gallery and the calendar
+    arrive in the next phases.
+  </p>
+
+  <dl class="mt-6 grid gap-4 sm:grid-cols-3">
+    <div class="rounded-control border border-border bg-background px-4 py-3">
+      <dt class="text-xs text-muted">Workspace</dt>
+      <dd class="mt-0.5 text-sm font-medium text-heading"><%= current_workspace.name %></dd>
+    </div>
+    <div class="rounded-control border border-border bg-background px-4 py-3">
+      <dt class="text-xs text-muted">Currency</dt>
+      <dd class="mt-0.5 text-sm font-medium text-heading"><%= current_workspace.currency %></dd>
+    </div>
+    <div class="rounded-control border border-border bg-background px-4 py-3">
+      <dt class="text-xs text-muted">Time zone</dt>
+      <dd class="mt-0.5 text-sm font-medium text-heading"><%= current_workspace.timezone %></dd>
+    </div>
+  </dl>
+</div>

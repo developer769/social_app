@@ -41,7 +41,9 @@ module Authentication
   end
 
   def request_authentication
-    session[:return_to_after_authenticating] = request.url if request.get?
+    # HEAD is routed like GET but request.get? is false for it, so both are
+    # checked; otherwise the return-to URL is silently dropped.
+    session[:return_to_after_authenticating] = request.url if request.get? || request.head?
     redirect_to login_path
   end
 
@@ -69,6 +71,13 @@ module Authentication
   end
 
   def after_authentication_url
-    session.delete(:return_to_after_authenticating) || root_path
+    session.delete(:return_to_after_authenticating) || default_post_authentication_url
+  end
+
+  # Straight into the workspace when there is exactly one, otherwise the picker.
+  def default_post_authentication_url
+    return root_path if Current.user.nil?
+
+    Workspaces::LandingPath.new(user: Current.user).call
   end
 end

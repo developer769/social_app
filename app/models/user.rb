@@ -19,7 +19,7 @@ class User < ApplicationRecord
   validates :email, presence: true, uniqueness: true, format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :name, presence: true, length: { maximum: 120 }
   validates :password, length: { minimum: 12 }, allow_nil: true
-  validates :timezone, presence: true, inclusion: { in: -> (_) { ActiveSupport::TimeZone::MAPPING.values } }
+  validates :timezone, presence: true, inclusion: { in: ->(_) { ActiveSupport::TimeZone::MAPPING.values } }
 
   def confirmed?
     confirmed_at.present?
