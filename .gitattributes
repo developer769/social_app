@@ -1,0 +1,24 @@
+# See https://git-scm.com/docs/gitattributes for more about git attribute files.
+
+# This project is developed on Windows but runs inside Linux containers.
+# Force LF in the repository AND the working tree, otherwise CRLF sneaks into
+# bin/* and the shebang breaks with "bad interpreter: no such file or directory".
+* text=auto eol=lf
+
+# Binary assets must never be normalised.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.woff binary
+*.woff2 binary
+
+# Mark the database schema as having been generated.
+db/schema.rb linguist-generated
+
+# Mark any vendored files as having been vendored.
+vendor/* linguist-vendored
+config/credentials/*.yml.enc diff=rails_credentials
+config/credentials.yml.enc diff=rails_credentials
