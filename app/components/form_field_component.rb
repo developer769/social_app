@@ -50,6 +50,17 @@ class FormFieldComponent < ApplicationComponent
 
   # A currency symbol needs a narrow gutter; a scheme like "https://" needs a
   # wide one. Both are fixed classes so Tailwind can see them.
+  # Spoken to screen readers in place of the visual prefix.
+  PREFIX_DESCRIPTIONS = {
+    "+91" => "Indian mobile number, country code plus 91",
+    "https://" => "Web address, starting https colon slash slash",
+    "₹" => "Amount in rupees"
+  }.freeze
+
+  def prefix_description
+    PREFIX_DESCRIPTIONS.fetch(prefix.to_s) { "Starts with #{prefix}" }
+  end
+
   def prefix_width_class = (prefix_size == :text) ? "w-[4.25rem]" : "w-9"
   def input_padding_class = (prefix_size == :text) ? "pl-[4.25rem] pr-3.5" : "pl-9 pr-3.5"
 

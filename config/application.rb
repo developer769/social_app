@@ -32,6 +32,10 @@ module Prachar
     # publishing and analytics all run outside the request (spec 31).
     config.active_job.queue_adapter = :sidekiq
 
+    # Refuse to redirect off-site unless a call opts in explicitly. Defence in
+    # depth behind Authentication#local_path?, not a replacement for it.
+    config.action_controller.raise_on_open_redirects = true
+
     # India-first defaults. Each workspace overrides these from its own columns;
     # nothing in the domain reads them directly (spec 3).
     config.time_zone = "Asia/Kolkata"

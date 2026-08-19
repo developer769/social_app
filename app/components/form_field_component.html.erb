@@ -1,9 +1,18 @@
 <div>
-  <%= form.label attribute, label, class: "mb-1.5 block text-sm font-medium text-heading" %>
+  <%= form.label attribute, class: "mb-1.5 block text-sm font-medium text-heading" do %>
+    <%= label %>
+    <%# The prefix is part of what the field means. Hiding it from assistive
+        technology leaves a screen-reader user guessing whether to type the
+        country code, the currency, or the scheme. %>
+    <% if prefix.present? %>
+      <span class="sr-only"><%= prefix_description %></span>
+    <% end %>
+  <% end %>
 
   <div class="relative">
     <% if prefix.present? %>
-      <span aria-hidden="true" class="pointer-events-none absolute inset-y-0 left-0 flex <%= prefix_width_class %> items-center justify-center text-sm text-muted">
+      <span aria-hidden="true"
+            class="pointer-events-none absolute inset-y-0 left-0 flex <%= prefix_width_class %> items-center justify-center text-sm text-muted">
         <%= prefix %>
       </span>
     <% end %>
@@ -15,7 +24,15 @@
     <p id="<%= hint_id %>" class="mt-1.5 text-xs text-muted"><%= hint %></p>
   <% end %>
 
-  <% if invalid? %>
-    <p id="<%= error_id %>" class="mt-1.5 text-xs text-danger"><%= errors.to_sentence.upcase_first %></p>
-  <% end %>
+  <%# Present in the DOM whether or not there is an error, and updated rather
+      than inserted, so assistive technology announces a change instead of
+      missing it. The glyph means status is never carried by colour alone
+      (spec 33). %>
+  <p id="<%= error_id %>" role="alert"
+     class="mt-1.5 flex items-start gap-1.5 text-xs text-danger <%= "hidden" unless invalid? %>">
+    <% if invalid? %>
+      <span aria-hidden="true" class="mt-px">&#9888;</span>
+      <span><%= errors.to_sentence.upcase_first %></span>
+    <% end %>
+  </p>
 </div>

@@ -1,0 +1,27 @@
+<% content_for :title, "Create a workspace" %>
+
+<div class="mx-auto flex min-h-dvh max-w-md flex-col justify-center px-6 py-16">
+  <%= render "shared/wordmark", classes: "text-2xl" %>
+
+  <div class="mt-8 rounded-card border border-border bg-surface p-8 shadow-card">
+    <h1 class="font-display text-3xl font-normal">Create a workspace</h1>
+    <p class="mt-2 text-sm text-muted">A workspace holds one business: its brand, catalog and accounts.</p>
+
+    <%= render "shared/error_summary", record: @workspace %>
+
+    <%= form_with model: @workspace, url: workspaces_path, method: :post, class: "mt-6 space-y-5" do |form| %>
+      <%= render FormFieldComponent.new(
+            form: form, attribute: :name, label: "Business name", required: true,
+            placeholder: "Anaya Bakes", maxlength: 120) %>
+
+      <%= form.submit "Create workspace",
+            class: "h-11 w-full cursor-pointer rounded-control bg-primary px-4 text-sm font-medium text-primary-contrast hover:bg-primary-hover" %>
+    <% end %>
+  </div>
+
+  <div class="mt-6 flex items-center justify-between gap-3">
+    <%= link_to "Back", workspaces_path, class: "text-sm text-muted underline underline-offset-4 hover:text-heading" %>
+    <%= button_to "Sign out", logout_path, method: :delete,
+          class: "cursor-pointer text-sm text-muted underline underline-offset-4 hover:text-heading" %>
+  </div>
+</div>

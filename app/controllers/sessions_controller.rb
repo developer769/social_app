@@ -17,7 +17,16 @@ class SessionsController < ApplicationController
     else
       # Deliberately does not say which of the two was wrong: that difference
       # tells an attacker which addresses have accounts.
-      AuditEvent.record!(action: "user.sign_in_failed", metadata: { email: params[:email].to_s.first(120) }, ip_address: request.remote_ip)
+      AuditEvent.record!(
+        action: "user.sign_in_failed",
+        # A masked hint plus a stable digest: enough to spot one address being
+        # hammered, without storing the address itself (spec 13, 32).
+        metadata: {
+          email_hint: EmailHint.mask(params[:email]),
+          email_digest: EmailHint.digest(params[:email])
+        },
+        ip_address: request.remote_ip
+      )
       flash.now[:alert] = "That email and password do not match."
       render :new, status: :unprocessable_content
     end

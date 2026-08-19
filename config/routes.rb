@@ -8,7 +8,7 @@ Rails.application.routes.draw do
   post "signup", to: "registrations#create"
 
   # ---- Workspace selection -------------------------------------------------
-  resources :workspaces, only: %i[index]
+  resources :workspaces, only: %i[index new create]
 
   # ---- Workspace-scoped ----------------------------------------------------
   # The slug is a lookup key only. Access resolves from the signed-in user's
