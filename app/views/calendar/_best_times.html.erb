@@ -1,34 +1,52 @@
 <%#
-  The design shows a best-time-to-post panel with specific windows per platform,
-  described as "based on your audience activity". That is a measurement of
-  published performance, and none exists until a real account has posted
-  history. Showing invented windows here would be exactly the fabricated
-  performance claim the specification forbids (spec 22, 27), so the panel says
-  what it needs instead.
+  The design shows this panel with four platforms, specific windows and filled
+  bars, captioned "Based on your audience activity". That caption describes a
+  measurement of published performance, and none exists until a live account
+  has history. Rendering the bars with invented numbers would be the fabricated
+  performance claim the specification forbids (spec 22, 27), so the panel keeps
+  its place and its styling but says what it is waiting for.
 %>
 <% accounts = workspace.social_accounts.connected %>
 <% simulated = accounts.any? && accounts.all?(&:mocked?) %>
 
-<section class="rounded-card border border-border bg-blue-soft p-5">
-  <h2 class="font-display text-lg font-normal">Best time to post</h2>
+<section class="rounded-card border border-border bg-gold-tint p-5">
+  <div class="flex items-start gap-2.5">
+    <span aria-hidden="true" class="mt-0.5 text-warning">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="h-5 w-5">
+        <circle cx="12" cy="12" r="8.5" />
+        <path d="M12 7.5V12l3 2" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+    </span>
+    <div class="min-w-0">
+      <h2 class="font-display text-lg font-normal">Best time to post</h2>
+      <p class="text-xs text-muted">From when your own audience engages</p>
+    </div>
+  </div>
 
   <% if accounts.empty? %>
-    <p class="mt-2 text-sm text-body">
-      Prachar works this out from when your own audience actually engages.
-      Connect an account and it will appear here once there is enough history.
+    <p class="mt-4 text-sm text-body">
+      Connect an account and Prachar will work this out from your own results,
+      rather than a general rule.
     </p>
     <%= link_to "Connect an account",
           workspace_onboarding_connections_path(workspace_slug: workspace.slug),
           class: "mt-4 inline-flex h-10 items-center rounded-control bg-primary px-4 text-sm font-medium text-primary-contrast hover:bg-primary-hover" %>
-  <% elsif simulated %>
-    <p class="mt-2 text-sm text-body">
-      Your connected accounts are simulated, so there is no real posting history to read.
-      This fills in once a live account has published for a while.
-    </p>
   <% else %>
-    <p class="mt-2 text-sm text-body">
-      Not enough published history yet to identify your best times.
-      Keep posting and this will fill in.
+    <ul class="mt-4 space-y-3">
+      <% accounts.first(4).each do |account| %>
+        <li class="flex items-center gap-3">
+          <%= render PlatformGlyphComponent.new(provider: account.provider, size: :small) %>
+          <span class="flex-1 text-sm text-muted">Not enough data yet</span>
+        </li>
+      <% end %>
+    </ul>
+
+    <p class="mt-4 border-t border-border pt-3 text-xs text-body">
+      <% if simulated %>
+        Your connected accounts are simulated, so there is no real posting history to read.
+      <% else %>
+        This fills in once your posts have run for a few weeks.
+      <% end %>
     </p>
   <% end %>
 </section>

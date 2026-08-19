@@ -1,31 +1,44 @@
 <section class="rounded-card border border-border bg-surface p-5">
-  <h2 class="font-display text-lg font-normal">Upcoming posts</h2>
+  <div class="flex items-center justify-between gap-3">
+    <h2 class="font-display text-lg font-normal">Upcoming posts</h2>
+    <% if posts.any? %>
+      <%= link_to "View all",
+            workspace_calendar_path(workspace_slug: current_workspace.slug, view: "agenda"),
+            class: "text-xs font-medium text-primary underline underline-offset-4" %>
+    <% end %>
+  </div>
 
   <% if posts.empty? %>
     <p class="mt-3 text-sm text-muted">
       Nothing scheduled yet. Anything you schedule appears here with a countdown.
     </p>
   <% else %>
-    <ul class="mt-4 space-y-3">
+    <ul class="mt-4 space-y-3.5">
       <% posts.each do |post| %>
-        <li class="flex items-start gap-3">
-          <% if post.primary_media&.file&.attached? %>
-            <%= image_tag post.primary_media.file.variant(resize_to_fill: [80, 80]), alt: "",
-                  class: "h-10 w-10 shrink-0 rounded-control object-cover" %>
+        <li class="flex items-center gap-3">
+          <% if post.primary_media&.file&.attached? && post.primary_media.image? %>
+            <%= image_tag post.primary_media.file.variant(resize_to_fill: [96, 96]), alt: "",
+                  class: "h-11 w-11 shrink-0 rounded-control object-cover" %>
           <% else %>
-            <span aria-hidden="true" class="h-10 w-10 shrink-0 rounded-control bg-surface-sunk"></span>
+            <span aria-hidden="true"
+                  class="flex h-11 w-11 shrink-0 items-center justify-center rounded-control bg-surface-sunk">
+              <% if post.providers.first %>
+                <%= render PlatformGlyphComponent.new(provider: post.providers.first, size: :small) %>
+              <% end %>
+            </span>
           <% end %>
 
           <div class="min-w-0 flex-1">
-            <p class="truncate text-sm font-medium text-heading">
-              <%= post.caption.presence&.truncate(38) || "Untitled post" %>
+            <p class="truncate text-sm font-semibold text-heading">
+              <%= post.caption.presence&.truncate(30) || "Untitled post" %>
             </p>
-            <p class="mt-0.5 text-xs text-muted">
+            <p class="mt-0.5 truncate text-xs text-muted">
+              <%= post_kind_label(post) %> &middot;
               <%= post.scheduled_at_local&.strftime("%-d %b, %-l:%M %p") %>
             </p>
           </div>
 
-          <span class="shrink-0 rounded-pill bg-gold-tint px-2 py-1 text-[11px] font-medium text-heading">
+          <span class="shrink-0 rounded-control px-2 py-1 text-[11px] font-medium <%= countdown_classes(post, current_workspace) %>">
             <%= relative_schedule(post, current_workspace) %>
           </span>
         </li>

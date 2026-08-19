@@ -1,31 +1,38 @@
 <%
   compact = local_assigns.fetch(:compact, false)
-  time = post.scheduled_at_local&.strftime("%-l:%M %p")
+  local = post.scheduled_at_local
+  provider = post.providers.first
+  tint = PlatformGlyphComponent::BRANDS.dig(provider, :tint) || "#F6F0E7"
+  thumbnail = post.primary_media
 %>
-<article class="<%= compact ? "rounded-[0.35rem] border border-border bg-background px-1.5 py-1" : "rounded-control border border-border bg-background p-3" %>">
-  <div class="flex items-start gap-2">
-    <% if post.primary_media&.file&.attached? && !compact %>
-      <%= image_tag post.primary_media.file.variant(resize_to_fill: [80, 80]), alt: "",
-            class: "h-10 w-10 shrink-0 rounded-[0.35rem] object-cover" %>
+
+<%= link_to edit_workspace_post_path(workspace_slug: current_workspace.slug, id: post),
+      class: "block overflow-hidden rounded-control border border-border/70 transition-shadow hover:shadow-panel",
+      style: "background-color: #{tint};" do %>
+  <div class="<%= compact ? "p-2" : "p-3" %>">
+    <div class="flex items-start gap-1.5">
+      <% if provider %>
+        <%= render PlatformGlyphComponent.new(provider: provider, size: :small) %>
+      <% end %>
+
+      <p class="min-w-0 flex-1 text-[11px] font-semibold leading-snug text-heading">
+        <%= post.caption.presence&.truncate(compact ? 34 : 60) || "Untitled post" %>
+      </p>
+    </div>
+
+    <p class="mt-1 text-[10px] text-muted">
+      <%= post_kind_label(post) %> &middot; <%= local&.strftime("%-l:%M %p") %>
+    </p>
+
+    <% if thumbnail&.file&.attached? && thumbnail.image? %>
+      <%= image_tag thumbnail.file.variant(resize_to_fill: [160, 120]), alt: "",
+            class: "mt-1.5 ml-auto block h-12 w-16 rounded-[0.3rem] object-cover" %>
     <% end %>
 
-    <div class="min-w-0 flex-1">
-      <p class="<%= compact ? "truncate text-[11px] font-medium text-heading" : "text-sm font-medium text-heading" %>">
-        <%= post.caption.presence&.truncate(compact ? 24 : 60) || "Untitled post" %>
+    <% if post.providers.size > 1 %>
+      <p class="mt-1 text-[10px] text-muted">
+        and <%= post.providers.size - 1 %> more
       </p>
-
-      <p class="<%= compact ? "truncate text-[10px] text-muted" : "mt-0.5 text-xs text-muted" %>">
-        <%= time %><%= " · #{post.status_label}" unless compact %>
-      </p>
-
-      <% unless compact %>
-        <div class="mt-2 flex flex-wrap items-center gap-1.5">
-          <% post.providers.each do |provider| %>
-            <%= render PlatformBadgeComponent.new(provider: provider, size: :small) %>
-          <% end %>
-          <%= render StatusBadgeComponent.new(label: post.status_label, tone: post.status_tone) %>
-        </div>
-      <% end %>
-    </div>
+    <% end %>
   </div>
-</article>
+<% end %>
