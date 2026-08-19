@@ -1,5 +1,25 @@
-<% content_for :title, "Brand Analysis" %>
+<% content_for :title, "Brand analysis" %>
 
-<%= render "onboarding/step_header", title: "Brand Analysis", subtitle: "We analyse your connected accounts to understand your content, audience and brand voice." %>
+<%= render "onboarding/step_header",
+      title: "We're learning about your brand",
+      subtitle: "Prachar reviews what you have set up so far to shape your content plan." %>
 
-<%= render "onboarding/pending_step", title: "Brand Analysis", summary: "Analysis runs as real background tasks with real states, not a timed animation, so it needs the job pipeline first." %>
+<%= render "shared/flash" %>
+
+<%= turbo_stream_from current_workspace, :brand_analysis %>
+
+<div id="brand-analysis">
+  <%= render "onboarding/analysis/panel", analysis: @analysis, workspace: current_workspace %>
+</div>
+
+<%= render StickyActionFooterComponent.new do |footer| %>
+  <% footer.with_secondary do %>
+    <%= link_to "Back", workspace_onboarding_connections_path(workspace_slug: current_workspace.slug),
+          class: "flex h-11 items-center rounded-control border border-border px-5 text-sm font-medium text-body hover:bg-surface-sunk" %>
+  <% end %>
+  <% footer.with_primary do %>
+    <%= button_to "Continue",
+          workspace_onboarding_analysis_complete_path(workspace_slug: current_workspace.slug),
+          class: "h-11 cursor-pointer rounded-control bg-primary px-6 text-sm font-medium text-primary-contrast hover:bg-primary-hover" %>
+  <% end %>
+<% end %>

@@ -1,0 +1,85 @@
+<% if analysis.nil? %>
+  <div class="rounded-card border border-border bg-surface p-8 text-center">
+    <h2 class="font-display text-2xl font-normal">Ready when you are</h2>
+    <p class="mx-auto mt-2 max-w-md text-sm text-body">
+      Prachar will review your brand profile, catalog and connected accounts.
+      Anything that needs data you do not have yet will say so, rather than guessing.
+    </p>
+    <%= button_to "Start analysis",
+          workspace_onboarding_analysis_path(workspace_slug: workspace.slug),
+          class: "mx-auto mt-6 h-11 cursor-pointer rounded-control bg-primary px-6 text-sm font-medium text-primary-contrast hover:bg-primary-hover" %>
+  </div>
+<% else %>
+  <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem] xl:grid-cols-[minmax(0,1fr)_22rem]">
+    <div class="rounded-card border border-border bg-surface p-6 sm:p-7">
+      <div class="flex flex-wrap items-center gap-6">
+        <%= render ProgressRingComponent.new(
+              percentage: analysis.progress_percentage,
+              caption: analysis.analyzing? ? "Analysing" : "Reviewed") %>
+
+        <div class="min-w-0 flex-1">
+          <h2 class="font-display text-2xl font-normal"><%= analysis_headline(analysis) %></h2>
+          <p class="mt-1 text-sm text-muted">
+            <%= pluralize(analysis.tasks.count(&:finished?), "check") %> of
+            <%= analysis.tasks.size %> finished.
+            <% if analysis.analyzing? %>
+              This page updates on its own.
+            <% end %>
+          </p>
+        </div>
+      </div>
+
+      <ul class="mt-6 grid gap-3 sm:grid-cols-2">
+        <% analysis.tasks.sort_by { |task| BrandAnalysis::TASK_KEYS.index(task.task_key) }.each do |task| %>
+          <li class="rounded-control border border-border bg-background p-4">
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <p class="text-sm font-medium text-heading"><%= task.label %></p>
+                <p class="mt-0.5 text-xs text-muted"><%= task.summary %></p>
+              </div>
+              <%= render StatusBadgeComponent.new(label: task.outcome_label, tone: task.outcome_tone) %>
+            </div>
+
+            <% if (reason = task.result["reason"]).present? %>
+              <p class="mt-2.5 border-t border-border pt-2.5 text-xs text-body"><%= reason %></p>
+            <% end %>
+
+            <% if task.task_key == "profile_health" && task.result["score"].present? %>
+              <p class="mt-2.5 border-t border-border pt-2.5 text-xs text-body">
+                <span class="font-medium text-heading"><%= task.result["score"] %>% complete.</span>
+                <% if task.result["missing"].present? %>
+                  Still missing: <%= task.result["missing"].to_sentence %>.
+                <% end %>
+              </p>
+            <% end %>
+
+            <% if task.task_key == "content_categories" && task.result["categories"].present? %>
+              <p class="mt-2.5 border-t border-border pt-2.5 text-xs text-body">
+                <%= task.result["categories"].map { |c| c["name"] }.to_sentence %>
+              </p>
+            <% end %>
+
+            <% if task.task_key == "brand_voice" && task.result["tones"].present? %>
+              <p class="mt-2.5 border-t border-border pt-2.5 text-xs text-body">
+                <%= task.result["tones"].to_sentence %>.
+                <span class="text-muted"><%= task.result["note"] %></span>
+              </p>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+
+    <%= render ContextualHelpPanelComponent.new(
+          title: "What this can and cannot tell you",
+          summary: "Prachar only reports what it can actually measure.",
+          tone: :lavender) do |panel| %>
+      <% panel.with_point(title: "Measured from your own data",
+            body: "Profile health, content categories and brand voice come from what you entered.") %>
+      <% panel.with_point(title: "Needs a real connection",
+            body: "Performance checks stay empty until a live account with published history is connected.") %>
+      <% panel.with_point(title: "No invented numbers",
+            body: "A check with no data says so, rather than showing a figure that would look like a measurement.") %>
+    <% end %>
+  </div>
+<% end %>

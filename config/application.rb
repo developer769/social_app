@@ -28,6 +28,17 @@ module Prachar
     # Common ones are `templates`, `generators`, or `middleware`, for example.
     config.autoload_lib(ignore: %w[assets tasks])
 
+    # Sidekiq, not the in-process async adapter: media processing, generation,
+    # publishing and analytics all run outside the request (spec 31).
+    config.active_job.queue_adapter = :sidekiq
+
+    # India-first defaults. Each workspace overrides these from its own columns;
+    # nothing in the domain reads them directly (spec 3).
+    config.time_zone = "Asia/Kolkata"
+    config.active_record.default_timezone = :utc
+    config.i18n.default_locale = :en
+    config.i18n.available_locales = %i[en]
+
     # Configuration for the application, engines, and railties goes here.
     #
     # These settings can be overridden in specific environments using the files

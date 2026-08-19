@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_19_100100) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_19_110000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
@@ -57,6 +57,37 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_19_100100) do
     t.index ["auditable_type", "auditable_id"], name: "index_audit_events_on_auditable_type_and_auditable_id"
     t.index ["workspace_id", "created_at"], name: "index_audit_events_on_workspace_id_and_created_at", order: { created_at: :desc }
     t.index ["workspace_id"], name: "index_audit_events_on_workspace_id"
+  end
+
+  create_table "brand_analyses", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "finished_at"
+    t.bigint "requested_by_id"
+    t.datetime "started_at"
+    t.string "status", default: "queued", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "workspace_id", null: false
+    t.index ["requested_by_id"], name: "index_brand_analyses_on_requested_by_id"
+    t.index ["workspace_id", "created_at"], name: "index_brand_analyses_on_workspace_id_and_created_at", order: { created_at: :desc }
+    t.index ["workspace_id"], name: "index_brand_analyses_on_workspace_id"
+    t.check_constraint "status::text = ANY (ARRAY['queued'::character varying, 'analyzing'::character varying, 'partially_complete'::character varying, 'complete'::character varying, 'failed'::character varying]::text[])", name: "brand_analyses_status_is_known"
+  end
+
+  create_table "brand_analysis_tasks", force: :cascade do |t|
+    t.bigint "brand_analysis_id", null: false
+    t.datetime "created_at", null: false
+    t.string "error_message"
+    t.datetime "finished_at"
+    t.string "outcome"
+    t.jsonb "result", default: {}, null: false
+    t.datetime "started_at"
+    t.string "status", default: "queued", null: false
+    t.string "task_key", null: false
+    t.datetime "updated_at", null: false
+    t.index ["brand_analysis_id", "task_key"], name: "index_brand_analysis_tasks_on_brand_analysis_id_and_task_key", unique: true
+    t.index ["brand_analysis_id"], name: "index_brand_analysis_tasks_on_brand_analysis_id"
+    t.check_constraint "outcome IS NULL OR (outcome::text = ANY (ARRAY['analysed'::character varying, 'insufficient_data'::character varying, 'not_supported'::character varying, 'error'::character varying]::text[]))", name: "brand_analysis_tasks_outcome_is_known"
+    t.check_constraint "status::text = ANY (ARRAY['queued'::character varying, 'analyzing'::character varying, 'complete'::character varying, 'failed'::character varying]::text[])", name: "brand_analysis_tasks_status_is_known"
   end
 
   create_table "brand_goals", force: :cascade do |t|
@@ -264,6 +295,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_19_100100) do
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "audit_events", "users", column: "actor_user_id"
   add_foreign_key "audit_events", "workspaces"
+  add_foreign_key "brand_analyses", "users", column: "requested_by_id"
+  add_foreign_key "brand_analyses", "workspaces"
+  add_foreign_key "brand_analysis_tasks", "brand_analyses"
   add_foreign_key "brand_goals", "workspaces"
   add_foreign_key "brand_profiles", "workspaces"
   add_foreign_key "brand_tones", "workspaces"

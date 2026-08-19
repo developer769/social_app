@@ -33,6 +33,8 @@ Rails.application.routes.draw do
       get   "connections", to: "onboarding/connections#show", as: :connections
       post  "connections/continue", to: "onboarding/connections#complete", as: :connections_complete
       get   "analysis",    to: "onboarding/analysis#show",    as: :analysis
+      post  "analysis",    to: "onboarding/analysis#create"
+      post  "analysis/continue", to: "onboarding/analysis#complete", as: :analysis_complete
       get   "health",      to: "onboarding/health#show",      as: :health
       get   "plan",        to: "onboarding/plan#show",        as: :plan
     end
