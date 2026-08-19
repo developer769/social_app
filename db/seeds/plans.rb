@@ -5,6 +5,10 @@
 # annual pricing, so this is flagged as needing confirmation rather than
 # presented as final.
 #
+# No entitlement may describe a capability the product does not deliver. Image
+# generation has no provider yet, so those rows are rendered as not-yet-available
+# rather than sold; see FeatureAvailability.
+#
 # Limits live here as data. Nothing in the application asks "is this Pro?" --
 # it asks for an entitlement key (spec 22: centralised entitlement system).
 definitions = [
@@ -18,7 +22,7 @@ definitions = [
     entitlements: [
       { key: "social_accounts", limit_value: 1, display_label: "1 social account" },
       { key: "posts_per_month", limit_value: 50, display_label: "50 posts per month" },
-      { key: "ai_generations_per_month", limit_value: 30, display_label: "30 AI generations per month" },
+      { key: "ai_generations_per_month", limit_value: 30, display_label: "30 image generations per month" },
       { key: "analytics_history_days", limit_value: 30, display_label: "Basic analytics" },
       { key: "team_members", limit_value: 1, display_label: "Just you" },
       { key: "support_level", limit_value: nil, display_label: "Email support" }
@@ -34,7 +38,7 @@ definitions = [
     entitlements: [
       { key: "social_accounts", limit_value: 3, display_label: "3 social accounts" },
       { key: "posts_per_month", limit_value: nil, display_label: "Unlimited posts" },
-      { key: "ai_generations_per_month", limit_value: 300, display_label: "AI caption help" },
+      { key: "ai_generations_per_month", limit_value: 80, display_label: "80 image generations per month" },
       { key: "analytics_history_days", limit_value: 180, display_label: "Advanced analytics" },
       { key: "team_members", limit_value: 3, display_label: "Up to 3 team members" },
       { key: "support_level", limit_value: nil, display_label: "Email support" }
@@ -50,7 +54,7 @@ definitions = [
     entitlements: [
       { key: "social_accounts", limit_value: nil, display_label: "Unlimited accounts" },
       { key: "posts_per_month", limit_value: nil, display_label: "Unlimited posts" },
-      { key: "ai_generations_per_month", limit_value: nil, display_label: "Unlimited AI generations" },
+      { key: "ai_generations_per_month", limit_value: 150, display_label: "150 image generations per month" },
       { key: "analytics_history_days", limit_value: 730, display_label: "Advanced reports" },
       { key: "team_members", limit_value: nil, display_label: "Unlimited team members" },
       { key: "support_level", limit_value: nil, display_label: "Priority support" }
