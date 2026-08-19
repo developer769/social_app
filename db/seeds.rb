@@ -1,6 +1,7 @@
 # Plans are reference data, not development fixtures, so they load in every
 # environment before the development-only block below.
 load Rails.root.join("db/seeds/plans.rb")
+load Rails.root.join("db/seeds/templates.rb")
 
 # Development seed data.
 #

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_19_130100) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_19_140000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
@@ -296,6 +296,74 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_19_130100) do
     t.check_constraint "status::text = ANY (ARRAY['trialing'::character varying, 'active'::character varying, 'past_due'::character varying, 'cancelled'::character varying, 'expired'::character varying]::text[])", name: "subscriptions_status_is_known"
   end
 
+  create_table "template_favourites", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "template_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.bigint "workspace_id", null: false
+    t.index ["template_id"], name: "index_template_favourites_on_template_id"
+    t.index ["user_id"], name: "index_template_favourites_on_user_id"
+    t.index ["workspace_id", "template_id"], name: "index_template_favourites_on_workspace_id_and_template_id", unique: true
+    t.index ["workspace_id"], name: "index_template_favourites_on_workspace_id"
+  end
+
+  create_table "template_refreshes", force: :cascade do |t|
+    t.integer "added_count", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.string "error_message"
+    t.datetime "finished_at"
+    t.integer "retired_count", default: 0, null: false
+    t.string "source", null: false
+    t.datetime "started_at", null: false
+    t.string "status", default: "running", null: false
+    t.datetime "updated_at", null: false
+    t.integer "updated_count", default: 0, null: false
+    t.index ["source", "started_at"], name: "index_template_refreshes_on_source_and_started_at", order: { started_at: :desc }
+    t.check_constraint "status::text = ANY (ARRAY['running'::character varying, 'complete'::character varying, 'failed'::character varying]::text[])", name: "template_refreshes_status_is_known"
+  end
+
+  create_table "templates", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.string "aspect_ratio", default: "1:1", null: false
+    t.string "content_category", null: false
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.integer "duration_seconds"
+    t.integer "favourites_count", default: 0, null: false
+    t.datetime "first_seen_at", null: false
+    t.integer "generations_count", default: 0, null: false
+    t.string "industry"
+    t.datetime "last_refreshed_at"
+    t.string "media_format", null: false
+    t.string "name", null: false
+    t.integer "position", default: 0, null: false
+    t.boolean "premium", default: false, null: false
+    t.text "prompt_instructions"
+    t.integer "prompt_version", default: 1, null: false
+    t.datetime "retired_at"
+    t.string "slug", null: false
+    t.string "source", default: "curated", null: false
+    t.string "source_external_id"
+    t.string "style_tags", default: [], null: false, array: true
+    t.string "supported_platforms", default: [], null: false, array: true
+    t.integer "trend_score"
+    t.datetime "trend_scored_at"
+    t.datetime "updated_at", null: false
+    t.index ["content_category", "active"], name: "index_templates_on_content_category_and_active"
+    t.index ["media_format", "active", "retired_at"], name: "index_templates_on_media_format_and_active_and_retired_at"
+    t.index ["slug"], name: "index_templates_on_slug", unique: true
+    t.index ["source", "source_external_id"], name: "index_templates_on_source_and_external_id", unique: true, where: "(source_external_id IS NOT NULL)"
+    t.index ["style_tags"], name: "index_templates_on_style_tags", using: :gin
+    t.index ["trend_score"], name: "index_templates_on_trend_score", order: :desc
+    t.check_constraint "content_category::text = ANY (ARRAY['festive'::character varying, 'offer'::character varying, 'new_launch'::character varying, 'behind_the_scenes'::character varying, 'product_showcase'::character varying, 'reels_style'::character varying, 'menu'::character varying, 'tips'::character varying, 'educational'::character varying, 'testimonials'::character varying]::text[])", name: "templates_content_category_is_known"
+    t.check_constraint "duration_seconds IS NULL OR duration_seconds > 0", name: "templates_duration_positive"
+    t.check_constraint "media_format::text <> 'video'::text OR duration_seconds IS NOT NULL", name: "templates_video_has_duration"
+    t.check_constraint "media_format::text = ANY (ARRAY['image'::character varying, 'video'::character varying]::text[])", name: "templates_media_format_is_known"
+    t.check_constraint "source::text = ANY (ARRAY['curated'::character varying, 'trend_feed'::character varying, 'partner'::character varying]::text[])", name: "templates_source_is_known"
+    t.check_constraint "trend_score IS NULL OR trend_score >= 0 AND trend_score <= 100", name: "templates_trend_score_in_range"
+  end
+
   create_table "users", force: :cascade do |t|
     t.datetime "confirmed_at"
     t.datetime "created_at", null: false
@@ -378,6 +446,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_19_130100) do
   add_foreign_key "subscriptions", "plans"
   add_foreign_key "subscriptions", "users", column: "selected_by_id"
   add_foreign_key "subscriptions", "workspaces"
+  add_foreign_key "template_favourites", "templates"
+  add_foreign_key "template_favourites", "users"
+  add_foreign_key "template_favourites", "workspaces"
   add_foreign_key "workspace_memberships", "users"
   add_foreign_key "workspace_memberships", "users", column: "invited_by_id"
   add_foreign_key "workspace_memberships", "workspaces"
