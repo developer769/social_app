@@ -59,7 +59,7 @@ RSpec.describe "Authentication hardening" do
     end
 
     it "has the framework's own open redirect guard switched on" do
-      expect(ActionController::Base.raise_on_open_redirects).to be(true)
+      expect(ActionController::Base.action_on_open_redirect).to eq(:raise)
     end
   end
 

@@ -15,7 +15,10 @@ class RegistrationsController < ApplicationController
 
     if result.success?
       start_new_session_for(result.value.user)
-      redirect_to workspace_root_path(workspace_slug: result.value.workspace.slug)
+      # Straight into onboarding, not the dashboard: a workspace created
+      # seconds ago has no brand, no catalog and no connected account, so the
+      # dashboard would greet a new owner with nothing to look at.
+      redirect_to workspace_onboarding_path(workspace_slug: result.value.workspace.slug)
     else
       @user = result.error
       render :new, status: :unprocessable_content

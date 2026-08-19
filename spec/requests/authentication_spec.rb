@@ -64,3 +64,43 @@ RSpec.describe "Authentication" do
     end
   end
 end
+
+RSpec.describe "First-time registration" do
+  it "sends a brand new owner into onboarding, not the empty dashboard" do
+    post signup_path, params: {
+      user: { business_name: "Meera Flowers", name: "Meera Iyer",
+              email: "meera@meeraflowers.test", password: "correct-horse-battery" }
+    }
+
+    workspace = Workspace.find_by(name: "Meera Flowers")
+    expect(response).to redirect_to(workspace_onboarding_path(workspace_slug: workspace.slug))
+
+    follow_redirect!
+    follow_redirect!
+    expect(response.body).to include("Step 1 of 6")
+  end
+
+  it "creates the user, workspace and membership together" do
+    expect {
+      post signup_path, params: {
+        user: { business_name: "Meera Flowers", name: "Meera Iyer",
+                email: "meera@meeraflowers.test", password: "correct-horse-battery" }
+      }
+    }.to change(User, :count).by(1)
+     .and change(Workspace, :count).by(1)
+     .and change(WorkspaceMembership, :count).by(1)
+
+    expect(Workspace.last.workspace_memberships.sole).to be_grants_access
+  end
+
+  it "creates nothing when the details are unusable" do
+    expect {
+      post signup_path, params: {
+        user: { business_name: "Meera Flowers", name: "Meera Iyer",
+                email: "not-an-email", password: "short" }
+      }
+    }.not_to change(User, :count)
+
+    expect(response).to have_http_status(:unprocessable_content)
+  end
+end

@@ -34,7 +34,7 @@ module Prachar
 
     # Refuse to redirect off-site unless a call opts in explicitly. Defence in
     # depth behind Authentication#local_path?, not a replacement for it.
-    config.action_controller.raise_on_open_redirects = true
+    config.action_controller.action_on_open_redirect = :raise
 
     # India-first defaults. Each workspace overrides these from its own columns;
     # nothing in the domain reads them directly (spec 3).
