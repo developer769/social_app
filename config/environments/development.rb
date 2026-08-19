@@ -1,6 +1,11 @@
 require "active_support/core_ext/integer/time"
 
 Rails.application.configure do
+  # Requests arriving from inside the compose network use the service name as
+  # the host, which host authorization rejects by default. bin/screenshot and
+  # any container-to-container call need it allowed.
+  config.hosts << "web"
+  config.hosts << /.*\.local\z/
   # Settings specified here will take precedence over those in config/application.rb.
 
   # Make code changes take effect immediately without server restart.

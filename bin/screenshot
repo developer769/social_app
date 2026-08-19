@@ -1,0 +1,118 @@
+#!/usr/bin/env ruby
+# Screenshot pages of the running app.
+#
+# Written because several rounds of "it looks wrong" were spent guessing at
+# rendered output from ERB source. This signs in as a real user and photographs
+# real pages, so a layout mistake is visible before anyone else has to find it.
+#
+#   docker compose run --rm web bin/screenshot /w/anaya-bakes/calendar
+#   docker compose run --rm web bin/screenshot --email other@example.test /path
+#   docker compose run --rm web bin/screenshot --width 1280 --full /path /another
+#
+# Images land in screenshots/ (gitignored). Chromium is installed in the development
+# image only; nothing here ships to production.
+
+# Run as a plain script, so the bundle has to be set up explicitly.
+ENV["BUNDLE_GEMFILE"] ||= File.expand_path("../Gemfile", __dir__)
+require "bundler/setup"
+
+require "optparse"
+
+options = {
+  email: "anaya@anayabakes.test",
+  password: "correct-horse-battery",
+  width: 1440,
+  height: 900,
+  full: false,
+  host: ENV.fetch("SCREENSHOT_HOST", "http://web:3000"),
+  admin: false
+}
+
+parser = OptionParser.new do |opts|
+  opts.banner = "Usage: bin/screenshot [options] PATH [PATH...]"
+  opts.on("--email EMAIL") { |value| options[:email] = value }
+  opts.on("--password PASSWORD") { |value| options[:password] = value }
+  opts.on("--width PIXELS", Integer) { |value| options[:width] = value }
+  opts.on("--height PIXELS", Integer) { |value| options[:height] = value }
+  opts.on("--full", "Capture the whole page, not just the viewport") { options[:full] = true }
+  opts.on("--admin", "Sign in to the staff area instead") { options[:admin] = true }
+  opts.on("--anonymous", "Do not sign in at all") { options[:anonymous] = true }
+end
+parser.parse!
+
+paths = ARGV
+abort parser.to_s if paths.empty?
+
+require "selenium-webdriver"
+require "fileutils"
+
+output_dir = File.expand_path("../screenshots", __dir__)
+FileUtils.mkdir_p(output_dir)
+
+# Use the Chromium and driver installed in the image. Left to itself, Selenium
+# Manager downloads a driver whose version does not match the installed
+# browser, and the pair refuses to start.
+Selenium::WebDriver::Chrome::Service.driver_path = ENV.fetch("CHROMEDRIVER_PATH", "/usr/bin/chromedriver")
+
+chrome_options = Selenium::WebDriver::Chrome::Options.new
+chrome_options.binary = ENV.fetch("CHROMIUM_PATH", "/usr/bin/chromium")
+chrome_options.add_argument("--headless=new")
+chrome_options.add_argument("--no-sandbox")
+chrome_options.add_argument("--disable-dev-shm-usage")
+chrome_options.add_argument("--disable-gpu")
+chrome_options.add_argument("--window-size=#{options[:width]},#{options[:height]}")
+chrome_options.add_argument("--force-device-scale-factor=1")
+chrome_options.add_argument("--hide-scrollbars")
+
+driver = Selenium::WebDriver.for(:chrome, options: chrome_options)
+
+def sign_in(driver, host, email, password, admin:)
+  url = "#{host}#{admin ? '/admin/login' : '/login'}"
+  warn "signing in at #{url.inspect} as #{email.inspect}"
+  driver.navigate.to(url)
+  driver.find_element(name: "email").send_keys(email)
+  driver.find_element(name: "password").send_keys(password)
+  driver.find_element(css: "input[type=submit], button[type=submit]").click
+
+  # Wait for the sign-in to actually land rather than guessing at a delay, so a
+  # failed login is reported instead of silently photographing the login page.
+  wait = Selenium::WebDriver::Wait.new(timeout: 15)
+  wait.until { !driver.current_url.include?("/login") }
+rescue Selenium::WebDriver::Error::TimeoutError
+  abort "could not sign in as #{email} -- still on #{driver.current_url}"
+end
+
+begin
+  unless options[:anonymous]
+    sign_in(driver, options[:host], options[:email], options[:password], admin: options[:admin])
+  end
+
+  paths.each do |path|
+    url = "#{options[:host]}#{path}"
+    warn "opening #{url.inspect}"
+    driver.navigate.to(url)
+    sleep 1.2
+
+    if options[:full]
+      # Grow the window to the document height so nothing is cut off.
+      height = driver.execute_script("return document.body.parentNode.scrollHeight")
+      driver.manage.window.resize_to(options[:width], [ height + 80, 6000 ].min)
+      sleep 0.5
+    end
+
+    name = path.gsub(%r{[^a-zA-Z0-9]+}, "-").sub(/\A-/, "").sub(/-\z/, "")
+    name = "root" if name.empty?
+    file = File.join(output_dir, "#{name}-#{options[:width]}.png")
+
+    driver.save_screenshot(file)
+    title = driver.title
+    puts "#{file}  (#{title})"
+  end
+rescue Selenium::WebDriver::Error::WebDriverError => e
+  # Chromium's own stack dumps are pages of hex and hide the actual cause.
+  warn "screenshot failed: #{e.class}"
+  warn e.message.to_s.lines.reject { |line| line.match?(/0x[0-9a-f]{6,}/) }.first(6).join
+  exit 1
+ensure
+  driver&.quit
+end

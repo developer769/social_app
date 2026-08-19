@@ -14,27 +14,35 @@
 
 <%= render "shared/flash" %>
 
-<div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
+<%# The rail sits alongside the calendar from 1024px. It previously waited for
+    1280px, so an ordinary laptop showed a full-width calendar with the rail
+    stranded underneath it. %>
+<div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_19rem] xl:grid-cols-[minmax(0,1fr)_21rem]">
   <div class="min-w-0">
     <%= render "calendar/toolbar", calendar: @calendar %>
 
+    <%# The grid always renders. An empty month is still a month, and swapping
+        the whole calendar for an empty-state card removed the one thing this
+        page exists to show. %>
+    <div class="hidden lg:block">
+      <%= render "calendar/#{@calendar.view == 'agenda' ? 'agenda' : @calendar.view}", calendar: @calendar %>
+    </div>
+
+    <%# A month grid cannot be read on a phone, so small screens get the agenda
+        rather than a horizontally scrolling grid (spec 19). %>
+    <div class="lg:hidden">
+      <%= render "calendar/agenda", calendar: @calendar %>
+    </div>
+
     <% if @calendar.posts.empty? %>
-      <%= render EmptyStateComponent.new(
-            title: calendar_empty_title(@calendar),
-            body: calendar_empty_body(@calendar)) do |state| %>
-        <% state.with_action do %>
-          <%= link_to "Create your first post", new_workspace_post_path(workspace_slug: current_workspace.slug),
-                class: "inline-flex h-11 items-center rounded-control bg-primary px-5 text-sm font-medium text-primary-contrast hover:bg-primary-hover" %>
-        <% end %>
-      <% end %>
-    <% else %>
-      <%# The month grid is unreadable on a phone, so small screens get the
-          agenda instead of a horizontally scrolling grid (spec 19). %>
-      <div class="hidden lg:block">
-        <%= render "calendar/#{@calendar.view == 'agenda' ? 'agenda' : @calendar.view}", calendar: @calendar %>
-      </div>
-      <div class="lg:hidden">
-        <%= render "calendar/agenda", calendar: @calendar %>
+      <div class="mt-4 flex flex-wrap items-center justify-between gap-4 rounded-card border border-dashed border-border-strong bg-surface px-5 py-4">
+        <div class="min-w-0">
+          <p class="text-sm font-medium text-heading"><%= calendar_empty_title(@calendar) %></p>
+          <p class="mt-0.5 text-sm text-muted"><%= calendar_empty_body(@calendar) %></p>
+        </div>
+
+        <%= link_to "Create your first post", new_workspace_post_path(workspace_slug: current_workspace.slug),
+              class: "flex h-10 shrink-0 items-center rounded-control bg-primary px-4 text-sm font-medium text-primary-contrast hover:bg-primary-hover" %>
       </div>
     <% end %>
   </div>

@@ -82,6 +82,10 @@ group :development, :test do
 end
 
 group :development do
+  # Drives headless Chromium for bin/screenshot, so a rendered page can be
+  # looked at during development rather than inferred from ERB.
+  gem "selenium-webdriver"
+
   # N+1 detection for the dashboard and calendar queries
   gem "bullet", "~> 8.0"
 
@@ -95,5 +99,4 @@ group :test do
   gem "shoulda-matchers", "~> 6.4"
   gem "rspec-sidekiq", "~> 5.1"
   gem "capybara"
-  gem "selenium-webdriver"
 end
