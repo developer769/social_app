@@ -1,81 +1,123 @@
-<% content_for :title, "Gallery styles" %>
+<% photos = @format == "image" %>
+<% content_for :title, photos ? "Photo styles" : "Video styles" %>
 
 <header class="mb-6 flex flex-wrap items-start justify-between gap-4">
   <div>
-    <h1 class="font-display text-3xl font-normal">Gallery styles</h1>
+    <h1 class="font-display text-3xl font-normal"><%= photos ? "Photo styles" : "Video styles" %></h1>
     <p class="mt-1.5 text-sm text-muted">
-      What every business sees in their gallery. Published styles are live immediately.
+      <% if photos %>
+        Still styles. They reach every platform except YouTube and TikTok, which take video only.
+      <% else %>
+        Video styles. They reach every platform except Google Business Profile, which takes no video.
+      <% end %>
     </p>
   </div>
 
-  <%= link_to "Add a style", new_admin_template_path,
+  <%= link_to "Add a #{photos ? 'photo' : 'video'} style",
+        new_admin_template_path(media_format: @format),
         class: "flex h-11 items-center rounded-control bg-primary px-5 text-sm font-medium text-primary-contrast hover:bg-primary-hover" %>
 </header>
 
-<nav class="mb-6 inline-flex rounded-control border border-border bg-surface p-1" aria-label="Filter styles">
-  <% [["published", "Published"], ["drafts", "Drafts"], ["retired", "Retired"]].each do |value, label| %>
-    <% active = @scope == value %>
-    <%= link_to admin_templates_path(scope: value),
+<%# Photos and videos are separate catalogues. The format is the primary axis
+    because curating them is different work, and the customer gallery splits
+    them the same way. %>
+<nav class="mb-4 inline-flex rounded-control border border-border bg-surface p-1" aria-label="Media format">
+  <% [["image", "Photos"], ["video", "Videos"]].each do |value, label| %>
+    <% active = @format == value %>
+    <%= link_to admin_templates_path(media_format: value, scope: @scope),
           aria: { current: (active ? "page" : nil) },
           class: class_names(
-            "rounded-[0.4rem] px-4 py-2 text-sm transition-colors",
+            "flex items-center gap-2 rounded-[0.4rem] px-6 py-2 text-sm transition-colors",
             "bg-primary font-medium text-primary-contrast" => active,
             "text-body hover:bg-surface-sunk" => !active
           ) do %>
       <%= label %>
-      <span class="<%= active ? "text-primary-contrast/70" : "text-muted" %>">
-        <%= @counts[value] %>
+      <span class="<%= active ? "text-primary-contrast/70" : "text-muted" %> tabular-nums">
+        <%= @format_counts[value] %>
       </span>
+    <% end %>
+  <% end %>
+</nav>
+
+<nav class="mb-6 flex flex-wrap gap-2" aria-label="Publication state">
+  <% [["published", "Published"], ["drafts", "Drafts"], ["retired", "Retired"]].each do |value, label| %>
+    <% active = @scope == value %>
+    <%= link_to admin_templates_path(media_format: @format, scope: value),
+          aria: { current: (active ? "page" : nil) },
+          class: class_names(
+            "rounded-pill border px-3.5 py-1.5 text-xs font-medium transition-colors",
+            "border-primary bg-lavender-soft text-primary" => active,
+            "border-border bg-surface text-body hover:border-border-strong" => !active
+          ) do %>
+      <%= label %> <span class="tabular-nums"><%= @counts[value] %></span>
     <% end %>
   <% end %>
 </nav>
 
 <% if @templates.empty? %>
   <%= render EmptyStateComponent.new(
-        title: "Nothing here yet",
-        body: @scope == "published" ? "Add a style and publish it to put it in every gallery." : "Nothing in this state.") %>
+        title: empty_state_title(@format, @scope),
+        body: empty_state_body(@format, @scope)) do |state| %>
+    <% if @scope == "published" %>
+      <% state.with_action do %>
+        <%= link_to "Add a #{photos ? 'photo' : 'video'} style",
+              new_admin_template_path(media_format: @format),
+              class: "inline-flex h-11 items-center rounded-control bg-primary px-5 text-sm font-medium text-primary-contrast hover:bg-primary-hover" %>
+      <% end %>
+    <% end %>
+  <% end %>
 <% else %>
-  <ul class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+  <ul class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
     <% @templates.each do |template| %>
       <li>
         <article class="flex h-full flex-col overflow-hidden rounded-card border border-border bg-surface">
-          <div class="relative aspect-4/5 bg-surface-sunk">
+          <div class="relative <%= photos ? 'aspect-4/5' : 'aspect-9/16' %> bg-surface-sunk">
             <% if template.preview.attached? %>
-              <%= image_tag template.preview.variant(resize_to_fill: [600, 750]),
+              <%= image_tag template.preview.variant(resize_to_fill: [600, photos ? 750 : 1066]),
                     alt: "Preview of #{template.name}",
                     class: "h-full w-full object-cover" %>
             <% else %>
-              <span class="flex h-full items-center justify-center text-xs text-muted">No preview yet</span>
+              <span class="flex h-full items-center justify-center px-3 text-center text-xs text-muted">
+                No preview yet
+              </span>
             <% end %>
 
             <div class="absolute left-3 top-3 flex flex-wrap gap-1.5">
-              <%= render StatusBadgeComponent.new(
-                    label: template.format_video? ? "Video" : "Photo",
-                    tone: :info) %>
+              <% if template.format_video? && template.duration_label %>
+                <span class="rounded-control bg-heading/80 px-2 py-1 text-[11px] font-medium text-white tabular-nums">
+                  <%= template.duration_label %>
+                </span>
+              <% end %>
               <% if template.premium? %>
                 <%= render StatusBadgeComponent.new(label: "Premium", tone: :highlight) %>
               <% end %>
             </div>
+
+            <% if template.format_video? && template.example_video? %>
+              <span aria-hidden="true"
+                    class="absolute inset-0 flex items-center justify-center">
+                <span class="flex h-11 w-11 items-center justify-center rounded-full bg-white/85 text-heading">&#9654;</span>
+              </span>
+            <% end %>
           </div>
 
           <div class="flex flex-1 flex-col p-4">
             <p class="font-medium text-heading"><%= template.name %></p>
-            <p class="mt-0.5 text-xs text-muted">
-              <%= template.category_label %>
-              <% if template.format_video? && template.duration_label %>
-                &middot; <%= template.duration_label %>
-              <% end %>
-            </p>
+            <p class="mt-0.5 text-xs text-muted"><%= template.category_label %></p>
 
             <p class="mt-2 text-xs text-muted">
               <% if template.retired? %>
                 Retired <%= time_ago_in_words(template.retired_at) %> ago
               <% elsif template.published? %>
-                Published <%= time_ago_in_words(template.published_at) %> ago<%= " by #{template.published_by.name}" if template.published_by %>
+                Live &middot; published <%= time_ago_in_words(template.published_at) %> ago
               <% else %>
                 Draft &mdash; not visible to customers
               <% end %>
             </p>
+
+            <% if template.format_video? && !template.example_video? %>
+              <p class="mt-1 text-xs text-muted">No example clip</p>
+            <% end %>
 
             <div class="mt-auto pt-4">
               <%= link_to "Edit", edit_admin_template_path(template),

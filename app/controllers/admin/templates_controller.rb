@@ -1,21 +1,28 @@
 module Admin
   class TemplatesController < BaseController
+    FORMATS = %w[image video].freeze
+    SCOPES = %w[published drafts retired].freeze
+
     before_action :set_template, only: %i[edit update publish unpublish retire]
+    before_action :set_filters, only: %i[index]
 
     def index
-      @scope = params[:scope].presence_in(%w[published drafts retired]) || "published"
-      @templates = filtered_scope.includes(:published_by).order(updated_at: :desc)
-      @counts = {
-        "published" => Template.published.count,
-        "drafts" => Template.where(draft: true).count,
-        "retired" => Template.where.not(retired_at: nil).count
-      }
+      @templates = filtered.includes(:published_by).order(position: :asc, updated_at: :desc)
+      @counts = counts_for(@format)
+      @format_counts = FORMATS.index_with { |format| Template.where(media_format: format).count }
     end
 
     def new
       # New styles start as drafts: uploading is not publishing, and a
       # half-finished row must never reach a customer's gallery.
-      @template = Template.new(draft: true, media_format: "image", aspect_ratio: "4:5")
+      format = params[:media_format].presence_in(FORMATS) || "image"
+
+      @template = Template.new(
+        draft: true,
+        media_format: format,
+        aspect_ratio: format == "video" ? "9:16" : "4:5",
+        duration_seconds: (15 if format == "video")
+      )
     end
 
     def create
@@ -61,7 +68,7 @@ module Admin
     def retire
       @template.retire!
       record_staff_event("template.retired", auditable: @template, metadata: { name: @template.name })
-      redirect_to admin_templates_path(scope: "retired"),
+      redirect_to admin_templates_path(media_format: @template.media_format, scope: "retired"),
         notice: "#{@template.name} is retired. Posts already made with it are unaffected."
     end
 
@@ -69,11 +76,28 @@ module Admin
 
     def set_template = @template = Template.find(params[:id])
 
-    def filtered_scope
-      case @scope
-      when "drafts" then Template.where(draft: true)
-      when "retired" then Template.where.not(retired_at: nil)
-      else Template.published
+    def set_filters
+      @format = params[:media_format].presence_in(FORMATS) || "image"
+      @scope = params[:scope].presence_in(SCOPES) || "published"
+    end
+
+    # Photos and videos are curated as separate catalogues, because they are
+    # different work: a video style needs a duration and an optional example
+    # clip, and the two reach different platforms.
+    def filtered
+      by_state(Template.where(media_format: @format), @scope)
+    end
+
+    def counts_for(format)
+      scoped = Template.where(media_format: format)
+      SCOPES.index_with { |scope| by_state(scoped, scope).count }
+    end
+
+    def by_state(scope, state)
+      case state
+      when "drafts" then scope.where(draft: true, retired_at: nil)
+      when "retired" then scope.where.not(retired_at: nil)
+      else scope.published
       end
     end
 

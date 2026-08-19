@@ -138,6 +138,63 @@ RSpec.describe "Admin templates" do
     end
   end
 
+  describe "the photo and video catalogues" do
+    let!(:photo) { create(:template, name: "A Photo Style") }
+    let!(:video) { create(:template, :video, name: "A Video Style") }
+
+    it "defaults to photos and shows no video styles" do
+      get admin_templates_path
+
+      expect(response.body).to include("Photo styles", "A Photo Style")
+      expect(response.body).not_to include("A Video Style")
+    end
+
+    it "shows only video styles on the video catalogue" do
+      get admin_templates_path(media_format: "video")
+
+      expect(response.body).to include("Video styles", "A Video Style")
+      expect(response.body).not_to include("A Photo Style")
+    end
+
+    it "keeps the state filter within the chosen format" do
+      create(:template, :video, name: "A Video Draft", draft: true, published_at: nil)
+
+      get admin_templates_path(media_format: "video", scope: "drafts")
+
+      expect(response.body).to include("A Video Draft")
+      expect(response.body).not_to include("A Video Style")
+      expect(response.body).not_to include("A Photo Style")
+    end
+
+    it "falls back to photos when the format is not recognised" do
+      get admin_templates_path(media_format: "hologram")
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Photo styles")
+    end
+
+    it "starts a new video style with a sensible shape and duration already set" do
+      get new_admin_template_path(media_format: "video")
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Add a video style")
+    end
+
+    it "names the platforms each format cannot reach, read from real capabilities" do
+      get admin_templates_path(media_format: "image")
+      expect(response.body).to include("except YouTube and TikTok")
+
+      get admin_templates_path(media_format: "video")
+      expect(response.body).to include("except Google Business Profile")
+    end
+
+    it "returns to the catalogue the style belongs to after retiring it" do
+      post retire_admin_template_path(video)
+
+      expect(response).to redirect_to(admin_templates_path(media_format: "video", scope: "retired"))
+    end
+  end
+
   describe "the customer gallery" do
     it "shows only published, live styles" do
       published = create(:template, draft: false, published_at: Time.current)

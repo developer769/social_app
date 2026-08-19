@@ -2,7 +2,8 @@
 
 <header class="mb-6 flex flex-wrap items-start justify-between gap-4">
   <div>
-    <%= link_to "← Back to styles", admin_templates_path,
+    <%= link_to "← Back to #{@template.format_video? ? 'video' : 'photo'} styles",
+          admin_templates_path(media_format: @template.media_format),
           class: "text-sm text-muted underline underline-offset-4 hover:text-heading" %>
     <h1 class="mt-3 font-display text-3xl font-normal"><%= @template.name %></h1>
 
