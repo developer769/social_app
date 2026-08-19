@@ -1,0 +1,29 @@
+<%# The list view. Also what small screens get instead of a month grid, which
+    cannot be read on a phone (spec 19). %>
+<div class="space-y-5">
+  <% days_with_posts = calendar.days.select { |day| calendar.posts_by_date[day].present? } %>
+
+  <% if days_with_posts.empty? %>
+    <p class="rounded-card border border-border bg-surface px-5 py-6 text-sm text-muted">
+      Nothing scheduled in this period.
+    </p>
+  <% else %>
+    <% days_with_posts.each do |day| %>
+      <section>
+        <h2 class="mb-2 flex items-baseline gap-2">
+          <span class="font-display text-lg text-heading"><%= day.strftime("%-d %B") %></span>
+          <span class="text-xs text-muted"><%= day.strftime("%A") %></span>
+          <% if day == calendar.zone.today %>
+            <span class="rounded-pill bg-primary px-2 py-0.5 text-[11px] font-medium text-primary-contrast">Today</span>
+          <% end %>
+        </h2>
+
+        <ul class="space-y-2">
+          <% calendar.posts_by_date[day].each do |post| %>
+            <li><%= render "calendar/event", post: post %></li>
+          <% end %>
+        </ul>
+      </section>
+    <% end %>
+  <% end %>
+</div>

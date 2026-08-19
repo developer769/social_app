@@ -1,0 +1,17 @@
+<div class="rounded-card border border-border bg-surface p-5">
+  <h2 class="font-display text-xl font-normal">
+    <%= calendar.anchor.strftime("%A %-d %B") %>
+  </h2>
+
+  <% posts = calendar.posts_by_date[calendar.anchor] || [] %>
+
+  <% if posts.empty? %>
+    <p class="mt-4 text-sm text-muted">Nothing scheduled on this day.</p>
+  <% else %>
+    <ul class="mt-4 space-y-2.5">
+      <% posts.each do |post| %>
+        <li><%= render "calendar/event", post: post %></li>
+      <% end %>
+    </ul>
+  <% end %>
+</div>

@@ -5,7 +5,7 @@ module Navigation
     { key: :home,      label: "Home",      icon: "home",      route: :workspace_root_path },
     { key: :gallery,   label: "Gallery",   icon: "gallery",   route: nil },
     { key: :create,    label: "Create",    icon: "create",    route: nil },
-    { key: :calendar,  label: "Calendar",  icon: "calendar",  route: nil },
+    { key: :calendar,  label: "Calendar",  icon: "calendar",  route: :workspace_calendar_path },
     { key: :analytics, label: "Analytics", icon: "analytics", route: nil },
     { key: :inbox,     label: "Inbox",     icon: "inbox",     route: nil },
     { key: :ads,       label: "Ads",       icon: "ads",       route: nil },

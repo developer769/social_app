@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_19_150000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_19_160000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
@@ -126,6 +126,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_19_150000) do
     t.check_constraint "tone::text = ANY (ARRAY['friendly'::character varying, 'elegant'::character varying, 'playful'::character varying, 'professional'::character varying, 'premium'::character varying, 'educational'::character varying, 'bold'::character varying, 'minimal'::character varying]::text[])", name: "brand_tones_tone_is_known"
   end
 
+  create_table "media_assets", force: :cascade do |t|
+    t.bigint "byte_size"
+    t.string "checksum"
+    t.string "content_type"
+    t.datetime "created_at", null: false
+    t.integer "duration_ms"
+    t.integer "height"
+    t.string "kind", null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.string "origin", default: "upload", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "uploaded_by_id"
+    t.integer "width"
+    t.bigint "workspace_id", null: false
+    t.index ["uploaded_by_id"], name: "index_media_assets_on_uploaded_by_id"
+    t.index ["workspace_id", "checksum"], name: "index_media_assets_on_workspace_id_and_checksum"
+    t.index ["workspace_id", "created_at"], name: "index_media_assets_on_workspace_id_and_created_at", order: { created_at: :desc }
+    t.index ["workspace_id"], name: "index_media_assets_on_workspace_id"
+    t.check_constraint "kind::text = ANY (ARRAY['image'::character varying, 'video'::character varying]::text[])", name: "media_assets_kind_is_known"
+    t.check_constraint "origin::text = ANY (ARRAY['upload'::character varying, 'generated'::character varying]::text[])", name: "media_assets_origin_is_known"
+  end
+
   create_table "plan_entitlements", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "display_label", null: false
@@ -155,6 +177,72 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_19_150000) do
     t.check_constraint "\"interval\"::text = ANY (ARRAY['month'::character varying, 'year'::character varying]::text[])", name: "plans_interval_is_known"
     t.check_constraint "char_length(currency::text) = 3", name: "plans_currency_is_iso4217"
     t.check_constraint "price_minor >= 0", name: "plans_price_not_negative"
+  end
+
+  create_table "post_media", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "media_asset_id", null: false
+    t.integer "position", default: 0, null: false
+    t.bigint "post_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["media_asset_id"], name: "index_post_media_on_media_asset_id"
+    t.index ["post_id", "position"], name: "index_post_media_on_post_id_and_position"
+    t.index ["post_id"], name: "index_post_media_on_post_id"
+  end
+
+  create_table "post_targets", force: :cascade do |t|
+    t.integer "attempt_count", default: 0, null: false
+    t.text "caption_override"
+    t.datetime "created_at", null: false
+    t.string "error_code"
+    t.string "error_message"
+    t.string "idempotency_key", null: false
+    t.string "permalink"
+    t.bigint "post_id", null: false
+    t.string "provider", null: false
+    t.datetime "published_at"
+    t.string "remote_post_id"
+    t.bigint "social_account_id", null: false
+    t.string "status", default: "pending", null: false
+    t.datetime "updated_at", null: false
+    t.index ["idempotency_key"], name: "index_post_targets_on_idempotency_key", unique: true
+    t.index ["post_id", "social_account_id"], name: "index_post_targets_on_post_id_and_social_account_id", unique: true
+    t.index ["post_id"], name: "index_post_targets_on_post_id"
+    t.index ["social_account_id"], name: "index_post_targets_on_social_account_id"
+    t.index ["status", "published_at"], name: "index_post_targets_on_status_and_published_at"
+    t.check_constraint "provider::text = ANY (ARRAY['instagram'::character varying, 'facebook'::character varying, 'linkedin'::character varying, 'youtube'::character varying, 'tiktok'::character varying, 'google_business'::character varying, 'x'::character varying]::text[])", name: "post_targets_provider_is_known"
+    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying, 'validating'::character varying, 'publishing'::character varying, 'published'::character varying, 'failed'::character varying, 'skipped'::character varying]::text[])", name: "post_targets_status_is_known"
+  end
+
+  create_table "posts", force: :cascade do |t|
+    t.datetime "approved_at"
+    t.bigint "approved_by_id"
+    t.string "call_to_action"
+    t.text "caption"
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id"
+    t.text "first_comment"
+    t.string "hashtags", default: [], null: false, array: true
+    t.string "link_url"
+    t.string "location_name"
+    t.datetime "published_at"
+    t.datetime "scheduled_at"
+    t.string "scheduled_timezone"
+    t.string "status", default: "draft", null: false
+    t.bigint "subject_id"
+    t.string "subject_type"
+    t.bigint "template_id"
+    t.datetime "updated_at", null: false
+    t.bigint "workspace_id", null: false
+    t.index ["approved_by_id"], name: "index_posts_on_approved_by_id"
+    t.index ["created_by_id"], name: "index_posts_on_created_by_id"
+    t.index ["subject_type", "subject_id"], name: "index_posts_on_subject"
+    t.index ["template_id"], name: "index_posts_on_template_id"
+    t.index ["workspace_id", "scheduled_at"], name: "index_posts_on_workspace_id_and_scheduled_at"
+    t.index ["workspace_id", "status"], name: "index_posts_on_workspace_id_and_status"
+    t.index ["workspace_id"], name: "index_posts_on_workspace_id"
+    t.check_constraint "status::text <> 'scheduled'::text OR scheduled_at IS NOT NULL AND scheduled_timezone IS NOT NULL", name: "posts_scheduled_has_a_time"
+    t.check_constraint "status::text = ANY (ARRAY['draft'::character varying, 'awaiting_approval'::character varying, 'approved'::character varying, 'scheduled'::character varying, 'publishing'::character varying, 'published'::character varying, 'failed'::character varying, 'cancelled'::character varying]::text[])", name: "posts_status_is_known"
   end
 
   create_table "products", force: :cascade do |t|
@@ -478,7 +566,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_19_150000) do
   add_foreign_key "brand_goals", "workspaces"
   add_foreign_key "brand_profiles", "workspaces"
   add_foreign_key "brand_tones", "workspaces"
+  add_foreign_key "media_assets", "users", column: "uploaded_by_id"
+  add_foreign_key "media_assets", "workspaces"
   add_foreign_key "plan_entitlements", "plans"
+  add_foreign_key "post_media", "media_assets"
+  add_foreign_key "post_media", "posts"
+  add_foreign_key "post_targets", "posts"
+  add_foreign_key "post_targets", "social_accounts"
+  add_foreign_key "posts", "templates"
+  add_foreign_key "posts", "users", column: "approved_by_id"
+  add_foreign_key "posts", "users", column: "created_by_id"
+  add_foreign_key "posts", "workspaces"
   add_foreign_key "products", "workspaces"
   add_foreign_key "services", "workspaces"
   add_foreign_key "sessions", "users"

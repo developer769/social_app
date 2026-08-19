@@ -1,0 +1,75 @@
+<%
+  slug = { workspace_slug: current_workspace.slug }
+  base = ->(**overrides) {
+    workspace_calendar_path(**slug, view: calendar.view, date: calendar.anchor.to_s,
+                            provider: calendar.provider, status: calendar.status, **overrides)
+  }
+%>
+
+<div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+  <nav class="inline-flex rounded-control border border-border bg-surface p-1" aria-label="Calendar view">
+    <% [["month", "Month"], ["week", "Week"], ["day", "Day"], ["agenda", "Agenda"]].each do |value, label| %>
+      <% active = calendar.view == value %>
+      <%= link_to base.call(view: value),
+            aria: { current: (active ? "page" : nil) },
+            class: class_names(
+              "rounded-[0.4rem] px-4 py-2 text-sm transition-colors",
+              "bg-primary font-medium text-primary-contrast" => active,
+              "text-body hover:bg-surface-sunk" => !active
+            ) do %>
+        <%= label %>
+      <% end %>
+    <% end %>
+  </nav>
+
+  <div class="flex items-center gap-2">
+    <%= link_to base.call(date: calendar.previous_date.to_s),
+          aria: { label: "Previous #{calendar.view}" },
+          class: "flex h-10 w-10 items-center justify-center rounded-control border border-border text-body hover:bg-surface-sunk" do %>
+      <span aria-hidden="true">&lsaquo;</span>
+    <% end %>
+
+    <p class="min-w-40 text-center font-display text-lg text-heading">
+      <%= calendar.period.title(calendar.zone) %>
+    </p>
+
+    <%= link_to base.call(date: calendar.next_date.to_s),
+          aria: { label: "Next #{calendar.view}" },
+          class: "flex h-10 w-10 items-center justify-center rounded-control border border-border text-body hover:bg-surface-sunk" do %>
+      <span aria-hidden="true">&rsaquo;</span>
+    <% end %>
+
+    <%= link_to "Today", base.call(date: calendar.zone.today.to_s),
+          class: "flex h-10 items-center rounded-control border border-border px-3.5 text-sm font-medium text-body hover:bg-surface-sunk" %>
+  </div>
+</div>
+
+<div class="mb-5 flex flex-wrap items-center gap-2">
+  <span class="text-xs font-medium uppercase tracking-wide text-muted">Platforms</span>
+
+  <%= link_to "All", base.call(provider: nil),
+        class: class_names(
+          "rounded-pill border px-3.5 py-1.5 text-xs font-medium",
+          "border-primary bg-primary text-primary-contrast" => calendar.provider.nil?,
+          "border-border bg-surface text-body hover:border-border-strong" => calendar.provider.present?
+        ) %>
+
+  <% if @connected_providers.empty? %>
+    <span class="text-xs text-muted">
+      No accounts connected yet, so nothing can be filtered by platform.
+    </span>
+  <% else %>
+    <% @connected_providers.each do |provider| %>
+      <% active = calendar.provider == provider %>
+      <%= link_to base.call(provider: provider),
+            class: class_names(
+              "flex items-center gap-1.5 rounded-pill border px-3 py-1.5 text-xs font-medium",
+              "border-primary bg-lavender-soft text-primary" => active,
+              "border-border bg-surface text-body hover:border-border-strong" => !active
+            ) do %>
+        <%= render PlatformBadgeComponent.new(provider: provider, size: :small) %>
+        <%= SocialProvider::Catalog.find(provider)&.name %>
+      <% end %>
+    <% end %>
+  <% end %>
+</div>

@@ -1,0 +1,31 @@
+<%
+  compact = local_assigns.fetch(:compact, false)
+  time = post.scheduled_at_local&.strftime("%-l:%M %p")
+%>
+<article class="<%= compact ? "rounded-[0.35rem] border border-border bg-background px-1.5 py-1" : "rounded-control border border-border bg-background p-3" %>">
+  <div class="flex items-start gap-2">
+    <% if post.primary_media&.file&.attached? && !compact %>
+      <%= image_tag post.primary_media.file.variant(resize_to_fill: [80, 80]), alt: "",
+            class: "h-10 w-10 shrink-0 rounded-[0.35rem] object-cover" %>
+    <% end %>
+
+    <div class="min-w-0 flex-1">
+      <p class="<%= compact ? "truncate text-[11px] font-medium text-heading" : "text-sm font-medium text-heading" %>">
+        <%= post.caption.presence&.truncate(compact ? 24 : 60) || "Untitled post" %>
+      </p>
+
+      <p class="<%= compact ? "truncate text-[10px] text-muted" : "mt-0.5 text-xs text-muted" %>">
+        <%= time %><%= " · #{post.status_label}" unless compact %>
+      </p>
+
+      <% unless compact %>
+        <div class="mt-2 flex flex-wrap items-center gap-1.5">
+          <% post.providers.each do |provider| %>
+            <%= render PlatformBadgeComponent.new(provider: provider, size: :small) %>
+          <% end %>
+          <%= render StatusBadgeComponent.new(label: post.status_label, tone: post.status_tone) %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</article>

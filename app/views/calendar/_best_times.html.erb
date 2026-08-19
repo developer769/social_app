@@ -1,0 +1,34 @@
+<%#
+  The design shows a best-time-to-post panel with specific windows per platform,
+  described as "based on your audience activity". That is a measurement of
+  published performance, and none exists until a real account has posted
+  history. Showing invented windows here would be exactly the fabricated
+  performance claim the specification forbids (spec 22, 27), so the panel says
+  what it needs instead.
+%>
+<% accounts = workspace.social_accounts.connected %>
+<% simulated = accounts.any? && accounts.all?(&:mocked?) %>
+
+<section class="rounded-card border border-border bg-blue-soft p-5">
+  <h2 class="font-display text-lg font-normal">Best time to post</h2>
+
+  <% if accounts.empty? %>
+    <p class="mt-2 text-sm text-body">
+      Prachar works this out from when your own audience actually engages.
+      Connect an account and it will appear here once there is enough history.
+    </p>
+    <%= link_to "Connect an account",
+          workspace_onboarding_connections_path(workspace_slug: workspace.slug),
+          class: "mt-4 inline-flex h-10 items-center rounded-control bg-primary px-4 text-sm font-medium text-primary-contrast hover:bg-primary-hover" %>
+  <% elsif simulated %>
+    <p class="mt-2 text-sm text-body">
+      Your connected accounts are simulated, so there is no real posting history to read.
+      This fills in once a live account has published for a while.
+    </p>
+  <% else %>
+    <p class="mt-2 text-sm text-body">
+      Not enough published history yet to identify your best times.
+      Keep posting and this will fill in.
+    </p>
+  <% end %>
+</section>

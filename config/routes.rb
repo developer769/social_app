@@ -23,6 +23,16 @@ Rails.application.routes.draw do
 
     # Resumable onboarding (spec 22). /onboarding redirects to wherever the
     # owner stopped; each step has its own addressable URL.
+    get "calendar", to: "calendar#show", as: :calendar
+
+    resources :posts, except: %i[index] do
+      member do
+        patch :schedule
+        patch :unschedule
+        post  :cancel
+      end
+    end
+
     get "onboarding", to: "onboarding/resume#show", as: :onboarding
 
     scope "onboarding", as: :onboarding do

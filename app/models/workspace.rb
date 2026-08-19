@@ -12,6 +12,8 @@ class Workspace < ApplicationRecord
   has_many :brand_analyses, dependent: :destroy
   has_many :social_health_scores, dependent: :destroy
   has_one :subscription, dependent: :destroy
+  has_many :media_assets, dependent: :destroy
+  has_many :posts, dependent: :destroy
 
   has_many :workspace_memberships, dependent: :destroy
   has_many :members, through: :workspace_memberships, source: :user

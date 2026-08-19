@@ -1,0 +1,44 @@
+<section class="rounded-card border border-border bg-surface p-6">
+  <h2 class="font-display text-xl font-normal">Where it goes</h2>
+
+  <% if accounts.empty? %>
+    <p class="mt-2 text-sm text-body">
+      No accounts connected yet, so this can only be saved as a draft.
+    </p>
+    <%= link_to "Connect an account",
+          workspace_onboarding_connections_path(workspace_slug: current_workspace.slug),
+          class: "mt-4 inline-flex h-10 items-center rounded-control bg-primary px-4 text-sm font-medium text-primary-contrast hover:bg-primary-hover" %>
+  <% else %>
+    <%#
+      Accounts that cannot carry this post's media are shown disabled with the
+      reason, rather than hidden or silently dropped at publish time. Google
+      Business Profile cannot take video; YouTube and TikTok cannot take a
+      still (spec 30).
+    %>
+    <ul class="mt-4 space-y-2.5">
+      <% accounts.each do |account| %>
+        <% blocked = account_block_reason(account, post) %>
+        <li>
+          <label class="flex cursor-pointer items-start gap-3 rounded-control border px-3.5 py-3
+                        <%= blocked ? 'cursor-not-allowed border-border bg-background opacity-60' : 'border-border bg-background hover:border-border-strong' %>">
+            <%= check_box_tag "social_account_ids[]", account.id,
+                  selected_ids.include?(account.id),
+                  disabled: blocked.present?,
+                  id: "account_#{account.id}",
+                  class: "mt-0.5 h-4 w-4 shrink-0 accent-[var(--color-primary)]" %>
+
+            <span class="min-w-0 flex-1">
+              <span class="flex items-center gap-2">
+                <%= render PlatformBadgeComponent.new(provider: account.provider, size: :small) %>
+                <span class="text-sm font-medium text-heading"><%= account.provider_name %></span>
+              </span>
+              <span class="mt-0.5 block truncate text-xs text-muted">
+                <%= blocked || account.handle.presence || account.display_name %>
+              </span>
+            </span>
+          </label>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+</section>

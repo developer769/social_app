@@ -1,0 +1,57 @@
+<div class="overflow-hidden rounded-card border border-border bg-surface">
+  <table class="w-full table-fixed border-collapse">
+    <caption class="sr-only">
+      Scheduled posts for <%= calendar.period.title(calendar.zone) %>
+    </caption>
+    <thead>
+      <tr>
+        <% %w[Sun Mon Tue Wed Thu Fri Sat].each do |day| %>
+          <th scope="col" class="border-b border-border bg-surface-sunk py-2.5 text-xs font-semibold uppercase tracking-wide text-muted">
+            <%= day %>
+          </th>
+        <% end %>
+      </tr>
+    </thead>
+    <tbody>
+      <% calendar.days.each_slice(7) do |week| %>
+        <tr>
+          <% week.each do |day| %>
+            <%
+              in_month = day.month == calendar.anchor.month
+              today = day == calendar.zone.today
+              posts = calendar.posts_by_date[day] || []
+            %>
+            <td class="h-28 border-b border-r border-border align-top last:border-r-0 <%= "bg-background" unless in_month %>">
+              <div class="flex h-full flex-col p-1.5">
+                <span class="mb-1 flex items-center gap-1.5">
+                  <span class="<%= class_names(
+                        "flex h-6 w-6 items-center justify-center rounded-full text-xs tabular-nums",
+                        "bg-primary font-semibold text-primary-contrast" => today,
+                        "text-muted" => !today && !in_month,
+                        "text-heading" => !today && in_month) %>">
+                    <%= day.day %>
+                  </span>
+                </span>
+
+                <ul class="flex flex-1 flex-col gap-1 overflow-hidden">
+                  <% posts.first(2).each do |post| %>
+                    <li><%= render "calendar/event", post: post, compact: true %></li>
+                  <% end %>
+                  <% if posts.size > 2 %>
+                    <li>
+                      <%= link_to workspace_calendar_path(workspace_slug: current_workspace.slug,
+                                                          view: "day", date: day.to_s),
+                            class: "block px-1 text-[11px] text-primary underline underline-offset-2" do %>
+                        <%= posts.size - 2 %> more
+                      <% end %>
+                    </li>
+                  <% end %>
+                </ul>
+              </div>
+            </td>
+          <% end %>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

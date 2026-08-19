@@ -1,0 +1,24 @@
+<div class="overflow-x-auto rounded-card border border-border bg-surface">
+  <div class="grid min-w-[52rem] grid-cols-7">
+    <% calendar.days.each do |day| %>
+      <% posts = calendar.posts_by_date[day] || [] %>
+      <div class="border-r border-border last:border-r-0">
+        <div class="border-b border-border bg-surface-sunk px-3 py-2.5 text-center">
+          <p class="text-xs font-semibold uppercase tracking-wide text-muted"><%= day.strftime("%a") %></p>
+          <p class="<%= class_names(
+                "mx-auto mt-1 flex h-7 w-7 items-center justify-center rounded-full text-sm tabular-nums",
+                "bg-primary font-semibold text-primary-contrast" => day == calendar.zone.today,
+                "text-heading" => day != calendar.zone.today) %>">
+            <%= day.day %>
+          </p>
+        </div>
+
+        <ul class="min-h-40 space-y-1.5 p-2">
+          <% posts.each do |post| %>
+            <li><%= render "calendar/event", post: post, compact: true %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+  </div>
+</div>

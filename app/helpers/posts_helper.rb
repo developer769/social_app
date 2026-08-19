@@ -1,0 +1,43 @@
+module PostsHelper
+  # Why an account cannot carry this post, or nil when it can. Read from real
+  # provider capabilities rather than assumed, so the form never offers a
+  # destination the API would refuse (spec 30).
+  def account_block_reason(account, post)
+    capabilities = account.capabilities
+    return "This platform's capabilities are unknown." if capabilities.nil?
+
+    asset = post.post_media.first&.media_asset
+    return nil if asset.nil?
+
+    if asset.video? && !capabilities.publish_video?
+      "#{account.provider_name} cannot post video."
+    elsif asset.image? && !capabilities.publish_image?
+      "#{account.provider_name} only accepts video."
+    end
+  end
+
+  # The binding limit is the smallest across the chosen platforms, and it names
+  # which one, so a caption cut to 280 characters is explained by X rather than
+  # appearing arbitrary.
+  def caption_limit_hint(accounts, selected_ids)
+    chosen = accounts.select { |account| selected_ids.include?(account.id) }
+    return "Choose where this goes and the length limit will appear here." if chosen.empty?
+
+    binding_account = chosen.min_by { |account| account.capabilities&.max_caption_length || Float::INFINITY }
+    limit = binding_account.capabilities&.max_caption_length
+    return "No caption limit on the platforms you chose." if limit.nil?
+
+    "Up to #{number_with_delimiter(limit)} characters, the limit on #{binding_account.provider_name}."
+  end
+
+  def hashtag_limit_hint(accounts, selected_ids)
+    chosen = accounts.select { |account| selected_ids.include?(account.id) }
+    limits = chosen.filter_map { |account| account.capabilities&.max_hashtags }
+
+    # Only Instagram publishes a hashtag cap, so with no Instagram target there
+    # is no denominator to show and inventing one would be wrong.
+    return "Separate them with spaces." if limits.empty?
+
+    "Up to #{limits.min} hashtags, the limit on the platforms you chose."
+  end
+end

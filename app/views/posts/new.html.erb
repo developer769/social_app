@@ -1,0 +1,11 @@
+<% content_for :title, "New post" %>
+
+<header class="mb-6">
+  <%= link_to "← Back to calendar", workspace_calendar_path(workspace_slug: current_workspace.slug),
+        class: "text-sm text-muted underline underline-offset-4 hover:text-heading" %>
+  <h1 class="mt-3 font-display text-3xl font-normal sm:text-4xl">New post</h1>
+  <p class="mt-1.5 text-sm text-muted">Upload a picture or video, write the caption, and choose when it goes out.</p>
+</header>
+
+<%= render "shared/flash" %>
+<%= render "form", post: @post, accounts: @accounts %>

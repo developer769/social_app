@@ -1,0 +1,46 @@
+<% content_for :title, "Calendar" %>
+
+<header class="mb-6 flex flex-wrap items-start justify-between gap-4">
+  <div>
+    <h1 class="font-display text-3xl font-normal sm:text-4xl">Calendar</h1>
+    <p class="mt-1.5 text-sm text-muted">Plan, view and manage your scheduled content.</p>
+  </div>
+
+  <%= link_to new_workspace_post_path(workspace_slug: current_workspace.slug),
+        class: "flex h-11 items-center gap-2 rounded-control bg-primary px-5 text-sm font-medium text-primary-contrast hover:bg-primary-hover" do %>
+    <span aria-hidden="true">+</span> Create post
+  <% end %>
+</header>
+
+<%= render "shared/flash" %>
+
+<div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
+  <div class="min-w-0">
+    <%= render "calendar/toolbar", calendar: @calendar %>
+
+    <% if @calendar.posts.empty? %>
+      <%= render EmptyStateComponent.new(
+            title: calendar_empty_title(@calendar),
+            body: calendar_empty_body(@calendar)) do |state| %>
+        <% state.with_action do %>
+          <%= link_to "Create your first post", new_workspace_post_path(workspace_slug: current_workspace.slug),
+                class: "inline-flex h-11 items-center rounded-control bg-primary px-5 text-sm font-medium text-primary-contrast hover:bg-primary-hover" %>
+        <% end %>
+      <% end %>
+    <% else %>
+      <%# The month grid is unreadable on a phone, so small screens get the
+          agenda instead of a horizontally scrolling grid (spec 19). %>
+      <div class="hidden lg:block">
+        <%= render "calendar/#{@calendar.view == 'agenda' ? 'agenda' : @calendar.view}", calendar: @calendar %>
+      </div>
+      <div class="lg:hidden">
+        <%= render "calendar/agenda", calendar: @calendar %>
+      </div>
+    <% end %>
+  </div>
+
+  <aside class="space-y-5">
+    <%= render "calendar/upcoming", posts: @upcoming %>
+    <%= render "calendar/best_times", workspace: current_workspace %>
+  </aside>
+</div>

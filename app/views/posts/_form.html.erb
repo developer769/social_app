@@ -1,0 +1,123 @@
+<%
+  slug = { workspace_slug: current_workspace.slug }
+  url = post.persisted? ? workspace_post_path(**slug, id: post) : workspace_posts_path(**slug)
+  selected_ids = post.post_targets.map(&:social_account_id)
+  local = post.scheduled_at_local
+%>
+
+<%= form_with model: post, url: url, scope: :post,
+              html: { multipart: true, novalidate: true }, class: "space-y-6" do |form| %>
+
+  <%= render "shared/error_summary", record: post %>
+
+  <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+    <div class="space-y-6">
+      <section class="rounded-card border border-border bg-surface p-6">
+        <h2 class="font-display text-xl font-normal">Picture or video</h2>
+        <p class="mt-1 text-sm text-muted">
+          Upload what you want to post. Generating one from a style arrives with the gallery.
+        </p>
+
+        <% if post.primary_media&.file&.attached? %>
+          <div class="mt-4 flex items-center gap-4 rounded-control border border-border bg-background p-4">
+            <% if post.primary_media.image? %>
+              <%= image_tag post.primary_media.file.variant(resize_to_limit: [160, 160]),
+                    alt: "Current picture for this post",
+                    class: "h-20 w-20 rounded-control object-cover" %>
+            <% else %>
+              <span aria-hidden="true"
+                    class="flex h-20 w-20 items-center justify-center rounded-control bg-surface-sunk text-heading">&#9654;</span>
+            <% end %>
+            <div class="min-w-0 text-sm">
+              <p class="font-medium text-heading"><%= post.primary_media.kind.capitalize %> attached</p>
+              <p class="mt-0.5 text-xs text-muted">Upload another file below to replace it.</p>
+            </div>
+          </div>
+        <% end %>
+
+        <label for="post_media_file"
+               class="mt-4 flex cursor-pointer flex-col items-center justify-center rounded-control border border-dashed border-border-strong bg-background px-4 py-8 text-center hover:bg-surface-sunk">
+          <span class="text-sm text-body">
+            <%= post.primary_media ? "Replace the file" : "Drag and drop, or click to choose a file" %>
+          </span>
+          <span class="mt-1 text-xs text-muted">JPG, PNG or WebP up to 15MB &middot; MP4, MOV or WebM up to 200MB</span>
+          <%= form.file_field :media_file, id: "post_media_file",
+                accept: (MediaAsset::IMAGE_CONTENT_TYPES + MediaAsset::VIDEO_CONTENT_TYPES).join(","),
+                class: "sr-only" %>
+        </label>
+      </section>
+
+      <section class="rounded-card border border-border bg-surface p-6">
+        <h2 class="font-display text-xl font-normal">What it says</h2>
+
+        <div class="mt-4">
+          <%= form.label :caption, "Caption", class: "mb-1.5 block text-sm font-medium text-heading" %>
+          <%= form.text_area :caption, rows: 5,
+                aria: { describedby: "caption-limit" },
+                placeholder: "Indulge in layers of rich chocolate and silky ganache...",
+                class: "w-full rounded-control border border-border bg-background px-3.5 py-2.5 text-sm text-heading placeholder:text-muted focus:border-border-strong focus:outline-none" %>
+          <p id="caption-limit" class="mt-1.5 text-xs text-muted"><%= caption_limit_hint(accounts, selected_ids) %></p>
+        </div>
+
+        <div class="mt-5">
+          <%= form.label :hashtags, "Hashtags", class: "mb-1.5 block text-sm font-medium text-heading" %>
+          <%= form.text_field :hashtags, value: post.hashtags.join(" "),
+                placeholder: "#AnayaBakes #ChocolateCake",
+                class: "h-11 w-full rounded-control border border-border bg-background px-3.5 text-sm text-heading placeholder:text-muted focus:border-border-strong focus:outline-none" %>
+          <p class="mt-1.5 text-xs text-muted"><%= hashtag_limit_hint(accounts, selected_ids) %></p>
+        </div>
+
+        <div class="mt-5 grid gap-5 sm:grid-cols-2">
+          <%= render FormFieldComponent.new(form: form, attribute: :call_to_action,
+                label: "Call to action", hint: "Optional", placeholder: "Order now", maxlength: 30) %>
+
+          <%= render FormFieldComponent.new(form: form, attribute: :link_url, label: "Link",
+                hint: "Optional", prefix: "https://", prefix_size: :text,
+                placeholder: "anayabakes.com/order",
+                value: post.link_url&.sub(%r{\Ahttps?://}, "")) %>
+        </div>
+
+        <div class="mt-5">
+          <%= form.label :first_comment, "First comment", class: "mb-1.5 block text-sm font-medium text-heading" %>
+          <%= form.text_area :first_comment, rows: 2,
+                placeholder: "Optional. Posted straight after, where the platform allows it.",
+                class: "w-full rounded-control border border-border bg-background px-3.5 py-2.5 text-sm text-heading placeholder:text-muted focus:border-border-strong focus:outline-none" %>
+        </div>
+      </section>
+    </div>
+
+    <div class="space-y-6">
+      <%= render "posts/accounts", accounts: accounts, selected_ids: selected_ids, post: post %>
+
+      <section class="rounded-card border border-border bg-surface p-6">
+        <h2 class="font-display text-xl font-normal">When</h2>
+
+        <div class="mt-4 space-y-4">
+          <div>
+            <%= form.label :scheduled_date, "Date", class: "mb-1.5 block text-sm font-medium text-heading" %>
+            <%= form.date_field :scheduled_date, value: local&.to_date,
+                  min: Date.current,
+                  class: "h-11 w-full rounded-control border border-border bg-background px-3.5 text-sm text-heading focus:border-border-strong focus:outline-none" %>
+          </div>
+
+          <div>
+            <%= form.label :scheduled_time, "Time", class: "mb-1.5 block text-sm font-medium text-heading" %>
+            <%= form.time_field :scheduled_time, value: local&.strftime("%H:%M"),
+                  class: "h-11 w-full rounded-control border border-border bg-background px-3.5 text-sm text-heading focus:border-border-strong focus:outline-none" %>
+            <p class="mt-1.5 text-xs text-muted">
+              <%= current_workspace.timezone %> &mdash; your workspace time zone.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <div class="space-y-2.5">
+        <%= form.hidden_field :status, value: "scheduled", id: "post_status_scheduled" %>
+        <%= form.submit "Schedule it",
+              class: "h-11 w-full cursor-pointer rounded-control bg-primary px-5 text-sm font-medium text-primary-contrast hover:bg-primary-hover" %>
+        <%= form.submit "Save as draft", name: "post[status]", value: "draft",
+              class: "h-11 w-full cursor-pointer rounded-control border border-border bg-surface px-5 text-sm font-medium text-body hover:bg-surface-sunk" %>
+      </div>
+    </div>
+  </div>
+<% end %>
