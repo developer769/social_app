@@ -29,15 +29,28 @@
       <% Navigation.items.each do |item| %>
         <% active = Navigation.active?(item, request.path, current_workspace) %>
         <li>
-          <%= link_to Navigation.path_for(item, current_workspace),
-                aria: { current: (active ? "page" : nil) },
-                class: class_names(
-                  "flex items-center gap-3 rounded-control px-3 py-2.5 text-sm transition-colors",
-                  "bg-gold-soft font-medium text-heading" => active,
-                  "text-body hover:bg-surface-sunk" => !active
-                ) do %>
-            <span aria-hidden="true" class="shrink-0"><%= render "shared/icons/#{item[:icon]}" %></span>
-            <%= item[:label] %>
+          <% if Navigation.available?(item) %>
+            <%= link_to Navigation.path_for(item, current_workspace),
+                  aria: { current: (active ? "page" : nil) },
+                  class: class_names(
+                    "flex items-center gap-3 rounded-control px-3 py-2.5 text-sm transition-colors",
+                    "bg-gold-soft font-medium text-heading" => active,
+                    "text-body hover:bg-surface-sunk" => !active
+                  ) do %>
+              <span aria-hidden="true" class="shrink-0"><%= render "shared/icons/#{item[:icon]}" %></span>
+              <%= item[:label] %>
+            <% end %>
+          <% else %>
+            <%# Not built yet. Rendered as plainly unavailable rather than as a
+                link that quietly returns you to Home. %>
+            <span class="flex cursor-not-allowed items-center gap-3 rounded-control px-3 py-2.5 text-sm text-muted/60"
+                  aria-disabled="true">
+              <span aria-hidden="true" class="shrink-0"><%= render "shared/icons/#{item[:icon]}" %></span>
+              <%= item[:label] %>
+              <span class="ml-auto rounded-pill border border-border px-1.5 py-0.5 text-[10px] font-medium text-muted">
+                Soon
+              </span>
+            </span>
           <% end %>
         </li>
       <% end %>

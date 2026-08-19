@@ -23,6 +23,10 @@ Rails.application.routes.draw do
 
     # Resumable onboarding (spec 22). /onboarding redirects to wherever the
     # owner stopped; each step has its own addressable URL.
+    get "gallery",               to: "gallery/templates#index", as: :gallery
+    get  "gallery/:slug",        to: "gallery/templates#show", as: :gallery_template
+    post "gallery/:slug/use",    to: "gallery/uses#create",    as: :gallery_template_use
+
     get "calendar", to: "calendar#show", as: :calendar
 
     resources :posts, except: %i[index] do

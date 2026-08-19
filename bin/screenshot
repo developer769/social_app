@@ -91,7 +91,31 @@ begin
     url = "#{options[:host]}#{path}"
     warn "opening #{url.inspect}"
     driver.navigate.to(url)
-    sleep 1.2
+    sleep 0.6
+
+    # Lazily loaded images never fetch in a headless browser that has not
+    # scrolled, so the page photographs with empty boxes where the pictures
+    # should be. Scroll through, then wait for every image to actually decode.
+    driver.execute_script(<<~JS)
+      window.scrollTo(0, document.body.scrollHeight);
+      window.scrollTo(0, 0);
+      document.querySelectorAll("img[loading=lazy]").forEach((img) => img.loading = "eager");
+    JS
+
+    begin
+      Selenium::WebDriver::Wait.new(timeout: 20).until do
+        driver.execute_script(
+          "return Array.from(document.images).every((img) => img.complete && img.naturalWidth > 0)"
+        )
+      end
+    rescue Selenium::WebDriver::Error::TimeoutError
+      broken = driver.execute_script(
+        "return Array.from(document.images).filter((i) => !i.complete || !i.naturalWidth).map((i) => i.src)"
+      )
+      warn "warning: #{broken.size} image(s) did not load, e.g. #{broken.first}"
+    end
+
+    sleep 0.4
 
     if options[:full]
       # Grow the window to the document height so nothing is cut off.

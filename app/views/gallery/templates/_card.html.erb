@@ -1,0 +1,44 @@
+<%= link_to workspace_gallery_template_path(workspace_slug: current_workspace.slug, slug: template.slug),
+      class: "group block overflow-hidden rounded-card border border-border bg-surface transition-shadow hover:shadow-card" do %>
+  <%# Photo cards follow the shape of the artwork rather than a fixed portrait
+      box. The seeded fixtures are landscape crops of the design deck, and
+      forcing them into 4:5 cut the headline off every one of them. %>
+  <div class="relative <%= photos ? 'aspect-4/3' : 'aspect-9/16' %> bg-surface-sunk">
+    <% if template.preview.attached? %>
+      <%= image_tag template.preview.variant(resize_to_fill: [600, photos ? 450 : 1066]),
+            alt: template.name,
+            loading: "lazy",
+            class: "h-full w-full object-cover" %>
+    <% else %>
+      <span class="flex h-full items-center justify-center px-3 text-center text-xs text-muted">
+        No preview
+      </span>
+    <% end %>
+
+    <div class="absolute left-3 top-3 flex flex-wrap gap-1.5">
+      <% if template.format_video? && template.duration_label %>
+        <span class="rounded-control bg-heading/80 px-2 py-1 text-[11px] font-medium text-white tabular-nums">
+          <%= template.duration_label %>
+        </span>
+      <% end %>
+      <% if template.premium? %>
+        <span class="rounded-control bg-gold-soft px-2 py-1 text-[11px] font-medium text-heading">Premium</span>
+      <% end %>
+    </div>
+
+    <%# The "Use" affordance from the design, pinned bottom-left of the card. %>
+    <span class="absolute bottom-3 left-3 flex items-center gap-1.5 rounded-pill bg-surface/95 px-3 py-1.5 text-xs font-medium text-heading shadow-panel">
+      <span aria-hidden="true" class="text-warning">&#10022;</span> Use
+    </span>
+  </div>
+
+  <div class="p-3.5">
+    <p class="truncate text-sm font-medium text-heading"><%= template.name %></p>
+    <p class="mt-0.5 truncate text-xs text-muted">
+      <%= template.category_label %>
+      <% if template.trend_ranked? %>
+        &middot; trending
+      <% end %>
+    </p>
+  </div>
+<% end %>

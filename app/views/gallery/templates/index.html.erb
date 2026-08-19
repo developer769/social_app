@@ -1,0 +1,100 @@
+<% content_for :title, "Gallery" %>
+<% slug = { workspace_slug: current_workspace.slug } %>
+
+<header class="mb-6">
+  <h1 class="font-display text-3xl font-normal sm:text-4xl">
+    Gallery<span aria-hidden="true" class="ml-1 align-super text-base text-warning">&#10022;</span>
+  </h1>
+  <p class="mt-1.5 text-sm text-muted">Pick a look for your next post.</p>
+</header>
+
+<%= render "shared/flash" %>
+
+<div class="mb-5 flex flex-wrap items-center gap-3">
+  <nav class="inline-flex rounded-control border border-border bg-surface p-1" aria-label="Media format">
+    <% [["image", "Photos"], ["video", "Videos"]].each do |value, label| %>
+      <% active = @search.format == value %>
+      <%= link_to workspace_gallery_path(**slug, format: value),
+            aria: { current: (active ? "page" : nil) },
+            class: class_names(
+              "flex items-center gap-2 rounded-[0.4rem] px-6 py-2 text-sm transition-colors",
+              "bg-primary font-medium text-primary-contrast" => active,
+              "text-body hover:bg-surface-sunk" => !active
+            ) do %>
+        <%= label %>
+      <% end %>
+    <% end %>
+  </nav>
+
+  <%= form_with url: workspace_gallery_path(**slug), method: :get, class: "flex items-center gap-2" do |form| %>
+    <%= hidden_field_tag :format, @search.format %>
+    <%= form.label :q, "Search styles", class: "sr-only" %>
+    <%= form.search_field :q, value: @search.query, placeholder: "Search styles",
+          class: "h-10 w-52 rounded-control border border-border bg-surface px-3.5 text-sm text-heading placeholder:text-muted focus:border-border-strong focus:outline-none" %>
+    <%= form.submit "Search",
+          class: "h-10 cursor-pointer rounded-control border border-border bg-surface px-4 text-sm font-medium text-body hover:bg-surface-sunk" %>
+  <% end %>
+
+  <%# The label states what the order actually is. It may only say "trending"
+      when a source has supplied a real signal (spec 27). %>
+  <span class="ml-auto text-xs text-muted"><%= @search.ordering_label %></span>
+</div>
+
+<div class="mb-6 flex flex-wrap gap-2">
+  <%= link_to "All", workspace_gallery_path(**slug, format: @search.format, q: @search.query),
+        class: class_names(
+          "rounded-pill border px-4 py-1.5 text-xs font-medium transition-colors",
+          "border-primary bg-primary text-primary-contrast" => @search.category.nil?,
+          "border-border bg-surface text-body hover:border-border-strong" => @search.category.present?
+        ) %>
+
+  <% @search.available_categories.each do |category, count| %>
+    <% active = @search.category == category %>
+    <%= link_to workspace_gallery_path(**slug, format: @search.format, category: category, q: @search.query),
+          class: class_names(
+            "rounded-pill border px-4 py-1.5 text-xs font-medium transition-colors",
+            "border-primary bg-lavender-soft text-primary" => active,
+            "border-border bg-surface text-body hover:border-border-strong" => !active
+          ) do %>
+      <%= ::Template::CONTENT_CATEGORIES.fetch(category, category.humanize) %>
+      <span class="<%= active ? "text-primary/70" : "text-muted" %> tabular-nums"><%= count %></span>
+    <% end %>
+  <% end %>
+</div>
+
+<% if @search.templates.empty? %>
+  <%= render EmptyStateComponent.new(
+        title: gallery_empty_title(@search),
+        body: gallery_empty_body(@search)) do |state| %>
+    <% if @search.query || @search.category %>
+      <% state.with_action do %>
+        <%= link_to "Clear filters", workspace_gallery_path(**slug, format: @search.format),
+              class: "inline-flex h-11 items-center rounded-control bg-primary px-5 text-sm font-medium text-primary-contrast hover:bg-primary-hover" %>
+      <% end %>
+    <% end %>
+  <% end %>
+<% else %>
+  <ul class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+    <% @search.templates.each do |template| %>
+      <li><%= render "gallery/templates/card", template: template, photos: @search.photos? %></li>
+    <% end %>
+  </ul>
+
+  <% if @search.total_pages > 1 %>
+    <nav class="mt-8 flex flex-wrap items-center justify-center gap-2" aria-label="Pagination">
+      <% (1..@search.total_pages).each do |number| %>
+        <% current = number == @search.page %>
+        <%= link_to workspace_gallery_path(**slug, format: @search.format,
+                                           category: @search.category, q: @search.query, page: number),
+              aria: { current: (current ? "page" : nil) },
+              class: class_names(
+                "flex h-9 min-w-9 items-center justify-center rounded-control border px-2 text-sm tabular-nums",
+                "border-primary bg-primary font-medium text-primary-contrast" => current,
+                "border-border bg-surface text-body hover:bg-surface-sunk" => !current
+              ) do %>
+          <%= number %>
+        <% end %>
+      <% end %>
+    </nav>
+  <% end %>
+<% end %>

@@ -1,9 +1,14 @@
 # The single source of truth for primary navigation, so every screen renders
 # the same order with exactly one active item (spec 19, 21).
+#
+# An item with no route is NOT yet built. It used to fall back to the workspace
+# root, which meant six of the eight items silently returned you to Home and
+# the whole product read as broken rather than unfinished. Unbuilt sections now
+# render as plainly unavailable.
 module Navigation
   ITEMS = [
     { key: :home,      label: "Home",      icon: "home",      route: :workspace_root_path },
-    { key: :gallery,   label: "Gallery",   icon: "gallery",   route: nil },
+    { key: :gallery,   label: "Gallery",   icon: "gallery",   route: :workspace_gallery_path },
     { key: :create,    label: "Create",    icon: "create",    route: nil },
     { key: :calendar,  label: "Calendar",  icon: "calendar",  route: :workspace_calendar_path },
     { key: :analytics, label: "Analytics", icon: "analytics", route: nil },
@@ -14,24 +19,22 @@ module Navigation
 
   module_function
 
-  def items
-    ITEMS
-  end
+  def items = ITEMS
 
-  # Sections that do not exist yet resolve to the workspace root rather than
-  # rendering a dead link.
+  def available?(item) = item[:route].present?
+
   def path_for(item, workspace)
-    helpers = Rails.application.routes.url_helpers
-    return helpers.workspace_root_path(workspace_slug: workspace.slug) if item[:route].nil?
+    return nil unless available?(item)
 
-    helpers.public_send(item[:route], workspace_slug: workspace.slug)
+    Rails.application.routes.url_helpers.public_send(item[:route], workspace_slug: workspace.slug)
   end
 
   def active?(item, request_path, workspace)
-    root = Rails.application.routes.url_helpers.workspace_root_path(workspace_slug: workspace.slug)
+    return false unless available?(item)
 
-    return request_path == root if item[:key] == :home
+    path = path_for(item, workspace)
+    return request_path == path if item[:key] == :home
 
-    request_path.start_with?("#{root}/#{item[:key]}")
+    request_path.start_with?(path)
   end
 end
