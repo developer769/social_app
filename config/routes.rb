@@ -19,6 +19,8 @@ Rails.application.routes.draw do
     resources :products, only: %i[create update destroy], module: :catalog
     resources :services, only: %i[create update destroy], module: :catalog
 
+    resources :social_accounts, only: %i[create destroy], module: :connections
+
     # Resumable onboarding (spec 22). /onboarding redirects to wherever the
     # owner stopped; each step has its own addressable URL.
     get "onboarding", to: "onboarding/resume#show", as: :onboarding
@@ -29,6 +31,7 @@ Rails.application.routes.draw do
       get   "catalog",     to: "onboarding/catalog#show",     as: :catalog
       post  "catalog/continue", to: "onboarding/catalog#complete", as: :catalog_complete
       get   "connections", to: "onboarding/connections#show", as: :connections
+      post  "connections/continue", to: "onboarding/connections#complete", as: :connections_complete
       get   "analysis",    to: "onboarding/analysis#show",    as: :analysis
       get   "health",      to: "onboarding/health#show",      as: :health
       get   "plan",        to: "onboarding/plan#show",        as: :plan

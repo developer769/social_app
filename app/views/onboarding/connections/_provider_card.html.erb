@@ -1,0 +1,56 @@
+<% connected = account&.connection_connected? %>
+<article class="flex h-full flex-col rounded-card border border-border bg-surface p-5">
+  <div class="flex items-start gap-3">
+    <%= render PlatformBadgeComponent.new(provider: provider.key, size: :large) %>
+
+    <div class="min-w-0 flex-1">
+      <h2 class="font-medium text-heading"><%= provider.name %></h2>
+      <p class="mt-0.5 truncate text-sm text-muted">
+        <%= connected ? account.handle.presence || account.display_name : "Not connected" %>
+      </p>
+    </div>
+
+    <% if connected %>
+      <%= render StatusBadgeComponent.new(label: "Connected", tone: :success) %>
+    <% elsif account&.connection_expired? %>
+      <%= render StatusBadgeComponent.new(label: "Expired", tone: :warning) %>
+    <% end %>
+  </div>
+
+  <dl class="mt-4 space-y-1.5 text-xs">
+    <div class="flex justify-between gap-3">
+      <dt class="text-muted">Can publish</dt>
+      <dd class="text-right text-heading"><%= publishable_formats(provider.capabilities) %></dd>
+    </div>
+    <div class="flex justify-between gap-3">
+      <dt class="text-muted">Caption limit</dt>
+      <dd class="tabular-nums text-heading">
+        <%= number_with_delimiter(provider.capabilities.max_caption_length) %> characters
+      </dd>
+    </div>
+    <% if connected && account.token_expires_at %>
+      <div class="flex justify-between gap-3">
+        <dt class="text-muted">Access valid until</dt>
+        <dd class="text-heading"><%= l(account.token_expires_at.to_date, format: :long) %></dd>
+      </div>
+    <% end %>
+  </dl>
+
+  <% if provider.notes.present? %>
+    <p class="mt-3 border-t border-border pt-3 text-xs text-muted"><%= provider.notes %></p>
+  <% end %>
+
+  <div class="mt-auto pt-4">
+    <% if connected %>
+      <%= button_to "Disconnect",
+            workspace_social_account_path(workspace_slug: current_workspace.slug, id: account),
+            method: :delete,
+            form: { data: { turbo_confirm: "Disconnect #{provider.name}? Scheduled posts to this account will stop." } },
+            class: "h-10 w-full cursor-pointer rounded-control border border-border text-sm font-medium text-body hover:border-border-strong hover:bg-surface-sunk" %>
+    <% else %>
+      <%= button_to (account ? "Reconnect" : "Connect"),
+            workspace_social_accounts_path(workspace_slug: current_workspace.slug, provider: provider.key),
+            class: "h-10 w-full cursor-pointer rounded-control bg-primary text-sm font-medium text-primary-contrast hover:bg-primary-hover" %>
+    <% end %>
+  </div>
+</article>

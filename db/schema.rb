@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_18_130301) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_19_100100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
@@ -162,6 +162,43 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_18_130301) do
     t.index ["user_id"], name: "index_sessions_on_user_id"
   end
 
+  create_table "social_accounts", force: :cascade do |t|
+    t.string "avatar_url"
+    t.datetime "connected_at"
+    t.bigint "connected_by_id"
+    t.string "connection_status", default: "connected", null: false
+    t.datetime "created_at", null: false
+    t.datetime "disconnected_at"
+    t.string "display_name"
+    t.string "external_account_id", null: false
+    t.string "granted_scopes", default: [], null: false, array: true
+    t.datetime "last_synced_at"
+    t.string "missing_scopes", default: [], null: false, array: true
+    t.string "permission_status", default: "granted", null: false
+    t.string "provider", null: false
+    t.datetime "token_expires_at"
+    t.datetime "updated_at", null: false
+    t.string "username"
+    t.bigint "workspace_id", null: false
+    t.index ["connected_by_id"], name: "index_social_accounts_on_connected_by_id"
+    t.index ["workspace_id", "connection_status"], name: "index_social_accounts_on_workspace_id_and_connection_status"
+    t.index ["workspace_id", "provider", "external_account_id"], name: "index_social_accounts_on_workspace_provider_account", unique: true
+    t.index ["workspace_id"], name: "index_social_accounts_on_workspace_id"
+    t.check_constraint "connection_status::text = ANY (ARRAY['connected'::character varying, 'disconnected'::character varying, 'expired'::character varying, 'revoked'::character varying, 'error'::character varying]::text[])", name: "social_accounts_connection_status_is_known"
+    t.check_constraint "permission_status::text = ANY (ARRAY['granted'::character varying, 'partial'::character varying, 'denied'::character varying]::text[])", name: "social_accounts_permission_status_is_known"
+    t.check_constraint "provider::text = ANY (ARRAY['instagram'::character varying, 'facebook'::character varying, 'linkedin'::character varying, 'youtube'::character varying, 'tiktok'::character varying, 'google_business'::character varying, 'x'::character varying]::text[])", name: "social_accounts_provider_is_known"
+  end
+
+  create_table "social_credentials", force: :cascade do |t|
+    t.text "access_token"
+    t.datetime "created_at", null: false
+    t.datetime "expires_at"
+    t.text "refresh_token"
+    t.bigint "social_account_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["social_account_id"], name: "index_social_credentials_on_social_account_id", unique: true
+  end
+
   create_table "users", force: :cascade do |t|
     t.datetime "confirmed_at"
     t.datetime "created_at", null: false
@@ -233,6 +270,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_18_130301) do
   add_foreign_key "products", "workspaces"
   add_foreign_key "services", "workspaces"
   add_foreign_key "sessions", "users"
+  add_foreign_key "social_accounts", "users", column: "connected_by_id"
+  add_foreign_key "social_accounts", "workspaces"
+  add_foreign_key "social_credentials", "social_accounts"
   add_foreign_key "workspace_memberships", "users"
   add_foreign_key "workspace_memberships", "users", column: "invited_by_id"
   add_foreign_key "workspace_memberships", "workspaces"
