@@ -4,10 +4,24 @@ Rails.application.configure do
   # Settings specified here will take precedence over those in config/application.rb.
 
   # Make code changes take effect immediately without server restart.
-  config.enable_reloading = true
+  # This project is edited on Windows but runs in a Linux container, so the app
+  # code is reached across a virtualisation boundary. Measured on this machine:
+  # a file stat costs ~24,600us on the bind mount versus ~17us on a Linux
+  # volume, roughly 1,450x slower. Rails' reloader stats every file in the
+  # autoload paths on each request, which turned page loads into 10-25 seconds.
+  #
+  # RAILS_FAST_DEV=true (the default) trades automatic reloading for speed:
+  # code is eager loaded once at boot and never re-checked. Restart the web
+  # container to pick up changes:  docker compose restart web
+  #
+  # Set RAILS_FAST_DEV=false while iterating on code if you would rather have
+  # automatic reloading and accept the slow page loads.
+  fast_dev = ENV.fetch("RAILS_FAST_DEV", "true") == "true"
+
+  config.enable_reloading = !fast_dev
 
   # Do not eager load code on boot.
-  config.eager_load = false
+  config.eager_load = fast_dev
 
   # Show full error reports.
   config.consider_all_requests_local = true
