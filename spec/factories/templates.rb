@@ -11,6 +11,8 @@ FactoryBot.define do
     source { "curated" }
     first_seen_at { Time.current }
     active { true }
+    draft { false }
+    published_at { Time.current }
 
     trait :video do
       media_format { "video" }

@@ -1,0 +1,132 @@
+<%= form_with model: template, url: (template.persisted? ? admin_template_path(template) : admin_templates_path),
+              html: { multipart: true, novalidate: true }, class: "space-y-6" do |form| %>
+
+  <%= render "shared/error_summary", record: template %>
+
+  <section class="rounded-card border border-border bg-surface p-6">
+    <h2 class="font-display text-xl font-normal">What this style is</h2>
+
+    <div class="mt-5 grid gap-5 sm:grid-cols-2">
+      <%= render FormFieldComponent.new(form: form, attribute: :name, label: "Name", required: true,
+            placeholder: "Weekend Indulgence", maxlength: 120) %>
+
+      <%= render SelectFieldComponent.new(form: form, attribute: :content_category, label: "Category",
+            include_blank: nil,
+            choices: ::Template::CONTENT_CATEGORIES.map { |value, label| [label, value] }) %>
+
+      <%= render SelectFieldComponent.new(form: form, attribute: :media_format, label: "Format",
+            include_blank: nil, hint: "Videos need a duration.",
+            choices: [["Photo", "image"], ["Video", "video"]]) %>
+
+      <%= render SelectFieldComponent.new(form: form, attribute: :aspect_ratio, label: "Shape",
+            include_blank: nil,
+            choices: [["Portrait 4:5 (feed)", "4:5"], ["Square 1:1", "1:1"],
+                      ["Vertical 9:16 (reel or story)", "9:16"], ["Landscape 16:9", "16:9"]]) %>
+
+      <%= render FormFieldComponent.new(form: form, attribute: :duration_seconds, label: "Duration in seconds",
+            type: :number_field, hint: "Videos only", placeholder: "15", min: 1) %>
+
+      <%= render FormFieldComponent.new(form: form, attribute: :position, label: "Order in the gallery",
+            type: :number_field, hint: "Lower numbers appear first", min: 0) %>
+    </div>
+
+    <div class="mt-5">
+      <%= form.label :description, "Description", class: "mb-1.5 block text-sm font-medium text-heading" %>
+      <%= form.text_area :description, rows: 3,
+            placeholder: "What this style is good for, in words a shop owner would use.",
+            class: "w-full rounded-control border border-border bg-background px-3.5 py-2.5 text-sm text-heading placeholder:text-muted focus:border-border-strong focus:outline-none" %>
+      <p class="mt-1.5 text-xs text-muted">Shown to customers on the style page.</p>
+    </div>
+
+    <div class="mt-5">
+      <%# A plain tag rather than a form helper: this is a form convenience that
+          the controller splits into the style_tags array, and Template has no
+          business carrying an accessor for it. %>
+      <%= label_tag "template_style_tags_text", "Style words",
+            class: "mb-1.5 block text-sm font-medium text-heading" %>
+      <%= text_field_tag "template[style_tags_text]", template.style_tags.join(", "),
+            id: "template_style_tags_text",
+            placeholder: "decadent, rich, premium",
+            class: "h-11 w-full rounded-control border border-border bg-background px-3.5 text-sm text-heading placeholder:text-muted focus:border-border-strong focus:outline-none" %>
+      <p class="mt-1.5 text-xs text-muted">Comma separated. Used for filtering and to steer the generator.</p>
+    </div>
+
+    <label class="mt-5 flex cursor-pointer items-center gap-3">
+      <%= form.check_box :premium, class: "h-4 w-4 accent-[var(--color-primary)]" %>
+      <span class="text-sm">
+        <span class="block font-medium text-heading">Premium style</span>
+        <span class="block text-xs text-muted">Marked as premium in the gallery.</span>
+      </span>
+    </label>
+  </section>
+
+  <section class="rounded-card border border-border bg-surface p-6">
+    <h2 class="font-display text-xl font-normal">Files</h2>
+    <p class="mt-1 text-sm text-muted">
+      The preview is what customers browse. For a video style you can also upload an example
+      clip so they can watch it before choosing &mdash; the generator does not need it.
+    </p>
+
+    <div class="mt-5 grid gap-5 lg:grid-cols-2">
+      <div>
+        <span class="mb-1.5 block text-sm font-medium text-heading">Preview image</span>
+
+        <% if template.preview.attached? %>
+          <%= image_tag template.preview.variant(resize_to_limit: [320, 320]),
+                alt: "Current preview for #{template.name}",
+                class: "mb-3 w-40 rounded-control border border-border object-cover" %>
+        <% end %>
+
+        <label for="template_preview"
+               class="flex cursor-pointer flex-col items-center justify-center rounded-control border border-dashed border-border-strong bg-background px-4 py-6 text-center hover:bg-surface-sunk">
+          <span class="text-sm text-body">
+            <%= template.preview.attached? ? "Replace the preview" : "Upload a preview" %>
+          </span>
+          <span class="mt-1 text-xs text-muted">PNG, JPG or WebP, up to 10MB</span>
+          <%= form.file_field :preview, id: "template_preview",
+                accept: ::Template::PREVIEW_CONTENT_TYPES.join(","), class: "sr-only" %>
+        </label>
+      </div>
+
+      <div>
+        <span class="mb-1.5 block text-sm font-medium text-heading">
+          Example video <span class="font-normal text-muted">(optional)</span>
+        </span>
+
+        <% if template.media.attached? %>
+          <p class="mb-3 text-xs text-body">
+            <%= template.media.filename %> &middot; <%= number_to_human_size(template.media.byte_size) %>
+          </p>
+        <% end %>
+
+        <label for="template_media"
+               class="flex cursor-pointer flex-col items-center justify-center rounded-control border border-dashed border-border-strong bg-background px-4 py-6 text-center hover:bg-surface-sunk">
+          <span class="text-sm text-body">
+            <%= template.media.attached? ? "Replace the example clip" : "Upload an example clip" %>
+          </span>
+          <span class="mt-1 text-xs text-muted">MP4, MOV or WebM, up to 200MB</span>
+          <%= form.file_field :media, id: "template_media",
+                accept: ::Template::MEDIA_CONTENT_TYPES.join(","), class: "sr-only" %>
+        </label>
+      </div>
+    </div>
+  </section>
+
+  <section class="rounded-card border border-border bg-surface p-6">
+    <h2 class="font-display text-xl font-normal">Generator instructions</h2>
+    <p class="mt-1 text-sm text-muted">
+      What the generator is told when a customer picks this style. Never shown to customers.
+    </p>
+
+    <%= form.text_area :prompt_instructions, rows: 5,
+          placeholder: "A rich, dark hero shot of the product on a matte surface, warm side light, shallow depth of field...",
+          class: "mt-4 w-full rounded-control border border-border bg-background px-3.5 py-2.5 font-mono text-sm text-heading placeholder:text-muted focus:border-border-strong focus:outline-none" %>
+  </section>
+
+  <div class="flex flex-wrap items-center gap-3">
+    <%= form.submit template.persisted? ? "Save changes" : "Save as draft",
+          class: "h-11 cursor-pointer rounded-control bg-primary px-6 text-sm font-medium text-primary-contrast hover:bg-primary-hover" %>
+    <%= link_to "Cancel", admin_templates_path,
+          class: "flex h-11 items-center rounded-control border border-border px-5 text-sm font-medium text-body hover:bg-surface-sunk" %>
+  </div>
+<% end %>

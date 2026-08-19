@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_19_140000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_19_150000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
@@ -277,6 +277,44 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_19_140000) do
     t.check_constraint "score >= 0 AND score <= 100", name: "social_health_score_in_range"
   end
 
+  create_table "staff_audit_events", force: :cascade do |t|
+    t.string "action", null: false
+    t.bigint "auditable_id"
+    t.string "auditable_type"
+    t.datetime "created_at", null: false
+    t.string "ip_address"
+    t.jsonb "metadata", default: {}, null: false
+    t.bigint "staff_user_id"
+    t.index ["auditable_type", "auditable_id"], name: "index_staff_audit_events_on_auditable_type_and_auditable_id"
+    t.index ["created_at"], name: "index_staff_audit_events_on_created_at", order: :desc
+    t.index ["staff_user_id"], name: "index_staff_audit_events_on_staff_user_id"
+  end
+
+  create_table "staff_sessions", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "expires_at", null: false
+    t.string "ip_address"
+    t.datetime "revoked_at"
+    t.bigint "staff_user_id", null: false
+    t.string "token_digest", null: false
+    t.datetime "updated_at", null: false
+    t.string "user_agent"
+    t.index ["staff_user_id", "revoked_at"], name: "index_staff_sessions_on_staff_user_id_and_revoked_at"
+    t.index ["staff_user_id"], name: "index_staff_sessions_on_staff_user_id"
+    t.index ["token_digest"], name: "index_staff_sessions_on_token_digest", unique: true
+  end
+
+  create_table "staff_users", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "deactivated_at"
+    t.citext "email", null: false
+    t.datetime "last_seen_at"
+    t.string "name", null: false
+    t.string "password_digest", null: false
+    t.datetime "updated_at", null: false
+    t.index ["email"], name: "index_staff_users_on_email", unique: true
+  end
+
   create_table "subscriptions", force: :cascade do |t|
     t.datetime "cancelled_at"
     t.datetime "created_at", null: false
@@ -329,6 +367,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_19_140000) do
     t.string "content_category", null: false
     t.datetime "created_at", null: false
     t.text "description"
+    t.boolean "draft", default: false, null: false
     t.integer "duration_seconds"
     t.integer "favourites_count", default: 0, null: false
     t.datetime "first_seen_at", null: false
@@ -341,6 +380,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_19_140000) do
     t.boolean "premium", default: false, null: false
     t.text "prompt_instructions"
     t.integer "prompt_version", default: 1, null: false
+    t.datetime "published_at"
+    t.bigint "published_by_id"
     t.datetime "retired_at"
     t.string "slug", null: false
     t.string "source", default: "curated", null: false
@@ -351,7 +392,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_19_140000) do
     t.datetime "trend_scored_at"
     t.datetime "updated_at", null: false
     t.index ["content_category", "active"], name: "index_templates_on_content_category_and_active"
+    t.index ["draft", "active", "retired_at"], name: "index_templates_on_draft_and_active_and_retired_at"
     t.index ["media_format", "active", "retired_at"], name: "index_templates_on_media_format_and_active_and_retired_at"
+    t.index ["published_by_id"], name: "index_templates_on_published_by_id"
     t.index ["slug"], name: "index_templates_on_slug", unique: true
     t.index ["source", "source_external_id"], name: "index_templates_on_source_and_external_id", unique: true, where: "(source_external_id IS NOT NULL)"
     t.index ["style_tags"], name: "index_templates_on_style_tags", using: :gin
@@ -443,12 +486,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_19_140000) do
   add_foreign_key "social_accounts", "workspaces"
   add_foreign_key "social_credentials", "social_accounts"
   add_foreign_key "social_health_scores", "workspaces"
+  add_foreign_key "staff_audit_events", "staff_users"
+  add_foreign_key "staff_sessions", "staff_users"
   add_foreign_key "subscriptions", "plans"
   add_foreign_key "subscriptions", "users", column: "selected_by_id"
   add_foreign_key "subscriptions", "workspaces"
   add_foreign_key "template_favourites", "templates"
   add_foreign_key "template_favourites", "users"
   add_foreign_key "template_favourites", "workspaces"
+  add_foreign_key "templates", "staff_users", column: "published_by_id"
   add_foreign_key "workspace_memberships", "users"
   add_foreign_key "workspace_memberships", "users", column: "invited_by_id"
   add_foreign_key "workspace_memberships", "workspaces"

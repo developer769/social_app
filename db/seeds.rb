@@ -2,6 +2,7 @@
 # environment before the development-only block below.
 load Rails.root.join("db/seeds/plans.rb")
 load Rails.root.join("db/seeds/templates.rb")
+load Rails.root.join("db/seeds/staff.rb")
 
 # Development seed data.
 #

@@ -43,6 +43,25 @@ Rails.application.routes.draw do
     end
   end
 
+  # ---- Staff area ----------------------------------------------------------
+  # Entirely separate from the customer application: its own login, its own
+  # session table, its own cookie. A customer account cannot reach it.
+  namespace :admin do
+    get    "login",  to: "sessions#new",     as: :login
+    post   "login",  to: "sessions#create"
+    delete "logout", to: "sessions#destroy", as: :logout
+
+    resources :templates, except: %i[destroy] do
+      member do
+        post :publish
+        post :unpublish
+        post :retire
+      end
+    end
+
+    root to: "templates#index"
+  end
+
   get "up", to: "rails/health#show", as: :rails_health_check
 
   root to: "sessions#new"

@@ -15,9 +15,19 @@ class Template < ApplicationRecord
     "testimonials" => "Testimonials"
   }.freeze
 
+  PREVIEW_CONTENT_TYPES = %w[image/png image/jpeg image/webp].freeze
+  MEDIA_CONTENT_TYPES = %w[video/mp4 video/quicktime video/webm].freeze
+  PREVIEW_MAX_BYTES = 10.megabytes
+  MEDIA_MAX_BYTES = 200.megabytes
+
+  # preview is what the gallery shows: a still, for both photo and video styles.
+  # media is the video file itself, which only a video style carries.
   has_one_attached :preview
+  has_one_attached :media
 
   has_many :template_favourites, dependent: :destroy
+
+  belongs_to :published_by, class_name: "StaffUser", optional: true
 
   enum :media_format, MEDIA_FORMATS.index_by(&:itself), prefix: :format, validate: true
   enum :source, SOURCES.index_by(&:itself), prefix: :source, validate: true
@@ -45,6 +55,9 @@ class Template < ApplicationRecord
   validates :duration_seconds, presence: true, if: :format_video?
   validates :duration_seconds, numericality: { greater_than: 0 }, allow_nil: true
   validates :trend_score, numericality: { in: 0..100 }, allow_nil: true
+
+  validate :preview_is_a_supported_image
+  validate :media_is_a_supported_video
 
   def category_label = CONTENT_CATEGORIES.fetch(content_category, content_category.humanize)
 
@@ -82,6 +95,27 @@ class Template < ApplicationRecord
     template_favourites.exists?(workspace: workspace)
   end
 
+  # A style is only browsable once someone has published it. Uploading is not
+  # publishing: a half-finished row must never appear in a customer's gallery.
+  scope :published, -> { live.where(draft: false).where.not(published_at: nil) }
+
+  def published? = !draft? && published_at.present?
+
+  # A style is a reference the generator works from, not the asset itself: what
+  # it must have is prompt instructions and a preview. An example video is an
+  # extra that lets a customer watch the style before choosing it, so its
+  # absence is a missing nicety, not a broken style.
+  def example_video? = format_video? && media.attached?
+
+  def publish!(staff_user:)
+    update!(draft: false, active: true, retired_at: nil,
+            published_at: published_at || Time.current, published_by: staff_user)
+  end
+
+  def unpublish!
+    update!(draft: true)
+  end
+
   def retire!(at: Time.current)
     update!(retired_at: at, active: false)
   end
@@ -91,5 +125,21 @@ class Template < ApplicationRecord
     attributes[:trend_score] = trend_score if trend_score
     attributes[:trend_scored_at] = Time.current if trend_score
     update!(**attributes)
+  end
+
+  private
+
+  def preview_is_a_supported_image
+    return unless preview.attached?
+
+    errors.add(:preview, "must be a PNG, JPG or WebP") unless PREVIEW_CONTENT_TYPES.include?(preview.content_type)
+    errors.add(:preview, "must be 10MB or smaller") if preview.byte_size > PREVIEW_MAX_BYTES
+  end
+
+  def media_is_a_supported_video
+    return unless media.attached?
+
+    errors.add(:media, "must be an MP4, MOV or WebM") unless MEDIA_CONTENT_TYPES.include?(media.content_type)
+    errors.add(:media, "must be 200MB or smaller") if media.byte_size > MEDIA_MAX_BYTES
   end
 end

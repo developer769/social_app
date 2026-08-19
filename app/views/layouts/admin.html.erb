@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="<%= I18n.locale %>">
+  <head>
+    <title><%= content_for(:title) || "Prachar staff" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+
+  <body class="min-h-dvh bg-background text-body antialiased">
+    <a href="#main-content"
+       class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-control focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:text-primary-contrast">
+      Skip to content
+    </a>
+
+    <header class="border-b border-border bg-surface">
+      <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-6 py-4">
+        <div class="flex items-center gap-3">
+          <%= link_to admin_templates_path, class: "inline-block" do %>
+            <%= render "shared/wordmark", classes: "text-xl" %>
+          <% end %>
+          <%# A visible, permanent marker: this area writes to every customer's
+              gallery, and it should never be mistaken for the customer app. %>
+          <span class="rounded-pill border border-primary/30 bg-lavender-soft px-2.5 py-1 text-xs font-medium text-primary">
+            Staff
+          </span>
+        </div>
+
+        <div class="flex items-center gap-4 text-sm">
+          <span class="text-muted"><%= current_staff_user.name %></span>
+          <%= button_to "Sign out", admin_logout_path, method: :delete,
+                class: "cursor-pointer rounded-control border border-border px-3 py-1.5 text-xs font-medium text-body hover:bg-surface-sunk" %>
+        </div>
+      </div>
+    </header>
+
+    <main id="main-content" class="mx-auto max-w-6xl px-6 py-8">
+      <%= render "shared/flash" %>
+      <%= yield %>
+    </main>
+  </body>
+</html>
