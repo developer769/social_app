@@ -1,5 +1,114 @@
-<% content_for :title, "Choose Your Plan" %>
+<% content_for :title, "Choose your plan" %>
 
-<%= render "onboarding/step_header", title: "Choose Your Plan", subtitle: "Pick the plan that fits your business best." %>
+<%= render "onboarding/step_header",
+      title: "Choose your plan",
+      subtitle: plan_subtitle(current_workspace) %>
 
-<%= render "onboarding/pending_step", title: "Choose Your Plan", summary: "Plans and entitlements arrive with billing. Nothing is charged and no plan is selected yet." %>
+<%= render "shared/flash" %>
+
+<div class="mb-7 flex flex-wrap items-center justify-between gap-4">
+  <nav class="inline-flex rounded-control border border-border bg-surface p-1"
+       aria-label="Billing interval">
+    <% [["month", "Monthly"], ["year", "Annual"]].each do |value, label| %>
+      <% active = @interval == value %>
+      <%= link_to workspace_onboarding_plan_path(workspace_slug: current_workspace.slug, interval: value),
+            aria: { current: (active ? "page" : nil) },
+            class: class_names(
+              "rounded-[0.4rem] px-5 py-2 text-sm transition-colors",
+              "bg-primary font-medium text-primary-contrast" => active,
+              "text-body hover:bg-surface-sunk" => !active
+            ) do %>
+        <%= label %>
+        <% if value == "year" %>
+          <span class="<%= active ? "text-primary-contrast/80" : "text-success" %>">&middot; 2 months free</span>
+        <% end %>
+      <% end %>
+    <% end %>
+  </nav>
+
+  <p class="text-sm text-muted">
+    Every plan starts with a <%= @plans.first&.trial_days || 14 %>-day free trial. No card needed.
+  </p>
+</div>
+
+<ul class="grid gap-5 lg:grid-cols-3">
+  <% @plans.each do |plan| %>
+    <li>
+      <article class="flex h-full flex-col rounded-card border bg-surface p-6
+                      <%= plan.recommended? ? 'border-gold-soft bg-gold-tint shadow-card' : 'border-border' %>">
+        <% if plan.recommended? %>
+          <p class="mb-4 self-start rounded-pill bg-blue-soft px-3 py-1 text-xs font-medium text-primary">
+            Recommended
+          </p>
+        <% end %>
+
+        <div class="flex items-baseline gap-3">
+          <h2 class="font-display text-2xl font-normal"><%= plan.name %></h2>
+        </div>
+        <p class="mt-1 text-sm text-muted"><%= plan.tagline %></p>
+
+        <p class="mt-4 flex items-baseline gap-1">
+          <span class="font-display text-4xl leading-none text-heading tabular-nums">
+            <%= MoneyPresenter.new(plan.price).full %>
+          </span>
+          <span class="text-sm text-muted">/<%= plan.interval %></span>
+        </p>
+
+        <% if plan.billed_year? && (monthly = @monthly_by_code[plan.code]) %>
+          <p class="mt-1 text-xs text-muted">
+            <%= MoneyPresenter.new(Money.new(minor_units: monthly.price_minor * 12, currency: monthly.currency)).full %>
+            billed monthly &mdash; you save
+            <%= MoneyPresenter.new(Money.new(minor_units: (monthly.price_minor * 12) - plan.price_minor, currency: plan.currency)).full %>
+          </p>
+        <% end %>
+
+        <ul class="mt-6 flex-1 space-y-3 border-t border-border pt-6">
+          <% plan.features.each do |feature| %>
+            <li class="flex items-start gap-2.5 text-sm text-body">
+              <span aria-hidden="true"
+                    class="mt-0.5 flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-full
+                           <%= plan.recommended? ? 'bg-gold-soft text-heading' : 'bg-blue-soft text-primary' %>
+                           text-[10px]">&#10003;</span>
+              <span><%= feature %></span>
+            </li>
+          <% end %>
+        </ul>
+
+        <div class="mt-6">
+          <%= button_to workspace_onboarding_plan_path(workspace_slug: current_workspace.slug),
+                params: { plan_id: plan.id },
+                class: class_names(
+                  "h-11 w-full cursor-pointer rounded-control text-sm font-medium transition-colors",
+                  "bg-primary text-primary-contrast hover:bg-primary-hover" => plan.recommended?,
+                  "border border-border-strong text-heading hover:bg-surface-sunk" => !plan.recommended?
+                ) do %>
+            Start trial<span class="sr-only"> of the <%= plan.name %> plan</span>
+          <% end %>
+        </div>
+      </article>
+    </li>
+  <% end %>
+</ul>
+
+<p class="mt-8 text-center text-sm text-muted">
+  Need a custom setup? <a href="mailto:support@prachar.app" class="font-medium text-primary underline underline-offset-4">Contact support</a>.
+</p>
+
+<div class="mt-6 flex gap-3 rounded-card border border-border bg-blue-soft px-5 py-4">
+  <span aria-hidden="true" class="text-primary">&#9432;</span>
+  <p class="text-sm text-body">
+    <span class="font-medium text-heading">Nothing is charged today.</span>
+    Payments are not connected yet, so starting a trial simply records the plan you want
+    and finishes your setup. You will be asked before any money moves.
+  </p>
+</div>
+
+<%= render StickyActionFooterComponent.new do |footer| %>
+  <% footer.with_secondary do %>
+    <%= link_to "Back", workspace_onboarding_health_path(workspace_slug: current_workspace.slug),
+          class: "flex h-11 items-center rounded-control border border-border px-5 text-sm font-medium text-body hover:bg-surface-sunk" %>
+  <% end %>
+  <% footer.with_note do %>
+    Cancel anytime during the trial.
+  <% end %>
+<% end %>

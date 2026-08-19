@@ -1,3 +1,7 @@
+# Plans are reference data, not development fixtures, so they load in every
+# environment before the development-only block below.
+load Rails.root.join("db/seeds/plans.rb")
+
 # Development seed data.
 #
 # "Anaya Bakes" is a fixture for development only, per the specification: the

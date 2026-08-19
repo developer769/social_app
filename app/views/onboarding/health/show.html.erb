@@ -1,5 +1,137 @@
-<% content_for :title, "Social Health" %>
+<% content_for :title, "Social health" %>
 
-<%= render "onboarding/step_header", title: "Social Health", subtitle: "How your brand is performing across social media." %>
+<%= render "onboarding/step_header",
+      title: "Social Health Result",
+      subtitle: "Here's how your brand is performing across social media." %>
 
-<%= render "onboarding/pending_step", title: "Social Health", summary: "The health score is calculated from connected-account data, so it follows the analysis step. No score is shown until there is data to base one on." %>
+<%= render "shared/flash" %>
+
+<% if @score.nil? %>
+  <div class="rounded-card border border-border bg-surface p-10 text-center">
+    <h2 class="font-display text-2xl font-normal">Calculate your social health</h2>
+    <p class="mx-auto mt-2 max-w-md text-sm text-body">
+      Prachar scores what it can actually measure and tells you plainly what it cannot.
+      Nothing is estimated or filled in for effect.
+    </p>
+    <%= button_to "Calculate my score",
+          workspace_onboarding_health_path(workspace_slug: current_workspace.slug),
+          class: "mx-auto mt-6 h-11 cursor-pointer rounded-control bg-primary px-6 text-sm font-medium text-primary-contrast hover:bg-primary-hover" %>
+  </div>
+<% else %>
+  <section class="rounded-card border border-border bg-surface p-6 sm:p-8">
+    <div class="grid gap-8 lg:grid-cols-[auto_minmax(0,1fr)] lg:items-center">
+      <div class="flex flex-col items-center gap-3">
+        <%= render ProgressRingComponent.new(
+              percentage: @score.score, caption: @score.rating_label, size: 168) %>
+        <p class="text-xs text-muted">out of 100</p>
+      </div>
+
+      <div class="min-w-0">
+        <h2 class="font-display text-3xl font-normal">Your Social Health</h2>
+        <p class="mt-3 max-w-prose text-sm text-body"><%= health_summary(@score) %></p>
+
+        <% if @score.partial? %>
+          <div class="mt-4 flex gap-3 rounded-control border border-border bg-blue-soft px-4 py-3.5">
+            <span aria-hidden="true" class="text-primary">&#9432;</span>
+            <p class="text-sm text-body">
+              <span class="font-medium text-heading">
+                This score covers <%= @score.coverage_percentage %>% of the full picture.
+              </span>
+              <%= pluralize(@score.unavailable_components.size, "signal") %>
+              could not be measured yet, and
+              <%= @score.unavailable_components.size == 1 ? "it is" : "they are" %>
+              left out rather than counted as zero.
+            </p>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <h3 class="mt-8 text-xs font-semibold uppercase tracking-wide text-primary">How this score is calculated</h3>
+    <ul class="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      <% @score.components.each do |component| %>
+        <li class="rounded-control border border-border bg-background p-4">
+          <div class="flex items-start justify-between gap-3">
+            <p class="text-sm font-medium text-heading"><%= component["label"] %></p>
+            <% if component["measured"] %>
+              <span class="font-display text-lg leading-none text-heading tabular-nums"><%= component["value"] %></span>
+            <% else %>
+              <%= render StatusBadgeComponent.new(label: "Not measured", tone: :neutral) %>
+            <% end %>
+          </div>
+
+          <% if component["measured"] %>
+            <div class="mt-2 h-1.5 overflow-hidden rounded-pill bg-border">
+              <div class="h-full rounded-pill bg-primary" style="width: <%= component['value'] %>%"></div>
+            </div>
+          <% end %>
+
+          <p class="mt-2 text-xs text-muted">
+            <%= component["detail"].presence || component["reason"] %>
+          </p>
+          <p class="mt-1 text-[11px] text-muted">
+            Worth <%= component["weight"] %> of 100<%= " — excluded from this score" unless component["measured"] %>
+          </p>
+        </li>
+      <% end %>
+    </ul>
+  </section>
+
+  <div class="mt-6 grid gap-6 lg:grid-cols-2">
+    <%= render "onboarding/health/findings",
+          title: "What's working", tone: :success, items: @score.working,
+          empty: "Nothing to celebrate yet — finish your setup and this will fill in." %>
+
+    <%= render "onboarding/health/findings",
+          title: "Needs attention", tone: :danger, items: @score.attention,
+          empty: "Nothing needs attention right now." %>
+  </div>
+
+  <section class="mt-6 rounded-card border border-border bg-surface p-6 sm:p-7">
+    <h2 class="font-display text-xl font-normal">Recommendations</h2>
+    <p class="mt-1 text-sm text-muted">Actionable steps, each one drawn from a measurement above.</p>
+
+    <% recommendations = health_recommendations(@score, current_workspace) %>
+    <% if recommendations.empty? %>
+      <%= render EmptyStateComponent.new(
+            title: "No recommendations yet",
+            body: "Once there is enough measured data, Prachar will suggest what to do next.") %>
+    <% else %>
+      <ul class="mt-4 space-y-2.5">
+        <% recommendations.each do |recommendation| %>
+          <li>
+            <%= link_to recommendation[:path],
+                  class: "flex items-center gap-3 rounded-control border border-border bg-background px-4 py-3 hover:border-border-strong" do %>
+              <span aria-hidden="true"
+                    class="flex h-9 w-9 shrink-0 items-center justify-center rounded-control bg-lavender-soft text-primary">
+                <%= recommendation[:glyph] %>
+              </span>
+              <span class="min-w-0 flex-1">
+                <span class="block text-sm font-medium text-heading"><%= recommendation[:title] %></span>
+                <span class="block text-xs text-muted"><%= recommendation[:body] %></span>
+              </span>
+              <span aria-hidden="true" class="text-muted">&rsaquo;</span>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+  </section>
+<% end %>
+
+<%= render StickyActionFooterComponent.new do |footer| %>
+  <% footer.with_secondary do %>
+    <%= link_to "Back", workspace_onboarding_analysis_path(workspace_slug: current_workspace.slug),
+          class: "flex h-11 items-center rounded-control border border-border px-5 text-sm font-medium text-body hover:bg-surface-sunk" %>
+  <% end %>
+  <% if @score %>
+    <% footer.with_note do %>
+      Calculated <%= time_ago_in_words(@score.computed_at) %> ago.
+    <% end %>
+  <% end %>
+  <% footer.with_primary do %>
+    <%= button_to "Continue",
+          workspace_onboarding_health_complete_path(workspace_slug: current_workspace.slug),
+          class: "h-11 cursor-pointer rounded-control bg-primary px-6 text-sm font-medium text-primary-contrast hover:bg-primary-hover" %>
+  <% end %>
+<% end %>

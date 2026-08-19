@@ -1,0 +1,28 @@
+<%
+  tone_classes = { success: "bg-success-soft border-success/25", danger: "bg-danger-soft border-danger/25" }
+  icon_classes = { success: "bg-success text-white", danger: "bg-danger text-white" }
+%>
+<section class="rounded-card border <%= tone_classes.fetch(tone) %> p-6">
+  <div class="flex items-center gap-3">
+    <span aria-hidden="true"
+          class="flex h-7 w-7 items-center justify-center rounded-full text-sm <%= icon_classes.fetch(tone) %>">
+      <%= tone == :success ? "\u2713" : "!" %>
+    </span>
+    <h2 class="font-display text-xl font-normal"><%= title %></h2>
+  </div>
+
+  <% if items.empty? %>
+    <p class="mt-4 text-sm text-muted"><%= empty %></p>
+  <% else %>
+    <ul class="mt-4 space-y-2.5">
+      <% items.each do |item| %>
+        <li class="flex gap-2.5 text-sm text-body">
+          <span aria-hidden="true" class="mt-0.5 <%= tone == :success ? 'text-success' : 'text-danger' %>">
+            <%= tone == :success ? "\u2713" : "\u25B3" %>
+          </span>
+          <span><%= item %></span>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+</section>

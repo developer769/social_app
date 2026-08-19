@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_19_110000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_19_130100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
@@ -126,6 +126,37 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_19_110000) do
     t.check_constraint "tone::text = ANY (ARRAY['friendly'::character varying, 'elegant'::character varying, 'playful'::character varying, 'professional'::character varying, 'premium'::character varying, 'educational'::character varying, 'bold'::character varying, 'minimal'::character varying]::text[])", name: "brand_tones_tone_is_known"
   end
 
+  create_table "plan_entitlements", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "display_label", null: false
+    t.string "key", null: false
+    t.integer "limit_value"
+    t.bigint "plan_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["plan_id", "key"], name: "index_plan_entitlements_on_plan_id_and_key", unique: true
+    t.index ["plan_id"], name: "index_plan_entitlements_on_plan_id"
+  end
+
+  create_table "plans", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.string "code", null: false
+    t.datetime "created_at", null: false
+    t.string "currency", default: "INR", null: false
+    t.string "interval", default: "month", null: false
+    t.string "name", null: false
+    t.integer "position", default: 0, null: false
+    t.bigint "price_minor", null: false
+    t.boolean "recommended", default: false, null: false
+    t.string "tagline"
+    t.integer "trial_days", default: 14, null: false
+    t.datetime "updated_at", null: false
+    t.index ["active", "position"], name: "index_plans_on_active_and_position"
+    t.index ["code", "interval"], name: "index_plans_on_code_and_interval", unique: true
+    t.check_constraint "\"interval\"::text = ANY (ARRAY['month'::character varying, 'year'::character varying]::text[])", name: "plans_interval_is_known"
+    t.check_constraint "char_length(currency::text) = 3", name: "plans_currency_is_iso4217"
+    t.check_constraint "price_minor >= 0", name: "plans_price_not_negative"
+  end
+
   create_table "products", force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.string "availability_status", default: "available", null: false
@@ -230,6 +261,41 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_19_110000) do
     t.index ["social_account_id"], name: "index_social_credentials_on_social_account_id", unique: true
   end
 
+  create_table "social_health_scores", force: :cascade do |t|
+    t.jsonb "components", default: [], null: false
+    t.datetime "computed_at", null: false
+    t.integer "coverage_percentage", null: false
+    t.datetime "created_at", null: false
+    t.string "rating", null: false
+    t.integer "score", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "workspace_id", null: false
+    t.index ["workspace_id", "computed_at"], name: "index_social_health_scores_on_workspace_id_and_computed_at", order: { computed_at: :desc }
+    t.index ["workspace_id"], name: "index_social_health_scores_on_workspace_id"
+    t.check_constraint "coverage_percentage >= 0 AND coverage_percentage <= 100", name: "social_health_coverage_in_range"
+    t.check_constraint "rating::text = ANY (ARRAY['needs_work'::character varying, 'fair'::character varying, 'good'::character varying, 'excellent'::character varying]::text[])", name: "social_health_rating_is_known"
+    t.check_constraint "score >= 0 AND score <= 100", name: "social_health_score_in_range"
+  end
+
+  create_table "subscriptions", force: :cascade do |t|
+    t.datetime "cancelled_at"
+    t.datetime "created_at", null: false
+    t.datetime "current_period_end"
+    t.datetime "current_period_start"
+    t.bigint "plan_id", null: false
+    t.string "provider"
+    t.string "provider_subscription_id"
+    t.bigint "selected_by_id"
+    t.string "status", default: "trialing", null: false
+    t.datetime "trial_ends_at"
+    t.datetime "updated_at", null: false
+    t.bigint "workspace_id", null: false
+    t.index ["plan_id"], name: "index_subscriptions_on_plan_id"
+    t.index ["selected_by_id"], name: "index_subscriptions_on_selected_by_id"
+    t.index ["workspace_id"], name: "index_subscriptions_on_workspace_id", unique: true
+    t.check_constraint "status::text = ANY (ARRAY['trialing'::character varying, 'active'::character varying, 'past_due'::character varying, 'cancelled'::character varying, 'expired'::character varying]::text[])", name: "subscriptions_status_is_known"
+  end
+
   create_table "users", force: :cascade do |t|
     t.datetime "confirmed_at"
     t.datetime "created_at", null: false
@@ -301,12 +367,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_19_110000) do
   add_foreign_key "brand_goals", "workspaces"
   add_foreign_key "brand_profiles", "workspaces"
   add_foreign_key "brand_tones", "workspaces"
+  add_foreign_key "plan_entitlements", "plans"
   add_foreign_key "products", "workspaces"
   add_foreign_key "services", "workspaces"
   add_foreign_key "sessions", "users"
   add_foreign_key "social_accounts", "users", column: "connected_by_id"
   add_foreign_key "social_accounts", "workspaces"
   add_foreign_key "social_credentials", "social_accounts"
+  add_foreign_key "social_health_scores", "workspaces"
+  add_foreign_key "subscriptions", "plans"
+  add_foreign_key "subscriptions", "users", column: "selected_by_id"
+  add_foreign_key "subscriptions", "workspaces"
   add_foreign_key "workspace_memberships", "users"
   add_foreign_key "workspace_memberships", "users", column: "invited_by_id"
   add_foreign_key "workspace_memberships", "workspaces"

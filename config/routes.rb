@@ -36,7 +36,10 @@ Rails.application.routes.draw do
       post  "analysis",    to: "onboarding/analysis#create"
       post  "analysis/continue", to: "onboarding/analysis#complete", as: :analysis_complete
       get   "health",      to: "onboarding/health#show",      as: :health
+      post  "health",      to: "onboarding/health#create"
+      post  "health/continue", to: "onboarding/health#complete", as: :health_complete
       get   "plan",        to: "onboarding/plan#show",        as: :plan
+      post  "plan",        to: "onboarding/plan#create"
     end
   end
 
