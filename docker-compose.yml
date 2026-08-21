@@ -26,6 +26,10 @@ x-app: &app
     POSTGRES_DB_PREFIX: prachar
     REDIS_URL: redis://redis:6379/0
     RAILS_ENV: development
+    # A .test domain in development, so an address that escaped this machine
+    # would visibly not be a real one.
+    MAIL_FROM: Prachar <no-reply@prachar.test>
+    MAIL_REPLY_TO: Prachar support <support@prachar.test>
     SMTP_HOST: mailcatcher
     SMTP_PORT: "1025"
   depends_on:
