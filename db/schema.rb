@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_19_160000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_21_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
@@ -100,6 +100,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_19_160000) do
     t.check_constraint "goal::text = ANY (ARRAY['increase_sales'::character varying, 'generate_leads'::character varying, 'grow_followers'::character varying, 'boost_engagement'::character varying, 'brand_awareness'::character varying, 'website_visits'::character varying]::text[])", name: "brand_goals_goal_is_known"
   end
 
+  create_table "brand_kits", force: :cascade do |t|
+    t.string "accent_color"
+    t.string "body_font"
+    t.datetime "created_at", null: false
+    t.string "heading_font"
+    t.string "primary_color"
+    t.string "secondary_color"
+    t.datetime "updated_at", null: false
+    t.text "usage_notes"
+    t.bigint "workspace_id", null: false
+    t.index ["workspace_id"], name: "index_brand_kits_on_workspace_id", unique: true
+    t.check_constraint "accent_color IS NULL OR accent_color::text ~* '^#[0-9a-f]{6}$'::text", name: "brand_kits_accent_is_hex"
+    t.check_constraint "primary_color IS NULL OR primary_color::text ~* '^#[0-9a-f]{6}$'::text", name: "brand_kits_primary_is_hex"
+    t.check_constraint "secondary_color IS NULL OR secondary_color::text ~* '^#[0-9a-f]{6}$'::text", name: "brand_kits_secondary_is_hex"
+  end
+
   create_table "brand_profiles", force: :cascade do |t|
     t.text "about"
     t.string "business_type"
@@ -146,6 +162,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_19_160000) do
     t.index ["workspace_id"], name: "index_media_assets_on_workspace_id"
     t.check_constraint "kind::text = ANY (ARRAY['image'::character varying, 'video'::character varying]::text[])", name: "media_assets_kind_is_known"
     t.check_constraint "origin::text = ANY (ARRAY['upload'::character varying, 'generated'::character varying]::text[])", name: "media_assets_origin_is_known"
+  end
+
+  create_table "notification_preferences", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.boolean "email_post_failed", default: true, null: false
+    t.boolean "email_post_published", default: true, null: false
+    t.boolean "email_product_news", default: false, null: false
+    t.boolean "email_team_activity", default: false, null: false
+    t.boolean "email_weekly_summary", default: true, null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.bigint "workspace_id", null: false
+    t.index ["user_id"], name: "index_notification_preferences_on_user_id"
+    t.index ["workspace_id", "user_id"], name: "index_notification_preferences_on_workspace_id_and_user_id", unique: true
+    t.index ["workspace_id"], name: "index_notification_preferences_on_workspace_id"
   end
 
   create_table "plan_entitlements", force: :cascade do |t|
@@ -212,6 +243,31 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_19_160000) do
     t.index ["status", "published_at"], name: "index_post_targets_on_status_and_published_at"
     t.check_constraint "provider::text = ANY (ARRAY['instagram'::character varying, 'facebook'::character varying, 'linkedin'::character varying, 'youtube'::character varying, 'tiktok'::character varying, 'google_business'::character varying, 'x'::character varying]::text[])", name: "post_targets_provider_is_known"
     t.check_constraint "status::text = ANY (ARRAY['pending'::character varying, 'validating'::character varying, 'publishing'::character varying, 'published'::character varying, 'failed'::character varying, 'skipped'::character varying]::text[])", name: "post_targets_status_is_known"
+  end
+
+  create_table "posting_preferences", force: :cascade do |t|
+    t.boolean "append_hashtags_as_first_comment", default: false, null: false
+    t.string "avoid_terms", default: [], null: false, array: true
+    t.string "brand_keywords", default: [], null: false, array: true
+    t.string "brand_voice"
+    t.string "caption_style", default: "balanced", null: false
+    t.datetime "created_at", null: false
+    t.string "default_call_to_action"
+    t.text "default_first_comment"
+    t.string "default_link_url"
+    t.string "emoji_level", default: "minimal", null: false
+    t.string "hashtag_style", default: "balanced", null: false
+    t.integer "posts_per_week", default: 3, null: false
+    t.integer "preferred_days", default: [], null: false, array: true
+    t.string "preferred_time", default: "10:00", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "workspace_id", null: false
+    t.index ["workspace_id"], name: "index_posting_preferences_on_workspace_id", unique: true
+    t.check_constraint "caption_style::text = ANY (ARRAY['short'::character varying, 'balanced'::character varying, 'storytelling'::character varying]::text[])", name: "posting_caption_style_is_known"
+    t.check_constraint "emoji_level::text = ANY (ARRAY['none'::character varying, 'minimal'::character varying, 'moderate'::character varying, 'expressive'::character varying]::text[])", name: "posting_emoji_level_is_known"
+    t.check_constraint "hashtag_style::text = ANY (ARRAY['none'::character varying, 'minimal'::character varying, 'balanced'::character varying, 'trending'::character varying]::text[])", name: "posting_hashtag_style_is_known"
+    t.check_constraint "posts_per_week >= 1 AND posts_per_week <= 21", name: "posting_posts_per_week_in_range"
+    t.check_constraint "preferred_time::text ~ '^([01][0-9]|2[0-3]):[0-5][0-9]$'::text", name: "posting_preferred_time_is_a_time"
   end
 
   create_table "posts", force: :cascade do |t|
@@ -564,15 +620,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_19_160000) do
   add_foreign_key "brand_analyses", "workspaces"
   add_foreign_key "brand_analysis_tasks", "brand_analyses"
   add_foreign_key "brand_goals", "workspaces"
+  add_foreign_key "brand_kits", "workspaces"
   add_foreign_key "brand_profiles", "workspaces"
   add_foreign_key "brand_tones", "workspaces"
   add_foreign_key "media_assets", "users", column: "uploaded_by_id"
   add_foreign_key "media_assets", "workspaces"
+  add_foreign_key "notification_preferences", "users"
+  add_foreign_key "notification_preferences", "workspaces"
   add_foreign_key "plan_entitlements", "plans"
   add_foreign_key "post_media", "media_assets"
   add_foreign_key "post_media", "posts"
   add_foreign_key "post_targets", "posts"
   add_foreign_key "post_targets", "social_accounts"
+  add_foreign_key "posting_preferences", "workspaces"
   add_foreign_key "posts", "templates"
   add_foreign_key "posts", "users", column: "approved_by_id"
   add_foreign_key "posts", "users", column: "created_by_id"

@@ -1,0 +1,33 @@
+<% content_for :title, "Products and services" %>
+
+<%= render "settings/page_header",
+      title: "Products & services",
+      subtitle: "What your business offers. Prachar builds content and ads around these." %>
+
+<%= render "shared/flash" %>
+
+<div class="mb-6 inline-flex rounded-control border border-border bg-surface p-1" role="tablist">
+  <% [["products", "Products", @products.size], ["services", "Services", @services.size]].each do |key, label, count| %>
+    <% active = @tab == key %>
+    <%= link_to workspace_settings_catalog_path(workspace_slug: current_workspace.slug, tab: key),
+          role: "tab", aria: { selected: active.to_s },
+          class: class_names(
+            "flex items-center gap-2 rounded-[0.4rem] px-6 py-2 text-sm transition-colors",
+            "bg-primary font-medium text-primary-contrast" => active,
+            "text-body hover:bg-surface-sunk" => !active
+          ) do %>
+      <%= label %>
+      <span class="<%= active ? "text-primary-contrast/70" : "text-muted" %> tabular-nums"><%= count %></span>
+    <% end %>
+  <% end %>
+</div>
+
+<div class="space-y-6">
+  <% if @tab == "services" %>
+    <%= render "onboarding/catalog/service_form", service: @service %>
+    <%= render "onboarding/catalog/service_table", services: @services %>
+  <% else %>
+    <%= render "onboarding/catalog/product_form", product: @product %>
+    <%= render "onboarding/catalog/product_table", products: @products %>
+  <% end %>
+</div>

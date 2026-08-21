@@ -1,0 +1,79 @@
+<% content_for :title, "Brand kit" %>
+
+<%= render "settings/page_header",
+      title: "Brand kit",
+      subtitle: "Your logo, colours and typography. Used whenever a creative is made for you." %>
+
+<%= render "shared/flash" %>
+<%= render "shared/error_summary", record: @brand_kit %>
+
+<%= form_with model: @brand_kit,
+              url: workspace_settings_brand_kit_path(workspace_slug: current_workspace.slug),
+              method: :patch, scope: :brand_kit,
+              html: { multipart: true, novalidate: true }, class: "space-y-6" do |form| %>
+
+  <section class="rounded-card border border-border bg-surface p-6">
+    <h2 class="font-display text-xl font-normal">Logos</h2>
+    <p class="mt-1 text-sm text-muted">
+      Three versions, because a mark that works on a light background rarely works on a dark one,
+      and neither works as a small icon.
+    </p>
+
+    <div class="mt-5 grid gap-5 sm:grid-cols-3">
+      <%= render "settings/brand_kit/upload", form: form, attribute: :logo,
+            label: "Main logo", hint: "For light backgrounds",
+            attachment: @brand_kit.logo, dark: false %>
+
+      <%= render "settings/brand_kit/upload", form: form, attribute: :logo_on_dark,
+            label: "Logo for dark", hint: "Light version of your mark",
+            attachment: @brand_kit.logo_on_dark, dark: true %>
+
+      <%= render "settings/brand_kit/upload", form: form, attribute: :icon,
+            label: "Icon", hint: "Square, for small spaces",
+            attachment: @brand_kit.icon, dark: false %>
+    </div>
+  </section>
+
+  <section class="rounded-card border border-border bg-surface p-6">
+    <h2 class="font-display text-xl font-normal">Colours</h2>
+    <p class="mt-1 text-sm text-muted">Six-digit hex, like #341044.</p>
+
+    <div class="mt-5 grid gap-5 sm:grid-cols-3">
+      <% [[:primary_color, "Primary"], [:secondary_color, "Secondary"], [:accent_color, "Accent"]].each do |attribute, label| %>
+        <div>
+          <%= form.label attribute, label, class: "mb-1.5 block text-sm font-medium text-heading" %>
+          <div class="flex items-center gap-2">
+            <span aria-hidden="true"
+                  class="h-11 w-11 shrink-0 rounded-control border border-border"
+                  style="background-color: <%= @brand_kit.public_send(attribute).presence || "transparent" %>;"></span>
+            <%= form.text_field attribute, placeholder: "#341044",
+                  class: "h-11 w-full rounded-control border border-border bg-background px-3.5 font-mono text-sm text-heading placeholder:text-muted focus:border-border-strong focus:outline-none" %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </section>
+
+  <section class="rounded-card border border-border bg-surface p-6">
+    <h2 class="font-display text-xl font-normal">Typography</h2>
+
+    <div class="mt-5 grid gap-5 sm:grid-cols-2">
+      <%= render FormFieldComponent.new(form: form, attribute: :heading_font,
+            label: "Heading font", placeholder: "Fraunces", hint: "Used for titles") %>
+
+      <%= render FormFieldComponent.new(form: form, attribute: :body_font,
+            label: "Body font", placeholder: "Figtree", hint: "Used for everything else") %>
+    </div>
+
+    <div class="mt-5">
+      <%= form.label :usage_notes, "Notes for whoever makes your creatives",
+            class: "mb-1.5 block text-sm font-medium text-heading" %>
+      <%= form.text_area :usage_notes, rows: 3, maxlength: 500,
+            placeholder: "Always keep clear space around the logo. Never stretch it.",
+            class: "w-full rounded-control border border-border bg-background px-3.5 py-2.5 text-sm text-heading placeholder:text-muted focus:border-border-strong focus:outline-none" %>
+    </div>
+  </section>
+
+  <%= form.submit "Save brand kit",
+        class: "h-11 cursor-pointer rounded-control bg-primary px-6 text-sm font-medium text-primary-contrast hover:bg-primary-hover" %>
+<% end %>

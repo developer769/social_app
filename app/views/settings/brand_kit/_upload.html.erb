@@ -1,0 +1,23 @@
+<div>
+  <span class="mb-1.5 block text-sm font-medium text-heading"><%= label %></span>
+
+  <%# The dark variant previews on a dark ground, because that is the only place
+      you can tell whether it works. %>
+  <div class="mb-2 flex h-24 items-center justify-center rounded-control border border-border <%= dark ? "bg-heading" : "bg-background" %>">
+    <% if attachment.attached? %>
+      <%= image_tag attachment.variant(resize_to_limit: [180, 80]),
+            alt: "Current #{label.downcase}", class: "max-h-16 object-contain" %>
+    <% else %>
+      <span class="text-xs <%= dark ? "text-white/60" : "text-muted" %>">Nothing uploaded</span>
+    <% end %>
+  </div>
+
+  <label for="brand_kit_<%= attribute %>"
+         class="flex cursor-pointer items-center justify-center rounded-control border border-dashed border-border-strong px-3 py-2.5 text-center text-xs text-body hover:bg-surface-sunk">
+    <%= attachment.attached? ? "Replace" : "Upload" %>
+    <%= form.file_field attribute, id: "brand_kit_#{attribute}",
+          accept: BrandKit::IMAGE_CONTENT_TYPES.join(","), class: "sr-only" %>
+  </label>
+
+  <p class="mt-1.5 text-xs text-muted"><%= hint %></p>
+</div>

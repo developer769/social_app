@@ -14,6 +14,9 @@ class Workspace < ApplicationRecord
   has_one :subscription, dependent: :destroy
   has_many :media_assets, dependent: :destroy
   has_many :posts, dependent: :destroy
+  has_one :posting_preference, dependent: :destroy
+  has_one :brand_kit, dependent: :destroy
+  has_many :notification_preferences, dependent: :destroy
 
   has_many :workspace_memberships, dependent: :destroy
   has_many :members, through: :workspace_memberships, source: :user

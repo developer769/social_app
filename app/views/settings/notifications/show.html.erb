@@ -1,0 +1,52 @@
+<% content_for :title, "Notifications" %>
+
+<%= render "settings/page_header",
+      title: "Notifications",
+      subtitle: "Choose what Prachar emails you about #{current_workspace.name}." %>
+
+<%= render "shared/flash" %>
+
+<div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+  <%= form_with model: @preference,
+                url: workspace_settings_notifications_path(workspace_slug: current_workspace.slug),
+                method: :patch, scope: :notification_preference do |form| %>
+    <section class="rounded-card border border-border bg-surface p-6">
+      <h2 class="font-display text-xl font-normal">Email me when</h2>
+
+      <ul class="mt-5 divide-y divide-border">
+        <% NotificationPreference::CHANNELS.each do |key, (title, summary)| %>
+          <li class="py-4 first:pt-0 last:pb-0">
+            <label class="flex cursor-pointer items-start gap-3">
+              <%= form.check_box key, class: "mt-0.5 h-4 w-4 shrink-0 accent-[var(--color-primary)]" %>
+              <span class="min-w-0">
+                <span class="block text-sm font-medium text-heading"><%= title %></span>
+                <span class="mt-0.5 block text-xs text-muted"><%= summary %></span>
+              </span>
+            </label>
+          </li>
+        <% end %>
+      </ul>
+
+      <%= form.submit "Save",
+            class: "mt-6 h-11 cursor-pointer rounded-control bg-primary px-6 text-sm font-medium text-primary-contrast hover:bg-primary-hover" %>
+    </section>
+  <% end %>
+
+  <aside>
+    <section class="rounded-card border border-border bg-blue-soft p-5">
+      <h2 class="font-display text-lg font-normal">These are yours alone</h2>
+      <p class="mt-2 text-sm text-body">
+        Settings here apply to <span class="font-medium text-heading"><%= current_user.email %></span>
+        in this workspace. Everyone else chooses their own.
+      </p>
+
+      <%# Saying this plainly matters: the switches work and are stored, but
+          nothing sends yet, and a switch that appears to do something it does
+          not is worse than one that explains itself. %>
+      <p class="mt-3 text-xs text-muted">
+        Notification sending is not switched on yet, so nothing is being emailed today.
+        Your choices are saved and will be honoured when it is.
+      </p>
+    </section>
+  </aside>
+</div>

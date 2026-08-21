@@ -1,0 +1,12 @@
+<%= @invited_by&.name || "Someone" %> invited you to <%= @workspace.name %> on Prachar.
+
+Prachar helps businesses plan, create and schedule their social media.
+Accepting this invitation gives you access to <%= @workspace.name %>'s workspace.
+
+Accept the invitation:
+<%= @accept_url %>
+<% if @expires_on %>
+This invitation expires on <%= l(@expires_on, format: :long) %>.
+<% end %>
+
+If you were not expecting this, you can ignore it. Nothing happens until you accept.

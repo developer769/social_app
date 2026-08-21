@@ -4,6 +4,11 @@ Rails.application.routes.draw do
   post   "login",  to: "sessions#create"
   delete "logout", to: "sessions#destroy", as: :logout
 
+  # ---- Invitations ---------------------------------------------------------
+  get    "invitations/:token",         to: "invitations#show",    as: :invitation
+  post   "invitations/:token/accept",  to: "invitations#accept",  as: :accept_invitation
+  delete "invitations/:token/decline", to: "invitations#decline", as: :decline_invitation
+
   get  "signup", to: "registrations#new", as: :signup
   post "signup", to: "registrations#create"
 
@@ -26,6 +31,23 @@ Rails.application.routes.draw do
     get "gallery",               to: "gallery/templates#index", as: :gallery
     get  "gallery/:slug",        to: "gallery/templates#show", as: :gallery_template
     post "gallery/:slug/use",    to: "gallery/uses#create",    as: :gallery_template_use
+
+    # ---- Settings ----------------------------------------------------------
+    namespace :settings do
+      root to: "hub#show"
+      resource  :business,     only: %i[show update], controller: "business"
+      get       "catalog",     to: "catalog#show",    as: :catalog
+      get       "connections", to: "connections#show", as: :connections
+      resource  :security,     only: %i[show update], controller: "security"
+      delete    "security/sessions/:id", to: "security#revoke_session", as: :security_session
+      resource  :billing,      only: %i[show],        controller: "billing"
+      resource  :posting_preferences, only: %i[show update], controller: "posting_preferences"
+      resource  :brand_kit,    only: %i[show update], controller: "brand_kit"
+      resource  :notifications, only: %i[show update], controller: "notifications"
+      resources :team, only: %i[index create destroy] do
+        member { post :resend }
+      end
+    end
 
     get "calendar", to: "calendar#show", as: :calendar
 

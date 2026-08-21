@@ -1,0 +1,65 @@
+<% content_for :title, "Business profile" %>
+
+<%= render "settings/page_header",
+      title: "Business profile",
+      subtitle: "Your business details. Prachar uses these to write content that sounds like you." %>
+
+<%= render "shared/flash" %>
+
+<%= form_with url: workspace_settings_business_path(workspace_slug: current_workspace.slug),
+              method: :patch, scope: :business_setup, model: @profile,
+              html: { multipart: true, novalidate: true }, class: "space-y-6" do |form| %>
+
+  <%= render "shared/error_summary", record: @profile %>
+
+  <section class="rounded-card border border-border bg-surface p-6">
+    <h2 class="font-display text-xl font-normal">Basic information</h2>
+
+    <div class="mt-5 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+      <%= render FormFieldComponent.new(form: form, attribute: :business_name, label: "Business name",
+            required: true, value: current_workspace.name) %>
+
+      <%= render FormFieldComponent.new(form: form, attribute: :category, label: "Category",
+            placeholder: "Bakery", value: @profile.category) %>
+
+      <%= render FormFieldComponent.new(form: form, attribute: :contact_email, label: "Business email",
+            type: :email_field, value: @profile.contact_email) %>
+
+      <%= render SelectFieldComponent.new(form: form, attribute: :business_type, label: "Business type",
+            include_blank: "Select a type",
+            choices: BrandProfile::BUSINESS_TYPES.map { |type| [type.humanize, type] }) %>
+
+      <%= render FormFieldComponent.new(form: form, attribute: :website_url, label: "Website",
+            hint: "Optional", prefix: "https://", prefix_size: :text,
+            placeholder: "anayabakes.com",
+            value: @profile.website_url&.sub(%r{\Ahttps?://}, "")) %>
+
+      <%= render FormFieldComponent.new(form: form, attribute: :phone, label: "Phone number",
+            type: :telephone_field, prefix: "+91", prefix_size: :text, value: @profile.phone) %>
+
+      <%= render FormFieldComponent.new(form: form, attribute: :city, label: "City",
+            placeholder: "Delhi, India", value: @profile.city) %>
+
+      <%= render SelectFieldComponent.new(form: form, attribute: :timezone, label: "Time zone",
+            include_blank: nil,
+            choices: ActiveSupport::TimeZone.all.map { |zone| [zone.to_s, zone.tzinfo.identifier] }) %>
+    </div>
+
+    <div class="mt-5 grid gap-5 lg:grid-cols-2">
+      <div>
+        <%= form.label :about, "About your business", class: "mb-1.5 block text-sm font-medium text-heading" %>
+        <%= form.text_area :about, rows: 5, maxlength: 500, value: @profile.about,
+              class: "w-full rounded-control border border-border bg-background px-3.5 py-2.5 text-sm text-heading placeholder:text-muted focus:border-border-strong focus:outline-none" %>
+        <p class="mt-1.5 text-right text-xs text-muted">Up to 500 characters</p>
+      </div>
+
+      <%= render "onboarding/business/logo_field", profile: @profile %>
+    </div>
+
+    <%= render "onboarding/business/goals_and_tones",
+          selected_goals: @selected_goals, selected_tones: @selected_tones %>
+  </section>
+
+  <%= form.submit "Save changes",
+        class: "h-11 cursor-pointer rounded-control bg-primary px-6 text-sm font-medium text-primary-contrast hover:bg-primary-hover" %>
+<% end %>

@@ -1,0 +1,16 @@
+<% content_for :title, "Invitation not available" %>
+
+<div class="mx-auto flex min-h-dvh max-w-md flex-col justify-center px-6 py-16">
+  <%= render "shared/wordmark", classes: "text-2xl" %>
+
+  <div class="mt-8 rounded-card border border-border bg-surface p-8 shadow-card">
+    <h1 class="font-display text-2xl font-normal">This invitation is not available</h1>
+    <p class="mt-2 text-sm text-body">
+      It may have already been used, cancelled, or never existed.
+      Ask whoever invited you to send a new one.
+    </p>
+
+    <%= link_to "Go to sign in", login_path,
+          class: "mt-6 inline-flex h-11 items-center rounded-control bg-primary px-5 text-sm font-medium text-primary-contrast hover:bg-primary-hover" %>
+  </div>
+</div>

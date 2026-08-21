@@ -1,0 +1,163 @@
+<% content_for :title, "Posting preferences" %>
+
+<%= render "settings/page_header",
+      title: "Posting preferences",
+      subtitle: "Set your default content preferences so posts sound like you and fit your brand." %>
+
+<%= render "shared/flash" %>
+<%= render "shared/error_summary", record: @preference %>
+
+<%= form_with model: @preference,
+              url: workspace_settings_posting_preferences_path(workspace_slug: current_workspace.slug),
+              method: :patch, scope: :posting_preference, class: "space-y-6" do |form| %>
+
+  <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+    <div class="min-w-0 space-y-6">
+      <section class="rounded-card border border-border bg-surface p-6">
+        <h2 class="font-display text-xl font-normal">How your content should sound</h2>
+
+        <div class="mt-5 space-y-6">
+          <%= render "settings/posting_preferences/choice",
+                form: form, attribute: :brand_voice, title: "Brand voice",
+                summary: "How do you want your brand to sound?", free_text: true %>
+
+          <%= render "settings/posting_preferences/segmented",
+                form: form, attribute: :caption_style, title: "Caption style",
+                summary: "Choose the tone and length of your captions.",
+                choices: PostingPreference::CAPTION_STYLES %>
+
+          <%= render "settings/posting_preferences/segmented",
+                form: form, attribute: :hashtag_style, title: "Hashtags",
+                summary: "How would you like hashtags to be used?",
+                choices: PostingPreference::HASHTAG_STYLES %>
+
+          <%= render "settings/posting_preferences/segmented",
+                form: form, attribute: :emoji_level, title: "Emojis",
+                summary: "How would you like emojis to be used?",
+                choices: PostingPreference::EMOJI_LEVELS %>
+        </div>
+      </section>
+
+      <section class="rounded-card border border-border bg-surface p-6">
+        <h2 class="font-display text-xl font-normal">Words to use, and words to avoid</h2>
+        <p class="mt-1 text-sm text-muted">Comma separated. Up to <%= PostingPreference::MAX_KEYWORDS %> of each.</p>
+
+        <div class="mt-5 space-y-5">
+          <div>
+            <%= label_tag "posting_preference_brand_keywords_text", "Brand keywords",
+                  class: "mb-1.5 block text-sm font-medium text-heading" %>
+            <%= text_field_tag "posting_preference[brand_keywords_text]",
+                  @preference.brand_keywords.join(", "),
+                  id: "posting_preference_brand_keywords_text",
+                  placeholder: "Freshly baked, Handmade, Premium ingredients",
+                  class: "h-11 w-full rounded-control border border-border bg-background px-3.5 text-sm text-heading placeholder:text-muted focus:border-border-strong focus:outline-none" %>
+            <p class="mt-1.5 text-xs text-muted">Words we should lean on.</p>
+          </div>
+
+          <div>
+            <%= label_tag "posting_preference_avoid_terms_text", "Things to avoid",
+                  class: "mb-1.5 block text-sm font-medium text-heading" %>
+            <%= text_field_tag "posting_preference[avoid_terms_text]",
+                  @preference.avoid_terms.join(", "),
+                  id: "posting_preference_avoid_terms_text",
+                  placeholder: "Overly promotional, Price sensitive, Political topics",
+                  class: "h-11 w-full rounded-control border border-border bg-background px-3.5 text-sm text-heading placeholder:text-muted focus:border-border-strong focus:outline-none" %>
+            <p class="mt-1.5 text-xs text-muted">Words or topics we should stay away from.</p>
+          </div>
+
+          <%= render FormFieldComponent.new(form: form, attribute: :default_call_to_action,
+                label: "Usual call to action", hint: "Pre-filled on new posts. You can change it each time.",
+                placeholder: "Order now", maxlength: 30) %>
+        </div>
+      </section>
+
+      <section class="rounded-card border border-border bg-surface p-6">
+        <h2 class="font-display text-xl font-normal">When you want to post</h2>
+
+        <div class="mt-5 grid gap-5 sm:grid-cols-2">
+          <%= render FormFieldComponent.new(form: form, attribute: :posts_per_week,
+                label: "Posts per week", type: :number_field, min: 1, max: 21,
+                hint: "Used to suggest a schedule. Nothing is posted automatically.") %>
+
+          <div>
+            <%= form.label :preferred_time, "Usual time", class: "mb-1.5 block text-sm font-medium text-heading" %>
+            <%= form.time_field :preferred_time, value: @preference.preferred_time,
+                  class: "h-11 w-full rounded-control border border-border bg-background px-3.5 text-sm text-heading focus:border-border-strong focus:outline-none" %>
+            <p class="mt-1.5 text-xs text-muted"><%= current_workspace.timezone %></p>
+          </div>
+        </div>
+
+        <fieldset class="mt-5">
+          <legend class="mb-2 text-sm font-medium text-heading">Preferred days</legend>
+          <div class="flex flex-wrap gap-2">
+            <% PostingPreference::DAY_NAMES.each_with_index do |name, index| %>
+              <label class="cursor-pointer">
+                <%= check_box_tag "posting_preference[preferred_days][]", index,
+                      @preference.preferred_days.include?(index),
+                      id: "day_#{index}", class: "peer sr-only" %>
+                <span class="block rounded-control border border-border bg-background px-3.5 py-2 text-sm text-body
+                             peer-checked:border-primary peer-checked:bg-primary peer-checked:text-primary-contrast
+                             peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-primary">
+                  <%= name.first(3) %>
+                </span>
+              </label>
+            <% end %>
+          </div>
+        </fieldset>
+      </section>
+
+      <section class="rounded-card border border-border bg-surface p-6">
+        <h2 class="font-display text-xl font-normal">Defaults for new posts</h2>
+        <p class="mt-1 text-sm text-muted">
+          Applied when a post is created. Existing posts are never changed.
+        </p>
+
+        <div class="mt-5 space-y-5">
+          <label class="flex cursor-pointer items-start gap-3">
+            <%= form.check_box :append_hashtags_as_first_comment,
+                  class: "mt-0.5 h-4 w-4 accent-[var(--color-primary)]" %>
+            <span class="text-sm">
+              <span class="block font-medium text-heading">Put hashtags in the first comment</span>
+              <span class="block text-xs text-muted">
+                Keeps the caption clean. Only on platforms that support a first comment.
+              </span>
+            </span>
+          </label>
+
+          <div>
+            <%= form.label :default_first_comment, "Usual first comment",
+                  class: "mb-1.5 block text-sm font-medium text-heading" %>
+            <%= form.text_area :default_first_comment, rows: 2,
+                  placeholder: "Tag someone who would love this.",
+                  class: "w-full rounded-control border border-border bg-background px-3.5 py-2.5 text-sm text-heading placeholder:text-muted focus:border-border-strong focus:outline-none" %>
+          </div>
+
+          <%= render FormFieldComponent.new(form: form, attribute: :default_link_url,
+                label: "Usual link", hint: "Optional", prefix: "https://", prefix_size: :text,
+                placeholder: "anayabakes.com/order",
+                value: @preference.default_link_url&.sub(%r{\Ahttps?://}, "")) %>
+        </div>
+      </section>
+    </div>
+
+    <aside class="space-y-5">
+      <section class="rounded-card border border-border bg-lavender-soft p-5">
+        <h2 class="font-display text-lg font-normal">What this affects</h2>
+        <p class="mt-2 text-sm text-body">
+          These preferences pre-fill new posts and will steer the generator once it is connected.
+        </p>
+        <p class="mt-3 text-xs text-muted">
+          Nothing here posts on your behalf. Every post still needs you to schedule it.
+        </p>
+      </section>
+
+      <section class="rounded-card border border-border bg-surface p-5">
+        <h2 class="font-display text-lg font-normal">Your plan, in a sentence</h2>
+        <p class="mt-2 text-sm text-body"><%= @preference.schedule_summary %></p>
+      </section>
+
+      <%= form.submit "Save preferences",
+            class: "h-11 w-full cursor-pointer rounded-control bg-primary px-5 text-sm font-medium text-primary-contrast hover:bg-primary-hover" %>
+    </aside>
+  </div>
+<% end %>

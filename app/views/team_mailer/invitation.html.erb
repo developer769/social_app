@@ -1,0 +1,27 @@
+<div style="font-family: -apple-system, Segoe UI, sans-serif; color: #485064; line-height: 1.6;">
+  <p style="font-size: 20px; color: #22113A; margin: 0 0 16px;">
+    <%= @invited_by&.name || "Someone" %> invited you to <strong><%= @workspace.name %></strong>
+  </p>
+
+  <p>
+    Prachar helps businesses plan, create and schedule their social media.
+    Accepting this invitation gives you access to <%= @workspace.name %>'s workspace.
+  </p>
+
+  <p style="margin: 28px 0;">
+    <a href="<%= @accept_url %>"
+       style="background:#341044; color:#FFFDF9; padding:12px 24px; border-radius:8px; text-decoration:none; font-weight:500;">
+      Accept the invitation
+    </a>
+  </p>
+
+  <% if @expires_on %>
+    <p style="font-size: 14px; color: #6E7385;">
+      This invitation expires on <%= l(@expires_on, format: :long) %>.
+    </p>
+  <% end %>
+
+  <p style="font-size: 14px; color: #6E7385;">
+    If you were not expecting this, you can ignore it. Nothing happens until you accept.
+  </p>
+</div>

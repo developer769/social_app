@@ -1,6 +1,16 @@
 require "active_support/core_ext/integer/time"
 
 Rails.application.configure do
+  # Mail is caught by mailcatcher in development; nothing leaves the machine.
+  # Open http://localhost:1080 to read it.
+  config.action_mailer.delivery_method = :smtp
+  config.action_mailer.smtp_settings = {
+    address: ENV.fetch("SMTP_HOST", "mailcatcher"),
+    port: ENV.fetch("SMTP_PORT", 1025).to_i
+  }
+  config.action_mailer.default_url_options = { host: "localhost", port: 3000 }
+  config.action_mailer.perform_deliveries = true
+  config.action_mailer.raise_delivery_errors = false
   # Requests arriving from inside the compose network use the service name as
   # the host, which host authorization rejects by default. bin/screenshot and
   # any container-to-container call need it allowed.

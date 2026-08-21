@@ -1,0 +1,78 @@
+<% content_for :title, "Security" %>
+
+<%= render "settings/page_header",
+      title: "Security",
+      subtitle: "Your password and the devices signed in to your account." %>
+
+<%= render "shared/flash" %>
+
+<div class="grid gap-6 lg:grid-cols-2">
+  <section class="rounded-card border border-border bg-surface p-6">
+    <h2 class="font-display text-xl font-normal">Change your password</h2>
+    <p class="mt-1 text-sm text-muted">
+      Changing it signs you out everywhere else, so a device you no longer trust loses access.
+    </p>
+
+    <% if @user_errors&.any? %>
+      <div role="alert" class="mt-4 rounded-control border border-danger/30 bg-danger-soft px-4 py-3 text-sm text-danger">
+        <%= @user_errors.full_messages.to_sentence %>
+      </div>
+    <% end %>
+
+    <%= form_with url: workspace_settings_security_path(workspace_slug: current_workspace.slug),
+                  method: :patch, scope: :user, class: "mt-5 space-y-4" do |form| %>
+      <div>
+        <%= form.label :current_password, "Current password", class: "mb-1.5 block text-sm font-medium text-heading" %>
+        <%= form.password_field :current_password, required: true, autocomplete: "current-password",
+              class: "h-11 w-full rounded-control border border-border bg-background px-3.5 text-sm text-heading focus:border-border-strong focus:outline-none" %>
+      </div>
+
+      <div>
+        <%= form.label :password, "New password", class: "mb-1.5 block text-sm font-medium text-heading" %>
+        <%= form.password_field :password, required: true, minlength: 12, autocomplete: "new-password",
+              aria: { describedby: "new-password-hint" },
+              class: "h-11 w-full rounded-control border border-border bg-background px-3.5 text-sm text-heading focus:border-border-strong focus:outline-none" %>
+        <p id="new-password-hint" class="mt-1.5 text-xs text-muted">At least 12 characters.</p>
+      </div>
+
+      <%= form.submit "Change password",
+            class: "h-11 cursor-pointer rounded-control bg-primary px-5 text-sm font-medium text-primary-contrast hover:bg-primary-hover" %>
+    <% end %>
+  </section>
+
+  <section class="rounded-card border border-border bg-surface p-6">
+    <h2 class="font-display text-xl font-normal">
+      Signed in devices <span class="text-base text-muted">(<%= @sessions.size %>)</span>
+    </h2>
+    <p class="mt-1 text-sm text-muted">
+      Every device currently signed in as you. Sign out anything you do not recognise.
+    </p>
+
+    <ul class="mt-5 divide-y divide-border">
+      <% @sessions.each do |session_record| %>
+        <% current = session_record.id == Current.session&.id %>
+        <li class="flex flex-wrap items-center gap-3 py-3.5">
+          <div class="min-w-0 flex-1">
+            <p class="flex flex-wrap items-center gap-2 text-sm font-medium text-heading">
+              <%= device_description(session_record.user_agent) %>
+              <% if current %>
+                <%= render StatusBadgeComponent.new(label: "This device", tone: :success) %>
+              <% end %>
+            </p>
+            <p class="mt-0.5 text-xs text-muted">
+              <%= session_record.ip_address.presence || "Unknown address" %>
+              &middot; signed in <%= time_ago_in_words(session_record.created_at) %> ago
+              &middot; expires <%= l(session_record.expires_at.to_date, format: :long) %>
+            </p>
+          </div>
+
+          <%= button_to (current ? "Sign out" : "Sign out this device"),
+                workspace_settings_security_session_path(workspace_slug: current_workspace.slug, id: session_record),
+                method: :delete,
+                form: { data: { turbo_confirm: current ? "Sign out on this device?" : nil } },
+                class: "cursor-pointer rounded-control border border-border px-3 py-1.5 text-xs font-medium text-danger hover:bg-danger-soft" %>
+        </li>
+      <% end %>
+    </ul>
+  </section>
+</div>

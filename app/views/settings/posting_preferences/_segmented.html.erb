@@ -1,0 +1,19 @@
+<div class="flex flex-wrap items-start justify-between gap-4 border-t border-border pt-5 first:border-0 first:pt-0">
+  <div class="min-w-48 flex-1">
+    <p class="text-sm font-medium text-heading"><%= title %></p>
+    <p class="mt-0.5 text-xs text-muted"><%= summary %></p>
+  </div>
+
+  <div class="flex flex-wrap gap-1.5" role="radiogroup" aria-label="<%= title %>">
+    <% choices.each do |value, label| %>
+      <label class="cursor-pointer">
+        <%= form.radio_button attribute, value, class: "peer sr-only" %>
+        <span class="block rounded-control border border-border bg-background px-3.5 py-2 text-sm text-body
+                     peer-checked:border-primary peer-checked:bg-primary peer-checked:text-primary-contrast
+                     peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-primary">
+          <%= label %>
+        </span>
+      </label>
+    <% end %>
+  </div>
+</div>
