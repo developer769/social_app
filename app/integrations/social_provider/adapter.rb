@@ -21,6 +21,8 @@ module SocialProvider
     def fetch_analytics(since:, until_date:) = not_implemented(__method__)
     def fetch_conversations(since:) = not_implemented(__method__)
     def send_reply(conversation:, body:) = not_implemented(__method__)
+    def create_campaign(campaign:) = not_implemented(__method__)
+    def fetch_campaign_metrics(campaign:, since:) = not_implemented(__method__)
 
     private
 

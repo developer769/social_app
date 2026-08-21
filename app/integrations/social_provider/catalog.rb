@@ -7,15 +7,32 @@ module SocialProvider
   # deliberately conservative: claiming less than a platform offers is
   # recoverable, claiming more breaks a customer's post.
   module Catalog
-    Definition = Struct.new(:key, :name, :handle_prefix, :capabilities, :notes, keyword_init: true)
+    Definition = Struct.new(:key, :name, :handle_prefix, :capabilities, :notes, :ad_metrics,
+                            keyword_init: true) do
+      # What this platform reports back about an ad. Deliberately different per
+      # platform: Meta reports reach, LinkedIn and X do not, and a dashboard
+      # that showed every column for every platform would have to invent the
+      # missing ones or print a zero that reads as "nobody saw it".
+      def reports?(metric) = ad_metrics.include?(metric.to_sym)
+    end
 
-    def self.define(key, name, handle_prefix:, supports:, limits:, notes:)
+    def self.define(key, name, handle_prefix:, supports:, limits:, notes:, ad_metrics: [])
       Definition.new(
         key: key, name: name, handle_prefix: handle_prefix,
         capabilities: Capabilities.new(supports: supports, limits: limits),
-        notes: notes
+        notes: notes, ad_metrics: ad_metrics.map(&:to_sym).freeze
       )
     end
+
+    # Every figure an ad platform can report, in the order a shop owner reads
+    # them: what it cost, then how far it went, then what it did.
+    AD_METRICS = {
+      spend: "Spent",
+      impressions: "Times shown",
+      reach: "People reached",
+      clicks: "Clicks",
+      results: "Results"
+    }.freeze
 
     ALL = {
       "instagram" => define("instagram", "Instagram", handle_prefix: "@",
@@ -23,18 +40,21 @@ module SocialProvider
                      read_comments reply_comments direct_messages analytics advertising],
         limits: { max_caption_length: 2_200, max_hashtags: 30, max_media_count: 10,
                   max_video_seconds: 90, daily_publish_limit: 25 },
+        ad_metrics: %i[spend impressions reach clicks results],
         notes: "Requires a Professional account linked to a Facebook Page. Publishing is capped per rolling 24 hours."),
 
       "facebook" => define("facebook", "Facebook Page", handle_prefix: "",
         supports: %i[publish_image publish_video publish_carousel publish_text first_comment
                      read_comments reply_comments direct_messages analytics advertising],
         limits: { max_caption_length: 63_206, max_media_count: 10, max_video_seconds: 14_400 },
+        ad_metrics: %i[spend impressions reach clicks results],
         notes: "Uses Page access tokens, which expire and must be refreshed."),
 
       "linkedin" => define("linkedin", "LinkedIn", handle_prefix: "",
         supports: %i[publish_image publish_video publish_text read_comments reply_comments
                      analytics advertising],
         limits: { max_caption_length: 3_000, max_media_count: 9, max_video_seconds: 600 },
+        ad_metrics: %i[spend impressions clicks],
         notes: "Posting needs Community Management API approval. No page-level direct messages."),
 
       "youtube" => define("youtube", "YouTube", handle_prefix: "@",
@@ -56,6 +76,7 @@ module SocialProvider
       "x" => define("x", "X", handle_prefix: "@",
         supports: %i[publish_image publish_video publish_text direct_messages analytics advertising],
         limits: { max_caption_length: 280, max_media_count: 4, max_video_seconds: 140 },
+        ad_metrics: %i[spend impressions clicks],
         notes: "Paid API tiers only, with low posting volume at the entry level.")
     }.freeze
 

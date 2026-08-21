@@ -21,6 +21,7 @@ class Workspace < ApplicationRecord
 
   has_many :workspace_memberships, dependent: :destroy
   has_many :members, through: :workspace_memberships, source: :user
+  has_many :ad_campaigns, dependent: :destroy
   has_many :conversations, dependent: :destroy
   has_many :saved_replies, dependent: :destroy
   has_many :audit_events, dependent: :nullify

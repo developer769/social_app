@@ -80,6 +80,22 @@ module SocialProvider
       )
     end
 
+    def create_campaign(campaign:)
+      require_capability!(:advertising)
+
+      raise PermanentError.new(
+        "Prachar cannot run ads on #{definition&.name || key} yet, so nothing was spent.",
+        code: "provider_not_connected"
+      )
+    end
+
+    def fetch_campaign_metrics(campaign:, since:)
+      raise PermanentError.new(
+        "Prachar cannot read ad figures from #{definition&.name || key} yet.",
+        code: "provider_not_connected"
+      )
+    end
+
     def send_reply(conversation:, body:)
       raise PermanentError.new(
         "Prachar cannot reply on #{definition&.name || key} yet, so nothing was sent.",

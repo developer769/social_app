@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_21_200000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_21_220000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
@@ -41,6 +41,59 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_200000) do
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "ad_campaigns", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id"
+    t.string "currency", default: "INR", null: false
+    t.bigint "daily_budget_minor"
+    t.date "ends_on"
+    t.string "error_message"
+    t.string "external_id"
+    t.datetime "last_synced_at"
+    t.string "name", null: false
+    t.string "objective", default: "reach", null: false
+    t.bigint "post_id", null: false
+    t.string "provider", null: false
+    t.bigint "social_account_id", null: false
+    t.date "starts_on"
+    t.string "status", default: "draft", null: false
+    t.bigint "total_budget_minor"
+    t.datetime "updated_at", null: false
+    t.bigint "workspace_id", null: false
+    t.index ["created_by_id"], name: "index_ad_campaigns_on_created_by_id"
+    t.index ["post_id"], name: "index_ad_campaigns_on_post_id"
+    t.index ["social_account_id", "external_id"], name: "index_ad_campaigns_on_social_account_id_and_external_id", unique: true, where: "(external_id IS NOT NULL)"
+    t.index ["social_account_id"], name: "index_ad_campaigns_on_social_account_id"
+    t.index ["workspace_id", "status"], name: "index_ad_campaigns_on_workspace_id_and_status"
+    t.index ["workspace_id"], name: "index_ad_campaigns_on_workspace_id"
+    t.check_constraint "daily_budget_minor IS NULL OR daily_budget_minor > 0", name: "ad_campaigns_daily_budget_is_positive"
+    t.check_constraint "ends_on IS NULL OR starts_on IS NULL OR ends_on >= starts_on", name: "ad_campaigns_ends_after_it_starts"
+    t.check_constraint "objective::text = ANY (ARRAY['reach'::character varying, 'engagement'::character varying, 'traffic'::character varying, 'messages'::character varying, 'leads'::character varying]::text[])", name: "ad_campaigns_objective_is_known"
+    t.check_constraint "status::text = ANY (ARRAY['draft'::character varying, 'pending'::character varying, 'running'::character varying, 'paused'::character varying, 'finished'::character varying, 'failed'::character varying]::text[])", name: "ad_campaigns_status_is_known"
+    t.check_constraint "total_budget_minor IS NULL OR total_budget_minor > 0", name: "ad_campaigns_total_budget_is_positive"
+  end
+
+  create_table "ad_metrics", force: :cascade do |t|
+    t.bigint "ad_campaign_id", null: false
+    t.bigint "clicks"
+    t.datetime "created_at", null: false
+    t.string "currency", default: "INR", null: false
+    t.datetime "fetched_at", null: false
+    t.bigint "impressions"
+    t.date "on_date", null: false
+    t.bigint "reach"
+    t.string "result_kind"
+    t.bigint "results"
+    t.bigint "spend_minor"
+    t.datetime "updated_at", null: false
+    t.index ["ad_campaign_id", "on_date"], name: "index_ad_metrics_on_ad_campaign_id_and_on_date", unique: true
+    t.index ["ad_campaign_id"], name: "index_ad_metrics_on_ad_campaign_id"
+    t.check_constraint "clicks IS NULL OR clicks >= 0", name: "ad_metrics_clicks_is_not_negative"
+    t.check_constraint "impressions IS NULL OR impressions >= 0", name: "ad_metrics_impressions_is_not_negative"
+    t.check_constraint "reach IS NULL OR reach >= 0", name: "ad_metrics_reach_is_not_negative"
+    t.check_constraint "spend_minor IS NULL OR spend_minor >= 0", name: "ad_metrics_spend_is_not_negative"
   end
 
   create_table "audit_events", force: :cascade do |t|
@@ -168,9 +221,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_200000) do
     t.index ["social_account_id"], name: "index_conversations_on_social_account_id"
     t.index ["workspace_id", "status", "last_message_at"], name: "index_conversations_for_listing", order: { last_message_at: :desc }
     t.index ["workspace_id"], name: "index_conversations_on_workspace_id"
-    t.check_constraint "kind::text = ANY (ARRAY['comment'::character varying, 'direct_message'::character varying, 'review'::character varying]::text[])", name: "conversations_kind_is_known"
+    t.check_constraint "kind::text = ANY (ARRAY['comment'::character varying::text, 'direct_message'::character varying::text, 'review'::character varying::text])", name: "conversations_kind_is_known"
     t.check_constraint "rating IS NULL OR rating >= 1 AND rating <= 5", name: "conversations_rating_in_range"
-    t.check_constraint "status::text = ANY (ARRAY['open'::character varying, 'closed'::character varying]::text[])", name: "conversations_status_is_known"
+    t.check_constraint "status::text = ANY (ARRAY['open'::character varying::text, 'closed'::character varying::text])", name: "conversations_status_is_known"
   end
 
   create_table "creative_outputs", force: :cascade do |t|
@@ -264,9 +317,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_200000) do
     t.index ["conversation_id", "sent_at"], name: "index_messages_on_conversation_id_and_sent_at"
     t.index ["conversation_id"], name: "index_messages_on_conversation_id"
     t.index ["sent_by_id"], name: "index_messages_on_sent_by_id"
-    t.check_constraint "delivery_status IS NULL OR (delivery_status::text = ANY (ARRAY['pending'::character varying, 'sending'::character varying, 'sent'::character varying, 'failed'::character varying]::text[]))", name: "messages_delivery_status_is_known"
+    t.check_constraint "delivery_status IS NULL OR (delivery_status::text = ANY (ARRAY['pending'::character varying::text, 'sending'::character varying::text, 'sent'::character varying::text, 'failed'::character varying::text]))", name: "messages_delivery_status_is_known"
     t.check_constraint "direction::text <> 'outbound'::text OR delivery_status IS NOT NULL", name: "messages_outbound_has_delivery_status"
-    t.check_constraint "direction::text = ANY (ARRAY['inbound'::character varying, 'outbound'::character varying]::text[])", name: "messages_direction_is_known"
+    t.check_constraint "direction::text = ANY (ARRAY['inbound'::character varying::text, 'outbound'::character varying::text])", name: "messages_direction_is_known"
   end
 
   create_table "notification_preferences", force: :cascade do |t|
@@ -743,6 +796,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_200000) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "ad_campaigns", "posts"
+  add_foreign_key "ad_campaigns", "social_accounts"
+  add_foreign_key "ad_campaigns", "users", column: "created_by_id"
+  add_foreign_key "ad_campaigns", "workspaces"
+  add_foreign_key "ad_metrics", "ad_campaigns"
   add_foreign_key "audit_events", "users", column: "actor_user_id"
   add_foreign_key "audit_events", "workspaces"
   add_foreign_key "brand_analyses", "users", column: "requested_by_id"

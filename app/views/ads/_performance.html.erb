@@ -1,0 +1,139 @@
+<%
+  p = performance
+  slug = { workspace_slug: current_workspace.slug }
+%>
+
+<section class="rounded-card border border-border bg-surface p-6">
+  <div class="flex flex-wrap items-start justify-between gap-4">
+    <div>
+      <h2 class="font-display text-xl font-normal">How the money performed</h2>
+      <p class="mt-1 text-sm text-muted">
+        <% if p.any_measurements? %>
+          <%= p.period_label %>, as the platforms reported it.
+        <% else %>
+          Every figure here comes from the ad platform itself. Nothing has been reported yet.
+        <% end %>
+      </p>
+    </div>
+
+    <% if p.any_measurements? %>
+      <nav class="flex gap-1 rounded-control border border-border bg-background p-1">
+        <% Ads::PerformanceQuery::PERIODS.each do |days, label| %>
+          <%= link_to label.sub("Last ", ""), workspace_ads_path(**slug, days: days),
+                class: class_names(
+                  "rounded-control px-3 py-1.5 text-sm font-medium",
+                  "bg-primary text-primary-contrast" => p.days == days,
+                  "text-body hover:bg-surface-sunk" => p.days != days) %>
+        <% end %>
+      </nav>
+    <% end %>
+  </div>
+
+  <%#
+    Paid and organic are never added together. A post seen by 500 followers and
+    boosted to 2,000 strangers did not reach 2,500 people, and the overlap
+    cannot be known from outside the platform. Saying so here keeps anyone from
+    reading these next to the Analytics figures and adding them up.
+  %>
+  <p class="mt-4 rounded-control border border-border bg-surface-sunk px-4 py-3 text-xs text-muted">
+    These count paid results only. They are kept apart from Analytics on purpose:
+    paid and organic reach measure different audiences that overlap by an unknown
+    amount, so adding them together would give a number that means nothing.
+  </p>
+
+  <dl class="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+    <% p.totals.each do |total| %>
+      <div class="rounded-control border border-border bg-background p-4">
+        <dt class="text-sm text-muted"><%= total.label %></dt>
+
+        <dd class="mt-1 font-display text-2xl tabular-nums text-heading">
+          <% if total.measured? %>
+            <% if total.money %>
+              <%= MoneyPresenter.new(Money.new(minor_units: total.value, currency: current_workspace.currency)).full %>
+            <% else %>
+              <%= number_with_delimiter(total.value) %>
+            <% end %>
+          <% elsif total.key == :results && p.mixed_goals? %>
+            <span class="text-base text-muted">Not comparable</span>
+          <% else %>
+            <%# Never a zero. "Not reported" and "none happened" are different
+                statements and only one of them is true. %>
+            <span class="text-base text-muted">Not reported</span>
+          <% end %>
+        </dd>
+
+        <% if total.note.present? %>
+          <%# "Results" is meaningless without saying what the result was. %>
+          <dd class="mt-1 text-xs text-muted"><%= total.note.capitalize %></dd>
+        <% end %>
+
+        <% if total.partial? %>
+          <dd class="mt-1.5 text-xs text-muted">
+            <%= total.missing_from.to_sentence %>
+            <%= total.missing_from.one? ? "does" : "do" %> not report this.
+          </dd>
+        <% end %>
+      </div>
+    <% end %>
+  </dl>
+
+  <% if p.any_campaigns? %>
+    <div class="mt-6 overflow-x-auto">
+      <table class="w-full min-w-[38rem] text-sm">
+        <thead>
+          <tr class="border-b border-border text-left text-xs uppercase tracking-wide text-muted">
+            <th class="pb-2 font-medium">Campaign</th>
+            <th class="pb-2 font-medium">Where</th>
+            <th class="pb-2 font-medium">Goal</th>
+            <th class="pb-2 text-right font-medium">Budget</th>
+            <th class="pb-2 text-right font-medium">Spent</th>
+            <th class="pb-2 text-right font-medium">Status</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-border">
+          <% p.campaigns.each do |campaign| %>
+            <tr>
+              <td class="py-3">
+                <%= link_to campaign.name, workspace_post_path(**slug, id: campaign.post_id),
+                      class: "text-heading underline underline-offset-4" %>
+              </td>
+              <td class="py-3">
+                <span class="flex items-center gap-2">
+                  <%= render PlatformGlyphComponent.new(provider: campaign.provider, size: :small) %>
+                  <span class="text-body"><%= campaign.provider_name %></span>
+                </span>
+              </td>
+              <td class="py-3 text-body"><%= campaign.objective_label %></td>
+              <td class="py-3 text-right tabular-nums text-body">
+                <% budget = campaign.total_budget || campaign.daily_budget %>
+                <%= budget ? MoneyPresenter.new(budget).full : "—" %>
+                <% if campaign.total_budget.nil? && campaign.daily_budget %>
+                  <span class="text-xs text-muted">a day</span>
+                <% end %>
+              </td>
+              <td class="py-3 text-right tabular-nums text-heading">
+                <% if campaign.spend %>
+                  <%= MoneyPresenter.new(campaign.spend).full %>
+                <% else %>
+                  <span class="text-xs text-muted">Not reported</span>
+                <% end %>
+              </td>
+              <td class="py-3 text-right">
+                <%= render StatusBadgeComponent.new(label: campaign.status_label, tone: campaign.status_tone) %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <div class="mt-6 rounded-control border border-dashed border-border-strong bg-background px-6 py-8 text-center">
+      <p class="text-sm font-medium text-heading">No money has been put behind a post yet</p>
+      <p class="mx-auto mt-1.5 max-w-md text-sm text-muted">
+        When an advertising connection exists, each campaign will be listed here with what
+        it cost and what it did &mdash; one row per campaign, one figure per thing the
+        platform actually reports.
+      </p>
+    </div>
+  <% end %>
+</section>

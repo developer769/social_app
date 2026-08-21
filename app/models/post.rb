@@ -32,6 +32,7 @@ class Post < ApplicationRecord
   # Nullified rather than destroyed: a generation is a record of what was made
   # and what it cost, and it outlives the draft it was made for.
   has_many :creative_requests, dependent: :nullify
+  has_many :ad_campaigns, dependent: :destroy
 
   enum :status, STATUSES.index_by(&:itself), validate: true
   enum :publish_mode, PUBLISH_MODES.index_by(&:itself), prefix: :publish, validate: true

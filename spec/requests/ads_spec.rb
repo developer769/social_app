@@ -124,6 +124,80 @@ RSpec.describe "Ads" do
     end
   end
 
+
+  describe "the performance dashboard" do
+    # Not called `post`: that name is the HTTP verb in a request spec, and
+    # shadowing it breaks the sign-in in the outer before block.
+    let(:advertised) { create(:post, workspace: workspace) }
+
+    def campaign_on(provider, **overrides)
+      account = create(:social_account, workspace: workspace, provider: provider)
+      create(:ad_campaign, workspace: workspace, post: advertised, social_account: account,
+                           provider: provider, **overrides)
+    end
+
+    it "invites a first campaign when none exist" do
+      get workspace_ads_path(**slug)
+
+      expect(body_text).to include("No money has been put behind a post yet")
+    end
+
+    it "lists campaigns with what they cost, in rupees" do
+      campaign = campaign_on("instagram", name: "Diwali hampers boost", total_budget_minor: 500_000)
+      create(:ad_metric, ad_campaign: campaign, spend_minor: 378_000)
+
+      get workspace_ads_path(**slug)
+
+      expect(body_text).to include("Diwali hampers boost")
+      expect(body_text).to include("₹5,000")
+      expect(body_text).to include("₹3,780")
+    end
+
+    # The measured-vs-unavailable rule, on the screen rather than in the query.
+    it "says a figure was not reported rather than showing a zero" do
+      campaign_on("instagram")
+
+      get workspace_ads_path(**slug)
+
+      expect(body_text).to include("Not reported")
+      expect(body_text).not_to match(/People reached\s*<\/dt>\s*<dd[^>]*>\s*0/)
+    end
+
+    it "names a platform that does not report a figure" do
+      instagram = campaign_on("instagram")
+      linkedin = campaign_on("linkedin")
+      create(:ad_metric, ad_campaign: instagram, reach: 8_000, spend_minor: 45_000)
+      create(:ad_metric, ad_campaign: linkedin, spend_minor: 28_000)
+
+      get workspace_ads_path(**slug)
+
+      expect(body_text).to include("LinkedIn does not report this")
+    end
+
+    # Paid and organic reach measure different audiences that overlap by an
+    # unknown amount. Adding them gives a number that means nothing.
+    it "warns against reading these together with Analytics" do
+      campaign_on("instagram")
+
+      get workspace_ads_path(**slug)
+
+      expect(body_text).to include("kept apart from Analytics on purpose")
+      expect(body_text).to include("adding them together would give a number that means nothing")
+    end
+
+    it "refuses to add results across campaigns aiming at different things" do
+      reach = campaign_on("instagram", objective: "reach")
+      traffic = campaign_on("facebook", objective: "traffic")
+      create(:ad_metric, ad_campaign: reach, results: 8_000, result_kind: "reach")
+      create(:ad_metric, ad_campaign: traffic, results: 120, result_kind: "link_click")
+
+      get workspace_ads_path(**slug)
+
+      expect(body_text).to include("Not comparable")
+      expect(body_text).to include("cannot be added up")
+    end
+  end
+
   # Spec 7.
   it "counts nothing from another workspace" do
     other = create(:workspace)
