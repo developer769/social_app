@@ -34,27 +34,34 @@ module SocialProvider
       results: "Results"
     }.freeze
 
+    # Purchase counts and their value are listed separately because they are
+    # not like the others: a platform CAN report them, but only when a tracking
+    # tag on a website is telling it about purchases. A shop taking orders on
+    # WhatsApp will get nothing here no matter which platform it uses, and that
+    # is a fact about the shop rather than about the platform.
+    REVENUE_METRICS = %i[conversions conversion_value].freeze
+
     ALL = {
       "instagram" => define("instagram", "Instagram", handle_prefix: "@",
         supports: %i[publish_image publish_video publish_carousel publish_story first_comment
                      read_comments reply_comments direct_messages analytics advertising],
         limits: { max_caption_length: 2_200, max_hashtags: 30, max_media_count: 10,
                   max_video_seconds: 90, daily_publish_limit: 25 },
-        ad_metrics: %i[spend impressions reach clicks results],
+        ad_metrics: %i[spend impressions reach clicks results conversions conversion_value],
         notes: "Requires a Professional account linked to a Facebook Page. Publishing is capped per rolling 24 hours."),
 
       "facebook" => define("facebook", "Facebook Page", handle_prefix: "",
         supports: %i[publish_image publish_video publish_carousel publish_text first_comment
                      read_comments reply_comments direct_messages analytics advertising],
         limits: { max_caption_length: 63_206, max_media_count: 10, max_video_seconds: 14_400 },
-        ad_metrics: %i[spend impressions reach clicks results],
+        ad_metrics: %i[spend impressions reach clicks results conversions conversion_value],
         notes: "Uses Page access tokens, which expire and must be refreshed."),
 
       "linkedin" => define("linkedin", "LinkedIn", handle_prefix: "",
         supports: %i[publish_image publish_video publish_text read_comments reply_comments
                      analytics advertising],
         limits: { max_caption_length: 3_000, max_media_count: 9, max_video_seconds: 600 },
-        ad_metrics: %i[spend impressions clicks],
+        ad_metrics: %i[spend impressions clicks conversions conversion_value],
         notes: "Posting needs Community Management API approval. No page-level direct messages."),
 
       "youtube" => define("youtube", "YouTube", handle_prefix: "@",
@@ -76,7 +83,7 @@ module SocialProvider
       "x" => define("x", "X", handle_prefix: "@",
         supports: %i[publish_image publish_video publish_text direct_messages analytics advertising],
         limits: { max_caption_length: 280, max_media_count: 4, max_video_seconds: 140 },
-        ad_metrics: %i[spend impressions clicks],
+        ad_metrics: %i[spend impressions clicks conversions conversion_value],
         notes: "Paid API tiers only, with low posting volume at the entry level.")
     }.freeze
 

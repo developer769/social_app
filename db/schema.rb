@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_21_220000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_21_233000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
@@ -70,14 +70,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_220000) do
     t.index ["workspace_id"], name: "index_ad_campaigns_on_workspace_id"
     t.check_constraint "daily_budget_minor IS NULL OR daily_budget_minor > 0", name: "ad_campaigns_daily_budget_is_positive"
     t.check_constraint "ends_on IS NULL OR starts_on IS NULL OR ends_on >= starts_on", name: "ad_campaigns_ends_after_it_starts"
-    t.check_constraint "objective::text = ANY (ARRAY['reach'::character varying, 'engagement'::character varying, 'traffic'::character varying, 'messages'::character varying, 'leads'::character varying]::text[])", name: "ad_campaigns_objective_is_known"
-    t.check_constraint "status::text = ANY (ARRAY['draft'::character varying, 'pending'::character varying, 'running'::character varying, 'paused'::character varying, 'finished'::character varying, 'failed'::character varying]::text[])", name: "ad_campaigns_status_is_known"
+    t.check_constraint "objective::text = ANY (ARRAY['reach'::character varying::text, 'engagement'::character varying::text, 'traffic'::character varying::text, 'messages'::character varying::text, 'leads'::character varying::text])", name: "ad_campaigns_objective_is_known"
+    t.check_constraint "status::text = ANY (ARRAY['draft'::character varying::text, 'pending'::character varying::text, 'running'::character varying::text, 'paused'::character varying::text, 'finished'::character varying::text, 'failed'::character varying::text])", name: "ad_campaigns_status_is_known"
     t.check_constraint "total_budget_minor IS NULL OR total_budget_minor > 0", name: "ad_campaigns_total_budget_is_positive"
   end
 
   create_table "ad_metrics", force: :cascade do |t|
     t.bigint "ad_campaign_id", null: false
     t.bigint "clicks"
+    t.bigint "conversion_value_minor"
+    t.bigint "conversions"
     t.datetime "created_at", null: false
     t.string "currency", default: "INR", null: false
     t.datetime "fetched_at", null: false
@@ -91,9 +93,29 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_220000) do
     t.index ["ad_campaign_id", "on_date"], name: "index_ad_metrics_on_ad_campaign_id_and_on_date", unique: true
     t.index ["ad_campaign_id"], name: "index_ad_metrics_on_ad_campaign_id"
     t.check_constraint "clicks IS NULL OR clicks >= 0", name: "ad_metrics_clicks_is_not_negative"
+    t.check_constraint "conversion_value_minor IS NULL OR conversion_value_minor >= 0", name: "ad_metrics_conversion_value_is_not_negative"
+    t.check_constraint "conversions IS NULL OR conversions >= 0", name: "ad_metrics_conversions_is_not_negative"
     t.check_constraint "impressions IS NULL OR impressions >= 0", name: "ad_metrics_impressions_is_not_negative"
     t.check_constraint "reach IS NULL OR reach >= 0", name: "ad_metrics_reach_is_not_negative"
     t.check_constraint "spend_minor IS NULL OR spend_minor >= 0", name: "ad_metrics_spend_is_not_negative"
+  end
+
+  create_table "ad_outcomes", force: :cascade do |t|
+    t.bigint "ad_campaign_id", null: false
+    t.datetime "created_at", null: false
+    t.string "currency", default: "INR", null: false
+    t.string "note"
+    t.date "occurred_on", null: false
+    t.integer "orders"
+    t.bigint "recorded_by_id"
+    t.bigint "revenue_minor"
+    t.datetime "updated_at", null: false
+    t.index ["ad_campaign_id", "occurred_on"], name: "index_ad_outcomes_on_ad_campaign_id_and_occurred_on"
+    t.index ["ad_campaign_id"], name: "index_ad_outcomes_on_ad_campaign_id"
+    t.index ["recorded_by_id"], name: "index_ad_outcomes_on_recorded_by_id"
+    t.check_constraint "orders IS NOT NULL OR revenue_minor IS NOT NULL", name: "ad_outcomes_records_something"
+    t.check_constraint "orders IS NULL OR orders >= 0", name: "ad_outcomes_orders_is_not_negative"
+    t.check_constraint "revenue_minor IS NULL OR revenue_minor >= 0", name: "ad_outcomes_revenue_is_not_negative"
   end
 
   create_table "audit_events", force: :cascade do |t|
@@ -801,6 +823,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_220000) do
   add_foreign_key "ad_campaigns", "users", column: "created_by_id"
   add_foreign_key "ad_campaigns", "workspaces"
   add_foreign_key "ad_metrics", "ad_campaigns"
+  add_foreign_key "ad_outcomes", "ad_campaigns"
+  add_foreign_key "ad_outcomes", "users", column: "recorded_by_id"
   add_foreign_key "audit_events", "users", column: "actor_user_id"
   add_foreign_key "audit_events", "workspaces"
   add_foreign_key "brand_analyses", "users", column: "requested_by_id"

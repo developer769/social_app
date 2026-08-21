@@ -47,8 +47,9 @@
 <% end %>
 
 <%# The dashboard first: it is what somebody comes to this page for. %>
-<div class="mb-6">
+<div class="mb-6 space-y-6">
   <%= render "performance", performance: @performance %>
+  <%= render "revenue", performance: @performance %>
 </div>
 
 <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">

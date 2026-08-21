@@ -128,6 +128,73 @@ module Ads
                  .map { |group| group.map(&:name) }
     end
 
+    # ---- Revenue -------------------------------------------------------------
+    #
+    # Two sources that are never added together, never averaged, and never
+    # shown without saying which is which. What a platform measured is a claim
+    # about tracked purchases; what the owner counted is a claim about their
+    # own till. Blending them would produce a figure less trustworthy than
+    # either, and ROAS is the number most likely to make somebody spend more
+    # money.
+
+    def measured_revenue
+      values = metrics.filter_map(&:conversion_value_minor)
+      return if values.empty?
+
+      Money.new(minor_units: values.sum, currency: currency)
+    end
+
+    def measured_conversions
+      values = metrics.filter_map(&:conversions)
+      values.empty? ? nil : values.sum
+    end
+
+    def outcomes
+      @outcomes ||= AdOutcome.where(ad_campaign_id: campaigns.map(&:id))
+                             .where(occurred_on: since..)
+                             .includes(:ad_campaign).newest_first.to_a
+    end
+
+    def recorded_revenue
+      values = outcomes.filter_map(&:revenue_minor)
+      return if values.empty?
+
+      Money.new(minor_units: values.sum, currency: currency)
+    end
+
+    def recorded_orders
+      values = outcomes.filter_map(&:orders)
+      values.empty? ? nil : values.sum
+    end
+
+    # Computed only when both halves are genuinely known. An unknown treated as
+    # zero would put a confident number about money in front of somebody
+    # deciding whether to spend more of it.
+    def return_on_spend(source)
+      revenue = source == :measured ? measured_revenue : recorded_revenue
+      spent = total_spend
+      return if revenue.nil? || spent.nil? || spent.minor_units.zero?
+
+      (revenue.minor_units.to_f / spent.minor_units).round(2)
+    end
+
+    def cost_per_order
+      orders = recorded_orders
+      spent = total_spend
+      return if orders.nil? || orders.zero? || spent.nil?
+
+      Money.new(minor_units: (spent.minor_units.to_f / orders).round, currency: currency)
+    end
+
+    # Why the platform figure is missing, in terms the owner can act on. The
+    # usual answer is not that the ad failed but that nothing was watching.
+    def revenue_tracking_possible?
+      campaigns.filter_map { |campaign| SocialProvider::Catalog.find(campaign.provider) }
+               .any? { |definition| definition.reports?(:conversion_value) }
+    end
+
+    def currency = @currency ||= campaigns.first&.currency || @workspace.currency
+
     def available? = SocialProvider::Registry.any_real?
   end
 end

@@ -1,0 +1,76 @@
+<% content_for :title, "Record what came in" %>
+<% slug = { workspace_slug: current_workspace.slug } %>
+
+<header class="mb-6">
+  <%= link_to "← Ads", workspace_ads_path(**slug),
+        class: "text-sm text-muted underline underline-offset-4 hover:text-heading" %>
+  <h1 class="mt-3 font-display text-3xl font-normal sm:text-4xl">Record what came in</h1>
+  <p class="mt-1.5 max-w-prose text-sm text-muted">
+    For <span class="text-heading"><%= @campaign.name %></span> on <%= @campaign.provider_name %>.
+    These are your figures, kept separate from anything the platform reports.
+  </p>
+</header>
+
+<%= form_with model: @outcome,
+              url: workspace_ad_campaign_outcomes_path(**slug, ad_campaign_id: @campaign),
+              class: "max-w-2xl space-y-5" do |form| %>
+
+  <% if @outcome.errors.any? %>
+    <div class="rounded-card border border-danger/30 bg-danger-soft px-5 py-4">
+      <p class="text-sm font-medium text-danger">This could not be saved</p>
+      <ul class="mt-1.5 space-y-1 text-sm text-body">
+        <% @outcome.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="rounded-card border border-border bg-surface p-6">
+    <div>
+      <%= form.label :occurred_on, "Which day", class: "text-sm font-medium text-heading" %>
+      <%= form.date_field :occurred_on, max: Date.current,
+            class: "mt-2 w-full rounded-control border border-border bg-background px-3.5 py-2.5 text-sm text-heading focus:border-border-strong focus:outline-none" %>
+    </div>
+
+    <div class="mt-5 grid gap-5 sm:grid-cols-2">
+      <div>
+        <%= form.label :orders, "How many orders", class: "text-sm font-medium text-heading" %>
+        <p class="mt-0.5 text-xs text-muted">Leave blank if you did not count.</p>
+        <%= form.number_field :orders, min: 0, placeholder: "12",
+              class: "mt-2 w-full rounded-control border border-border bg-background px-3.5 py-2.5 text-sm text-heading placeholder:text-muted focus:border-border-strong focus:outline-none" %>
+      </div>
+
+      <div>
+        <%= form.label :revenue, "What they were worth", class: "text-sm font-medium text-heading" %>
+        <p class="mt-0.5 text-xs text-muted">
+          In <%= Money.new(minor_units: 0, currency: @campaign.currency).symbol.strip.presence || @campaign.currency %>.
+          Whole rupees is fine.
+        </p>
+        <%= form.text_field :revenue, inputmode: "decimal", placeholder: "18500",
+              value: @outcome.revenue_minor && Money.new(minor_units: @outcome.revenue_minor, currency: @campaign.currency).major.to_s,
+              class: "mt-2 w-full rounded-control border border-border bg-background px-3.5 py-2.5 text-sm text-heading placeholder:text-muted focus:border-border-strong focus:outline-none" %>
+      </div>
+    </div>
+
+    <div class="mt-5">
+      <%= form.label :note, "Anything worth remembering", class: "text-sm font-medium text-heading" %>
+      <p class="mt-0.5 text-xs text-muted">Optional.</p>
+      <%= form.text_field :note, maxlength: 200, placeholder: "Most came through WhatsApp after the Diwali post",
+            class: "mt-2 w-full rounded-control border border-border bg-background px-3.5 py-2.5 text-sm text-heading placeholder:text-muted focus:border-border-strong focus:outline-none" %>
+    </div>
+
+    <%# Said on the form itself, so the number is never mistaken for measurement. %>
+    <p class="mt-5 rounded-control bg-surface-sunk px-4 py-3 text-xs text-muted">
+      Prachar cannot see your sales. Whatever you enter here is shown as your own count,
+      never as something a platform measured, and the two are never added together.
+    </p>
+  </div>
+
+  <div class="flex items-center gap-3">
+    <%= form.submit "Save this",
+          class: "h-11 cursor-pointer rounded-control bg-primary px-5 text-sm font-medium text-primary-contrast hover:bg-primary-hover" %>
+    <%= link_to "Cancel", workspace_ads_path(**slug),
+          class: "text-sm text-muted underline underline-offset-4 hover:text-heading" %>
+  </div>
+<% end %>

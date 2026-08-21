@@ -1,0 +1,161 @@
+<%
+  p = performance
+  slug = { workspace_slug: current_workspace.slug }
+  measured_roas = p.return_on_spend(:measured)
+  recorded_roas = p.return_on_spend(:recorded)
+%>
+
+<section class="rounded-card border border-border bg-surface p-6">
+  <h2 class="font-display text-xl font-normal">What it brought in</h2>
+  <p class="mt-1 max-w-prose text-sm text-muted">
+    Return on ad spend is the number most likely to make somebody spend more money, so it is
+    only ever shown when both halves of it are genuinely known, and always with where the
+    revenue figure came from.
+  </p>
+
+  <div class="mt-5 grid gap-4 lg:grid-cols-2">
+    <%#
+      Source one: the platform. Only possible when a tracking tag on a website
+      is telling it about purchases, which most shops taking orders on WhatsApp
+      will never have.
+    %>
+    <div class="rounded-control border border-border bg-background p-5">
+      <div class="flex items-start justify-between gap-3">
+        <h3 class="text-sm font-medium text-heading">Measured by the platform</h3>
+        <%= render StatusBadgeComponent.new(
+              label: p.measured_revenue ? "Tracked" : "Not tracked",
+              tone: p.measured_revenue ? :success : :neutral) %>
+      </div>
+
+      <% if p.measured_revenue %>
+        <p class="mt-3 font-display text-3xl tabular-nums text-heading">
+          <%= MoneyPresenter.new(p.measured_revenue).full %>
+        </p>
+        <p class="mt-1 text-sm text-muted">
+          from <%= number_with_delimiter(p.measured_conversions) %>
+          tracked <%= "purchase".pluralize(p.measured_conversions) %>
+        </p>
+
+        <% if measured_roas %>
+          <p class="mt-4 border-t border-border pt-4 text-sm text-body">
+            <span class="font-display text-2xl tabular-nums text-heading"><%= measured_roas %>&times;</span>
+            <span class="ml-1">back for every rupee spent, by the platform's own count.</span>
+          </p>
+        <% end %>
+      <% else %>
+        <%#
+          The explanation matters more than the empty figure. "No purchases"
+          and "nothing was watching for purchases" are different statements
+          about money, and only one of them is true here.
+        %>
+        <p class="mt-3 text-sm text-body">
+          No purchase value has been reported. That usually does not mean the ads sold
+          nothing &mdash; it means nothing was measuring.
+        </p>
+        <p class="mt-2 text-sm text-muted">
+          A platform can only count a sale it can see: a tracking tag on a website, on a
+          checkout that completes online. An order that arrives as a WhatsApp message or
+          over the counter is invisible to it, whatever the ad did.
+        </p>
+      <% end %>
+    </div>
+
+    <%#
+      Source two: the shopkeeper's own till. For most Indian small businesses
+      this is the only honest number available, and it is genuinely theirs.
+    %>
+    <div class="rounded-control border border-border bg-gold-tint p-5">
+      <div class="flex items-start justify-between gap-3">
+        <h3 class="text-sm font-medium text-heading">What you counted</h3>
+        <%= render StatusBadgeComponent.new(
+              label: p.recorded_revenue || p.recorded_orders ? "Your figures" : "Nothing logged",
+              tone: :neutral) %>
+      </div>
+
+      <% if p.recorded_revenue || p.recorded_orders %>
+        <% if p.recorded_revenue %>
+          <p class="mt-3 font-display text-3xl tabular-nums text-heading">
+            <%= MoneyPresenter.new(p.recorded_revenue).full %>
+          </p>
+        <% end %>
+
+        <p class="mt-1 text-sm text-muted">
+          <% if p.recorded_orders %>
+            from <%= pluralize(p.recorded_orders, "order") %> you logged
+          <% else %>
+            recorded by you
+          <% end %>
+        </p>
+
+        <div class="mt-4 space-y-1.5 border-t border-border pt-4 text-sm text-body">
+          <% if recorded_roas %>
+            <p>
+              <span class="font-display text-2xl tabular-nums text-heading"><%= recorded_roas %>&times;</span>
+              <span class="ml-1">back for every rupee spent, by your own count.</span>
+            </p>
+          <% elsif p.recorded_orders && p.total_spend.nil? %>
+            <p class="text-muted">
+              No spend has been reported yet, so this cannot be turned into a return.
+            </p>
+          <% end %>
+
+          <% if p.cost_per_order %>
+            <p class="text-muted">
+              <%= MoneyPresenter.new(p.cost_per_order).full %> of advertising per order.
+            </p>
+          <% end %>
+        </div>
+      <% else %>
+        <p class="mt-3 text-sm text-body">
+          You know what these ads brought in and Prachar does not. Log the orders as they
+          come and this becomes a real return on what you spent.
+        </p>
+      <% end %>
+
+      <% if p.any_campaigns? %>
+        <%= link_to "Record what came in",
+              new_workspace_ad_campaign_outcome_path(**slug, ad_campaign_id: p.campaigns.first),
+              class: "mt-4 inline-flex h-10 items-center rounded-control bg-primary px-4 text-sm font-medium text-primary-contrast hover:bg-primary-hover" %>
+      <% end %>
+    </div>
+  </div>
+
+  <%#
+    The rule, stated where both figures are visible. Two numbers of different
+    provenance summed into one would be worth less than either.
+  %>
+  <% if p.measured_revenue && p.recorded_revenue %>
+    <p class="mt-4 rounded-control border border-border bg-surface-sunk px-4 py-3 text-xs text-muted">
+      These two are deliberately not added together. The platform's figure counts tracked
+      online purchases; yours counts what actually came in. The same sale may well be in
+      both, so a total would double-count it.
+    </p>
+  <% end %>
+
+  <% if p.outcomes.any? %>
+    <div class="mt-6">
+      <h3 class="text-sm font-medium text-heading">What you have logged</h3>
+      <ul class="mt-3 divide-y divide-border rounded-control border border-border">
+        <% p.outcomes.first(8).each do |outcome| %>
+          <li class="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+            <span class="min-w-0">
+              <span class="block text-sm text-heading">
+                <%= outcome.occurred_on.strftime("%-d %b %Y") %>
+                &middot; <%= outcome.ad_campaign.name %>
+              </span>
+              <% if outcome.note.present? %>
+                <span class="block text-xs text-muted"><%= outcome.note %></span>
+              <% end %>
+            </span>
+            <span class="shrink-0 text-sm tabular-nums text-body">
+              <% if outcome.orders %><%= pluralize(outcome.orders, "order") %><% end %>
+              <% if outcome.revenue %>
+                <span class="ml-2 font-medium text-heading"><%= MoneyPresenter.new(outcome.revenue).full %></span>
+              <% end %>
+            </span>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+</section>

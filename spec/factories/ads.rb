@@ -19,3 +19,13 @@ FactoryBot.define do
     fetched_at { Time.current }
   end
 end
+
+FactoryBot.define do
+  factory :ad_outcome do
+    ad_campaign
+    occurred_on { Date.current }
+    orders { 12 }
+    revenue_minor { 185_000 }
+    currency { "INR" }
+  end
+end

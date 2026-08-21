@@ -62,6 +62,9 @@ Rails.application.routes.draw do
     get "analytics", to: "analytics#show", as: :analytics
 
     get "ads", to: "ads#show", as: :ads
+    resources :ad_campaigns, only: [] do
+      resources :outcomes, only: %i[new create destroy], controller: "ad_outcomes"
+    end
 
     get "inbox", to: "inbox#show", as: :inbox
     resources :conversations, only: %i[show] do
