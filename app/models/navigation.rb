@@ -9,7 +9,7 @@ module Navigation
   ITEMS = [
     { key: :home,      label: "Home",      icon: "home",      route: :workspace_root_path },
     { key: :gallery,   label: "Gallery",   icon: "gallery",   route: :workspace_gallery_path },
-    { key: :create,    label: "Create",    icon: "create",    route: nil },
+    { key: :create,    label: "Create",    icon: "create",    route: :workspace_create_path },
     { key: :calendar,  label: "Calendar",  icon: "calendar",  route: :workspace_calendar_path },
     { key: :analytics, label: "Analytics", icon: "analytics", route: nil },
     { key: :inbox,     label: "Inbox",     icon: "inbox",     route: nil },

@@ -4,10 +4,10 @@ module Gallery
 
     # Starts a post from a style.
     #
-    # Generation is not connected yet, so this creates the draft and takes the
-    # owner to it, where they attach their own picture. When a generation
-    # provider lands, this is where it hooks in -- the draft already knows which
-    # style it came from.
+    # Creates the draft and moves straight into choosing what the post should
+    # feature. Creating the post here rather than later makes that choice an
+    # update rather than an insert, which removes the double-draft race by
+    # construction.
     def create
       template = Template.published.find_by!(slug: params[:slug])
 
@@ -24,8 +24,8 @@ module Gallery
         metadata: { template: template.slug }
       )
 
-      redirect_to edit_workspace_post_path(workspace_slug: current_workspace.slug, id: post),
-                  notice: "Started a post from #{template.name}. Add your picture and caption."
+      redirect_to new_workspace_post_creative_path(workspace_slug: current_workspace.slug, post_id: post),
+                  notice: "Using #{template.name}. Choose what it should feature."
     end
   end
 end

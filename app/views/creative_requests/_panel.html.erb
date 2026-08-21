@@ -1,0 +1,111 @@
+<%#
+  Generation progress and results.
+  Everything here is read from real rows: "2 of 3 ready" is a count of finished
+  records, never an animation (spec 24).
+%>
+<div id="creative-request" class="space-y-5">
+  <% if request.generating? || request.queued? %>
+    <section class="rounded-card border border-border bg-surface p-8 text-center">
+      <%= render ProgressRingComponent.new(
+            percentage: request.progress_percentage,
+            caption: "#{request.finished_count} of #{request.creative_outputs.size}",
+            size: 132) %>
+
+      <h2 class="mt-5 font-display text-2xl font-normal">Making your pictures</h2>
+      <p class="mx-auto mt-2 max-w-md text-sm text-body">
+        <%= pluralize(request.creative_outputs.size, "version") %> are being made so you can choose.
+        This page updates on its own &mdash; you can leave and come back.
+      </p>
+    </section>
+  <% else %>
+    <section class="rounded-card border border-border bg-surface p-6">
+      <div class="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h2 class="font-display text-2xl font-normal"><%= generation_headline(request) %></h2>
+          <p class="mt-1 text-sm text-muted"><%= generation_summary(request) %></p>
+        </div>
+
+        <%= render StatusBadgeComponent.new(
+              label: request.status.humanize,
+              tone: request.ready? ? :success : (request.failed? ? :danger : :warning)) %>
+      </div>
+
+      <% if request.usable_outputs.any? %>
+        <%#
+          Every picture here is a watermarked sample. Saying so plainly matters:
+          it looks like a finished creative, and it is not one.
+        %>
+        <div class="mt-4 flex gap-3 rounded-control border border-border bg-gold-tint px-4 py-3">
+          <span aria-hidden="true" class="text-warning">&#9432;</span>
+          <p class="text-sm text-body">
+            <span class="font-medium text-heading">These are samples.</span>
+            No image generator is connected yet, so each one is watermarked and cannot be published.
+            They are here so you can see how the flow works.
+          </p>
+        </div>
+
+        <ul class="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <% request.creative_outputs.each do |output| %>
+            <li>
+              <% if output.ready? && output.media_asset&.file&.attached? %>
+                <%= button_to workspace_creative_request_selections_path(
+                      workspace_slug: current_workspace.slug,
+                      creative_request_id: request.id, id: output.id),
+                      class: class_names(
+                        "block w-full overflow-hidden rounded-card border-2 p-0 text-left transition-shadow hover:shadow-card",
+                        "border-primary" => request.selected_output_id == output.id,
+                        "border-border" => request.selected_output_id != output.id
+                      ) do %>
+                  <span class="block aspect-4/5 bg-surface-sunk">
+                    <%= image_tag output.media_asset.file.variant(resize_to_fill: [600, 750]),
+                          alt: "Version #{output.position + 1}", class: "h-full w-full object-cover" %>
+                  </span>
+                  <span class="flex items-center justify-between gap-2 px-3.5 py-3">
+                    <span class="text-sm font-medium text-heading">Version <%= output.position + 1 %></span>
+                    <span class="text-xs <%= request.selected_output_id == output.id ? "text-primary" : "text-muted" %>">
+                      <%= request.selected_output_id == output.id ? "Chosen" : "Choose this" %>
+                    </span>
+                  </span>
+                <% end %>
+              <% else %>
+                <div class="flex h-full flex-col justify-center rounded-card border border-dashed border-border bg-background p-5 text-center">
+                  <p class="text-sm font-medium text-heading">Version <%= output.position + 1 %></p>
+                  <p class="mt-1 text-xs text-muted"><%= output.failure_label %></p>
+                </div>
+              <% end %>
+            </li>
+          <% end %>
+        </ul>
+      <% else %>
+        <%#
+          The provider's own message is deliberately not shown. It is written
+          for an engineer reading a log, and reaches a bakery owner as noise.
+          failure_label says the same thing in words that are useful to them.
+        %>
+        <% reason = request.creative_outputs.detect(&:failed?) %>
+        <%= render EmptyStateComponent.new(
+              title: "Nothing could be made this time",
+              body: reason&.failure_label ||
+                    "The generator could not produce a picture for this style.") %>
+      <% end %>
+
+      <div class="mt-6 flex flex-wrap gap-3">
+        <%#
+          When a picture is wrong the only offers are these. There is no editing
+          of any kind, which is deliberate (spec 2).
+        %>
+        <%= button_to "Try again",
+              workspace_post_creative_path(workspace_slug: current_workspace.slug, post_id: request.post_id),
+              class: "h-11 cursor-pointer rounded-control border border-border px-5 text-sm font-medium text-body hover:bg-surface-sunk" %>
+
+        <%= link_to "Choose another style",
+              workspace_gallery_path(workspace_slug: current_workspace.slug),
+              class: "flex h-11 items-center rounded-control border border-border px-5 text-sm font-medium text-body hover:bg-surface-sunk" %>
+
+        <%= link_to "Use my own picture instead",
+              edit_workspace_post_path(workspace_slug: current_workspace.slug, id: request.post_id),
+              class: "flex h-11 items-center rounded-control border border-border px-5 text-sm font-medium text-body hover:bg-surface-sunk" %>
+      </div>
+    </section>
+  <% end %>
+</div>

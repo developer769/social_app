@@ -1,0 +1,76 @@
+<% content_for :title, "Create" %>
+<% slug = { workspace_slug: current_workspace.slug } %>
+
+<header class="mb-7">
+  <h1 class="font-display text-3xl font-normal sm:text-4xl">
+    Create<span aria-hidden="true" class="ml-1 align-super text-base text-warning">&#10022;</span>
+  </h1>
+  <p class="mt-1.5 text-sm text-muted">Start a post. You can change your mind at any point.</p>
+</header>
+
+<%= render "shared/flash" %>
+
+<ul class="grid gap-4 sm:grid-cols-2">
+  <li>
+    <%= link_to workspace_gallery_path(**slug),
+          class: "flex h-full flex-col rounded-card border border-border bg-gold-tint p-6 transition-shadow hover:shadow-card" do %>
+      <span class="font-display text-xl text-heading">Start from a style</span>
+      <span class="mt-2 flex-1 text-sm text-body">
+        Pick a look you like, choose what it should feature, and Prachar makes the picture.
+      </span>
+      <span class="mt-4 text-sm font-medium text-primary">Browse the gallery &rsaquo;</span>
+    <% end %>
+  </li>
+
+  <li>
+    <%= link_to new_workspace_post_path(**slug),
+          class: "flex h-full flex-col rounded-card border border-border bg-blue-soft p-6 transition-shadow hover:shadow-card" do %>
+      <span class="font-display text-xl text-heading">Use my own picture</span>
+      <span class="mt-2 flex-1 text-sm text-body">
+        Upload a photo or video you already have, write the caption, and schedule it.
+      </span>
+      <span class="mt-4 text-sm font-medium text-primary">Upload something &rsaquo;</span>
+    <% end %>
+  </li>
+</ul>
+
+<% unless @has_catalog %>
+  <div class="mt-5 flex flex-wrap items-center justify-between gap-4 rounded-card border border-dashed border-border-strong bg-surface px-5 py-4">
+    <div>
+      <p class="text-sm font-medium text-heading">Your catalog is empty</p>
+      <p class="mt-0.5 text-sm text-muted">
+        Prachar can only make pictures of things it knows about. Add a product or service first.
+      </p>
+    </div>
+    <%= link_to "Add products", workspace_settings_catalog_path(**slug),
+          class: "flex h-10 shrink-0 items-center rounded-control bg-primary px-4 text-sm font-medium text-primary-contrast hover:bg-primary-hover" %>
+  </div>
+<% end %>
+
+<% if @recent.any? %>
+  <section class="mt-8">
+    <h2 class="font-display text-xl font-normal">Pick up where you left off</h2>
+    <ul class="mt-4 divide-y divide-border rounded-card border border-border bg-surface">
+      <% @recent.each do |post| %>
+        <li>
+          <%= link_to edit_workspace_post_path(**slug, id: post),
+                class: "flex items-center gap-3 px-5 py-3.5 hover:bg-surface-sunk" do %>
+            <% if post.primary_media&.file&.attached? && post.primary_media.image? %>
+              <%= image_tag post.primary_media.file.variant(resize_to_fill: [80, 80]), alt: "",
+                    class: "h-10 w-10 shrink-0 rounded-control object-cover" %>
+            <% else %>
+              <span aria-hidden="true" class="h-10 w-10 shrink-0 rounded-control bg-surface-sunk"></span>
+            <% end %>
+            <span class="min-w-0 flex-1">
+              <span class="block truncate text-sm font-medium text-heading">
+                <%= post.caption.presence&.truncate(50) || post.template&.name || "Untitled draft" %>
+              </span>
+              <span class="block text-xs text-muted">Edited <%= time_ago_in_words(post.updated_at) %> ago</span>
+            </span>
+            <span aria-hidden="true" class="text-muted">&rsaquo;</span>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  </section>
+<% end %>

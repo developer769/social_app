@@ -49,9 +49,18 @@ Rails.application.routes.draw do
       end
     end
 
+    resources :creative_requests, only: [] do
+      resources :selections, only: %i[create], controller: "posts/selections"
+    end
+
+    get "create", to: "create#show", as: :create
+
     get "calendar", to: "calendar#show", as: :calendar
 
     resources :posts, except: %i[index] do
+      # Generating a picture for this post, and choosing between the results.
+      resource :creative, only: %i[show new create], controller: "posts/creatives"
+
       member do
         patch :schedule
         patch :unschedule

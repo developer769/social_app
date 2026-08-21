@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_21_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_21_110000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
@@ -140,6 +140,58 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_100000) do
     t.index ["workspace_id", "tone"], name: "index_brand_tones_on_workspace_id_and_tone", unique: true
     t.index ["workspace_id"], name: "index_brand_tones_on_workspace_id"
     t.check_constraint "tone::text = ANY (ARRAY['friendly'::character varying, 'elegant'::character varying, 'playful'::character varying, 'professional'::character varying, 'premium'::character varying, 'educational'::character varying, 'bold'::character varying, 'minimal'::character varying]::text[])", name: "brand_tones_tone_is_known"
+  end
+
+  create_table "creative_outputs", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "creative_request_id", null: false
+    t.string "error_message"
+    t.datetime "finished_at"
+    t.bigint "media_asset_id"
+    t.jsonb "metadata", default: {}, null: false
+    t.string "outcome"
+    t.integer "position", default: 0, null: false
+    t.string "status", default: "pending", null: false
+    t.datetime "updated_at", null: false
+    t.index ["creative_request_id", "position"], name: "index_creative_outputs_on_creative_request_id_and_position", unique: true
+    t.index ["creative_request_id"], name: "index_creative_outputs_on_creative_request_id"
+    t.index ["media_asset_id"], name: "index_creative_outputs_on_media_asset_id"
+    t.check_constraint "outcome IS NULL OR (outcome::text = ANY (ARRAY['generated'::character varying, 'refused'::character varying, 'provider_error'::character varying, 'unavailable'::character varying]::text[]))", name: "creative_outputs_outcome_is_known"
+    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying, 'generating'::character varying, 'ready'::character varying, 'failed'::character varying]::text[])", name: "creative_outputs_status_is_known"
+  end
+
+  create_table "creative_requests", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "error_code"
+    t.string "error_message"
+    t.datetime "finished_at"
+    t.string "instructions"
+    t.string "media_format", default: "image", null: false
+    t.bigint "post_id"
+    t.integer "prompt_version", default: 1, null: false
+    t.string "provider", default: "mock", null: false
+    t.bigint "requested_by_id"
+    t.bigint "selected_output_id"
+    t.datetime "started_at"
+    t.string "status", default: "queued", null: false
+    t.bigint "subject_id"
+    t.string "subject_type"
+    t.bigint "template_id"
+    t.datetime "updated_at", null: false
+    t.integer "variant_count", default: 3, null: false
+    t.bigint "workspace_id", null: false
+    t.index ["post_id"], name: "index_creative_requests_on_post_id"
+    t.index ["requested_by_id"], name: "index_creative_requests_on_requested_by_id"
+    t.index ["selected_output_id"], name: "index_creative_requests_on_selected_output_id"
+    t.index ["status", "created_at"], name: "index_creative_requests_on_status_and_created_at"
+    t.index ["subject_type", "subject_id"], name: "index_creative_requests_on_subject"
+    t.index ["template_id"], name: "index_creative_requests_on_template_id"
+    t.index ["workspace_id", "created_at"], name: "index_creative_requests_on_workspace_id_and_created_at", order: { created_at: :desc }
+    t.index ["workspace_id"], name: "index_creative_requests_on_workspace_id"
+    t.check_constraint "media_format::text <> 'video'::text OR variant_count = 1", name: "creative_requests_video_is_single"
+    t.check_constraint "media_format::text = ANY (ARRAY['image'::character varying, 'video'::character varying]::text[])", name: "creative_requests_media_format_is_known"
+    t.check_constraint "status::text = ANY (ARRAY['queued'::character varying, 'generating'::character varying, 'ready'::character varying, 'partially_ready'::character varying, 'failed'::character varying, 'cancelled'::character varying]::text[])", name: "creative_requests_status_is_known"
+    t.check_constraint "variant_count >= 1 AND variant_count <= 3", name: "creative_requests_variant_count_in_range"
   end
 
   create_table "media_assets", force: :cascade do |t|
@@ -623,6 +675,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_100000) do
   add_foreign_key "brand_kits", "workspaces"
   add_foreign_key "brand_profiles", "workspaces"
   add_foreign_key "brand_tones", "workspaces"
+  add_foreign_key "creative_outputs", "creative_requests"
+  add_foreign_key "creative_outputs", "media_assets"
+  add_foreign_key "creative_requests", "creative_outputs", column: "selected_output_id"
+  add_foreign_key "creative_requests", "posts"
+  add_foreign_key "creative_requests", "templates"
+  add_foreign_key "creative_requests", "users", column: "requested_by_id"
+  add_foreign_key "creative_requests", "workspaces"
   add_foreign_key "media_assets", "users", column: "uploaded_by_id"
   add_foreign_key "media_assets", "workspaces"
   add_foreign_key "notification_preferences", "users"

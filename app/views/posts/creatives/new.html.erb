@@ -1,0 +1,113 @@
+<% content_for :title, "Choose what to feature" %>
+<% slug = { workspace_slug: current_workspace.slug } %>
+
+<header class="mb-6">
+  <%= link_to "← Back to gallery", workspace_gallery_path(**slug),
+        class: "text-sm text-muted underline underline-offset-4 hover:text-heading" %>
+  <h1 class="mt-3 font-display text-3xl font-normal sm:text-4xl">
+    Choose what to feature<span aria-hidden="true" class="ml-1 align-super text-base text-warning">&#10022;</span>
+  </h1>
+  <p class="mt-1.5 text-sm text-muted">
+    Pick one thing from <%= current_workspace.name %> and Prachar will make pictures of it
+    <% if @post.template %>in the <span class="text-heading"><%= @post.template.name %></span> style<% end %>.
+  </p>
+</header>
+
+<%= render "shared/flash" %>
+
+<% if @products.empty? && @services.empty? %>
+  <%= render EmptyStateComponent.new(
+        title: "Nothing in your catalog yet",
+        body: "Add a product or service first, so there is something to make a picture of.") do |state| %>
+    <% state.with_action do %>
+      <%= link_to "Add a product", workspace_settings_catalog_path(**slug),
+            class: "inline-flex h-11 items-center rounded-control bg-primary px-5 text-sm font-medium text-primary-contrast hover:bg-primary-hover" %>
+    <% end %>
+  <% end %>
+<% else %>
+  <%= form_with url: workspace_post_creative_path(**slug, post_id: @post), method: :post,
+                class: "grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]" do |form| %>
+    <div class="min-w-0 space-y-6">
+      <% [["Products", @products, "Product"], ["Services", @services, "Service"]].each do |title, items, type| %>
+        <% next if items.empty? %>
+
+        <section class="rounded-card border border-border bg-surface p-6">
+          <h2 class="font-display text-xl font-normal"><%= title %></h2>
+
+          <ul class="mt-4 grid gap-3 sm:grid-cols-2">
+            <% items.each do |item| %>
+              <li>
+                <%# Single select: one post features one thing. %>
+                <label class="flex h-full cursor-pointer gap-3 rounded-control border border-border bg-background p-3
+                              has-checked:border-primary has-checked:bg-gold-tint">
+                  <%= radio_button_tag "subject", "#{type}:#{item.id}",
+                        @post.subject == item,
+                        id: "subject_#{type}_#{item.id}",
+                        class: "peer sr-only" %>
+
+                  <% image = type == "Product" ? item.image : item.cover_image %>
+                  <% if image.attached? %>
+                    <%= image_tag image.variant(resize_to_fill: [120, 120]), alt: "",
+                          class: "h-16 w-16 shrink-0 rounded-control object-cover" %>
+                  <% else %>
+                    <span aria-hidden="true" class="h-16 w-16 shrink-0 rounded-control bg-surface-sunk"></span>
+                  <% end %>
+
+                  <span class="min-w-0 flex-1">
+                    <span class="block text-sm font-medium text-heading"><%= item.name %></span>
+                    <% price = type == "Product" ? item.price : item.starting_price %>
+                    <% if price %>
+                      <span class="mt-0.5 block text-sm text-heading tabular-nums">
+                        <%= "from " if type == "Service" %><%= MoneyPresenter.new(price).full %>
+                      </span>
+                    <% end %>
+                    <% if item.description.present? %>
+                      <span class="mt-1 block text-xs text-muted"><%= truncate(item.description, length: 60) %></span>
+                    <% end %>
+                  </span>
+                </label>
+              </li>
+            <% end %>
+          </ul>
+        </section>
+      <% end %>
+    </div>
+
+    <aside class="space-y-5">
+      <section class="rounded-card border border-border bg-surface p-5">
+        <h2 class="font-display text-lg font-normal">Anything to change?</h2>
+        <p class="mt-1 text-xs text-muted">Optional. Describe the setting, not the words on the picture.</p>
+
+        <%= text_area_tag :instructions, params[:instructions], rows: 3, maxlength: 200,
+              placeholder: "On a wooden table, with marigolds",
+              class: "mt-3 w-full rounded-control border border-border bg-background px-3.5 py-2.5 text-sm text-heading placeholder:text-muted focus:border-border-strong focus:outline-none" %>
+
+        <%#
+          There is no field here for text to put ON the picture. That would be
+          the overlay editor this product deliberately excludes, arriving with
+          no way to position or correct it (spec 2).
+        %>
+        <p class="mt-2 text-xs text-muted">
+          Prachar cannot put your own words onto the picture. Captions go with the post instead.
+        </p>
+      </section>
+
+      <section class="rounded-card border border-border bg-blue-soft p-5">
+        <h2 class="font-display text-lg font-normal">What happens next</h2>
+        <p class="mt-2 text-sm text-body">
+          Three versions are made so you can choose. If none of them work, you can try
+          again, pick another style, or upload your own picture.
+        </p>
+        <p class="mt-3 text-xs text-muted">
+          No generator is connected yet, so these come back watermarked as samples.
+        </p>
+      </section>
+
+      <%= submit_tag "Make my pictures",
+            class: "h-11 w-full cursor-pointer rounded-control bg-primary px-5 text-sm font-medium text-primary-contrast hover:bg-primary-hover" %>
+
+      <%= link_to "Skip and upload my own", edit_workspace_post_path(**slug, id: @post),
+            class: "block text-center text-sm text-muted underline underline-offset-4 hover:text-heading" %>
+    </aside>
+  <% end %>
+<% end %>

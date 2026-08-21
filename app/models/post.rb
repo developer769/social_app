@@ -24,6 +24,9 @@ class Post < ApplicationRecord
   has_many :post_media, -> { order(:position) }, dependent: :destroy, inverse_of: :post
   has_many :media_assets, through: :post_media
   has_many :post_targets, dependent: :destroy
+  # Nullified rather than destroyed: a generation is a record of what was made
+  # and what it cost, and it outlives the draft it was made for.
+  has_many :creative_requests, dependent: :nullify
 
   enum :status, STATUSES.index_by(&:itself), validate: true
 

@@ -13,6 +13,7 @@ class Workspace < ApplicationRecord
   has_many :social_health_scores, dependent: :destroy
   has_one :subscription, dependent: :destroy
   has_many :media_assets, dependent: :destroy
+  has_many :creative_requests, dependent: :destroy
   has_many :posts, dependent: :destroy
   has_one :posting_preference, dependent: :destroy
   has_one :brand_kit, dependent: :destroy

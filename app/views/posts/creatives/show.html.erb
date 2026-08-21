@@ -1,0 +1,21 @@
+<% content_for :title, "Your pictures" %>
+<% slug = { workspace_slug: current_workspace.slug } %>
+
+<header class="mb-6">
+  <%= link_to "← Back", new_workspace_post_creative_path(**slug, post_id: @post),
+        class: "text-sm text-muted underline underline-offset-4 hover:text-heading" %>
+  <h1 class="mt-3 font-display text-3xl font-normal sm:text-4xl">Your pictures</h1>
+  <p class="mt-1.5 text-sm text-muted">
+    <% if @post.subject %>
+      Made for <span class="text-heading"><%= @post.subject.name %></span><% end %><% if @post.template %>
+      in the <span class="text-heading"><%= @post.template.name %></span> style<% end %>.
+  </p>
+</header>
+
+<%= render "shared/flash" %>
+
+<%# Progress arrives as the worker finishes each variant, so leaving and coming
+    back loses nothing. %>
+<%= turbo_stream_from current_workspace, :creative_request, @request.id %>
+
+<%= render "creative_requests/panel", request: @request %>
