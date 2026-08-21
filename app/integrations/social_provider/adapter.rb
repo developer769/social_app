@@ -24,6 +24,13 @@ module SocialProvider
     def create_campaign(campaign:) = not_implemented(__method__)
     def fetch_campaign_metrics(campaign:, since:) = not_implemented(__method__)
 
+    # Whether purchase figures can be requested for this account. Requesting
+    # conversion metrics with no pixel or dataset behind them is an error on
+    # every real ad API, so the question is not asked at all.
+    def revenue_readable?(account)
+      definition&.reports?(:conversion_value).present? && account&.conversion_tracking?
+    end
+
     private
 
     def not_implemented(name)

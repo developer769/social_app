@@ -15,3 +15,9 @@ inbox_sync:
   class: "Inbox::SyncAllJob"
   queue: default
   description: "Pull comments, messages and reviews from connected accounts"
+
+ad_metrics_sync:
+  cron: "20 * * * *"
+  class: "Ads::SyncAllJob"
+  queue: default
+  description: "Pull daily ad figures back from the platforms"

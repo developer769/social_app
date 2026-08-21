@@ -193,6 +193,28 @@ module Ads
                .any? { |definition| definition.reports?(:conversion_value) }
     end
 
+    # The accounts in play that a pixel could be attached to.
+    def accounts_that_could_track
+      campaigns.map(&:social_account).compact.uniq.select(&:reports_revenue?)
+    end
+
+    def accounts_tracking = accounts_that_could_track.select(&:conversion_tracking?)
+    def accounts_not_tracking = accounts_that_could_track.reject(&:conversion_tracking?)
+
+    # Three genuinely different situations, and collapsing them into
+    # "no revenue" would misdescribe two of them:
+    #
+    #   :untracked   nothing is watching for purchases, which is normal for a
+    #                shop with no website and says nothing about the ads.
+    #   :waiting     a pixel is connected and has reported nothing back yet.
+    #   :reported    figures have arrived.
+    def measured_state
+      return :reported if measured_revenue.present?
+      return :waiting if accounts_tracking.any?
+
+      :untracked
+    end
+
     def currency = @currency ||= campaigns.first&.currency || @workspace.currency
 
     def available? = SocialProvider::Registry.any_real?

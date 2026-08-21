@@ -23,8 +23,9 @@
       <div class="flex items-start justify-between gap-3">
         <h3 class="text-sm font-medium text-heading">Measured by the platform</h3>
         <%= render StatusBadgeComponent.new(
-              label: p.measured_revenue ? "Tracked" : "Not tracked",
-              tone: p.measured_revenue ? :success : :neutral) %>
+              label: { reported: "Tracked", waiting: "Waiting for figures", untracked: "Not tracked" }
+                       .fetch(p.measured_state),
+              tone: { reported: :success, waiting: :info, untracked: :neutral }.fetch(p.measured_state)) %>
       </div>
 
       <% if p.measured_revenue %>
@@ -42,11 +43,25 @@
             <span class="ml-1">back for every rupee spent, by the platform's own count.</span>
           </p>
         <% end %>
+      <% elsif p.measured_state == :waiting %>
+        <%#
+          A pixel IS connected. Saying "nothing was measuring" here would be
+          wrong, and would send somebody off to fix something already done.
+        %>
+        <p class="mt-3 text-sm text-body">
+          <%= p.accounts_tracking.map(&:provider_name).to_sentence %>
+          <%= p.accounts_tracking.one? ? "is" : "are" %> set up to report purchases.
+          Nothing has come back yet.
+        </p>
+        <p class="mt-2 text-sm text-muted">
+          Figures usually arrive a day behind, and a purchase can be counted days after the
+          click that led to it. This will fill in on its own.
+        </p>
       <% else %>
         <%#
-          The explanation matters more than the empty figure. "No purchases"
-          and "nothing was watching for purchases" are different statements
-          about money, and only one of them is true here.
+          Nothing is watching. The explanation matters more than the empty
+          figure: "no purchases" and "nothing was watching for purchases" are
+          different statements about money, and only one of them is true here.
         %>
         <p class="mt-3 text-sm text-body">
           No purchase value has been reported. That usually does not mean the ads sold
@@ -56,6 +71,43 @@
           A platform can only count a sale it can see: a tracking tag on a website, on a
           checkout that completes online. An order that arrives as a WhatsApp message or
           over the counter is invisible to it, whatever the ad did.
+        </p>
+
+        <%# Open to it, for the businesses that do have one. %>
+        <% if p.accounts_not_tracking.any? %>
+          <details class="mt-4 rounded-control border border-border bg-surface p-3.5">
+            <summary class="cursor-pointer text-sm font-medium text-heading">
+              I have a Meta Pixel or a conversion tag
+            </summary>
+            <p class="mt-2.5 text-sm text-muted">
+              Then Prachar can read purchase value from
+              <%= p.accounts_not_tracking.map(&:provider_name).to_sentence %>. Add the id and
+              it will be requested with every figures pull.
+            </p>
+            <%= form_with url: workspace_ads_tracking_path(**slug), method: :patch, class: "mt-3 space-y-3" do %>
+              <% p.accounts_not_tracking.each do |account| %>
+                <div>
+                  <label for="tracking_<%= account.id %>" class="text-xs font-medium text-heading">
+                    <%= account.provider_name %>
+                  </label>
+                  <%= text_field_tag "tracking[#{account.id}]", nil, id: "tracking_#{account.id}",
+                        placeholder: "e.g. 1234567890123456", maxlength: 64,
+                        class: "mt-1 w-full rounded-control border border-border bg-background px-3 py-2 text-sm text-heading placeholder:text-muted focus:border-border-strong focus:outline-none" %>
+                </div>
+              <% end %>
+              <%= submit_tag "Save",
+                    class: "h-9 cursor-pointer rounded-control bg-primary px-4 text-sm font-medium text-primary-contrast hover:bg-primary-hover" %>
+            <% end %>
+          </details>
+        <% end %>
+      <% end %>
+
+      <% if p.accounts_tracking.any? %>
+        <p class="mt-4 border-t border-border pt-3 text-xs text-muted">
+          Reading purchases from
+          <%= p.accounts_tracking.map { |a| "#{a.provider_name} (#{a.conversion_tracking_id})" }.to_sentence %>.
+          <%= link_to "Change", workspace_settings_connections_path(**slug),
+                class: "underline underline-offset-4 hover:text-heading" %>
         </p>
       <% end %>
     </div>

@@ -96,6 +96,14 @@ module SocialProvider
       )
     end
 
+    # Whether this adapter would ask the platform for purchase figures at all.
+    # False without a tracking id: requesting conversion metrics with no
+    # dataset to read them from is an error on every real ad API, so the
+    # question is not asked (spec 30).
+    def revenue_readable?(account)
+      definition&.reports?(:conversion_value).present? && account&.conversion_tracking?
+    end
+
     def send_reply(conversation:, body:)
       raise PermanentError.new(
         "Prachar cannot reply on #{definition&.name || key} yet, so nothing was sent.",

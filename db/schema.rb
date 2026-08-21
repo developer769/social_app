@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_21_233000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_22_010000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
@@ -577,6 +577,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_233000) do
     t.datetime "connected_at"
     t.bigint "connected_by_id"
     t.string "connection_status", default: "connected", null: false
+    t.datetime "conversion_tracking_added_at"
+    t.string "conversion_tracking_id"
     t.datetime "created_at", null: false
     t.datetime "disconnected_at"
     t.string "display_name"
@@ -595,6 +597,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_233000) do
     t.index ["workspace_id", "provider", "external_account_id"], name: "index_social_accounts_on_workspace_provider_account", unique: true
     t.index ["workspace_id"], name: "index_social_accounts_on_workspace_id"
     t.check_constraint "connection_status::text = ANY (ARRAY['connected'::character varying::text, 'disconnected'::character varying::text, 'expired'::character varying::text, 'revoked'::character varying::text, 'error'::character varying::text])", name: "social_accounts_connection_status_is_known"
+    t.check_constraint "conversion_tracking_id IS NULL OR char_length(conversion_tracking_id::text) >= 3 AND char_length(conversion_tracking_id::text) <= 64", name: "social_accounts_conversion_tracking_id_length"
     t.check_constraint "permission_status::text = ANY (ARRAY['granted'::character varying::text, 'partial'::character varying::text, 'denied'::character varying::text])", name: "social_accounts_permission_status_is_known"
     t.check_constraint "provider::text = ANY (ARRAY['instagram'::character varying::text, 'facebook'::character varying::text, 'linkedin'::character varying::text, 'youtube'::character varying::text, 'tiktok'::character varying::text, 'google_business'::character varying::text, 'x'::character varying::text])", name: "social_accounts_provider_is_known"
   end

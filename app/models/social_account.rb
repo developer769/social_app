@@ -73,4 +73,23 @@ class SocialAccount < ApplicationRecord
   end
 
   def mocked? = SocialProvider::Registry.mocked?(provider)
+
+  # Whether this platform has been told where to watch for purchases. Without
+  # it, no ad revenue figure can ever arrive from this platform -- not because
+  # the ads sold nothing, but because nothing is counting.
+  def conversion_tracking? = conversion_tracking_id.present?
+
+  # Whether the platform could report purchase value at all, if tracking were
+  # set up. Separate from the above: one is about the platform, the other about
+  # this particular business.
+  def reports_revenue?
+    SocialProvider::Catalog.find(provider)&.reports?(:conversion_value).present?
+  end
+
+  def record_conversion_tracking!(id)
+    cleaned = id.to_s.strip.presence
+
+    update!(conversion_tracking_id: cleaned,
+            conversion_tracking_added_at: (Time.current if cleaned))
+  end
 end

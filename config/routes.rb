@@ -62,6 +62,7 @@ Rails.application.routes.draw do
     get "analytics", to: "analytics#show", as: :analytics
 
     get "ads", to: "ads#show", as: :ads
+    patch "ads/tracking", to: "ads#tracking", as: :ads_tracking
     resources :ad_campaigns, only: [] do
       resources :outcomes, only: %i[new create destroy], controller: "ad_outcomes"
     end
