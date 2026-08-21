@@ -7,3 +7,11 @@ publishing_dispatch:
   class: "Publishing::DispatchDueJob"
   queue: default
   description: "Find posts whose scheduled time has arrived and publish them"
+
+# Quarter-hourly rather than every minute: a comment answered fifteen minutes
+# later is fine, and every platform meters how often it may be asked.
+inbox_sync:
+  cron: "*/15 * * * *"
+  class: "Inbox::SyncAllJob"
+  queue: default
+  description: "Pull comments, messages and reviews from connected accounts"

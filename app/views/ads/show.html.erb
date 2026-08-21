@@ -1,0 +1,154 @@
+<% content_for :title, "Ads" %>
+<% slug = { workspace_slug: current_workspace.slug } %>
+<% r = @readiness %>
+<%
+  fix_paths = {
+    connections: workspace_settings_connections_path(**slug),
+    business: workspace_settings_business_path(**slug),
+    catalog: workspace_settings_catalog_path(**slug),
+    calendar: workspace_calendar_path(**slug)
+  }
+%>
+
+<header class="mb-6">
+  <h1 class="font-display text-3xl font-normal sm:text-4xl">
+    Ads<span aria-hidden="true" class="ml-1 align-super text-base text-warning">&#10022;</span>
+  </h1>
+  <p class="mt-1.5 max-w-prose text-sm text-muted">
+    Putting money behind a post, on the platforms that allow it.
+  </p>
+</header>
+
+<%= render "shared/flash" %>
+
+<%#
+  Ads is the one place where a confident-looking guess costs real money. Said
+  first, plainly, and without a "coming soon" that implies a date nobody has
+  committed to (spec 22, 30).
+%>
+<% unless r.available? %>
+  <section class="mb-6 rounded-card border border-border bg-gold-tint px-5 py-4">
+    <div class="flex gap-3">
+      <%= render "shared/note_icon", tone: "text-warning" %>
+      <div class="text-sm text-body">
+        <p>
+          <span class="font-medium text-heading">Prachar cannot run ads yet.</span>
+          Spending money on a platform needs a connection built for exactly that, with its
+          own approval from the platform, and none exists today.
+        </p>
+        <p class="mt-1.5">
+          You will not find estimated reach or a suggested budget on this page. Those are
+          numbers Prachar has no way to know, and a guess you could act on is worse than
+          an empty space.
+        </p>
+      </div>
+    </div>
+  </section>
+<% end %>
+
+<div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+  <div class="min-w-0 space-y-6">
+    <%#
+      Real, and useful today: everything on this list is something the platforms
+      will ask for, and every answer is read from this workspace's own records.
+    %>
+    <section class="rounded-card border border-border bg-surface p-6">
+      <div class="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 class="font-display text-xl font-normal">Getting ready</h2>
+          <p class="mt-1 text-sm text-muted">
+            What the ad platforms will ask for. You can do all of this now.
+          </p>
+        </div>
+        <span class="shrink-0 text-sm tabular-nums text-muted">
+          <%= r.ready_count %> of <%= r.total_checks %> done
+        </span>
+      </div>
+
+      <ol class="mt-5 space-y-3">
+        <% r.checks.each do |check| %>
+          <li class="flex items-start gap-3.5 rounded-control border border-border bg-background p-4">
+            <span aria-hidden="true"
+                  class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-xs
+                         <%= check.done? ? "border-success bg-success text-white" : "border-border-strong text-muted" %>">
+              <%= check.done? ? "✓" : "" %>
+            </span>
+
+            <span class="min-w-0 flex-1">
+              <span class="block text-sm font-medium text-heading"><%= check.label %></span>
+              <span class="mt-0.5 block text-sm text-muted"><%= check.detail %></span>
+            </span>
+
+            <% unless check.done? %>
+              <%= link_to check.fix_label, fix_paths.fetch(check.fix_path),
+                    class: "shrink-0 text-sm font-medium text-primary underline underline-offset-4" %>
+            <% end %>
+          </li>
+        <% end %>
+      </ol>
+
+      <% if r.all_ready? %>
+        <p class="mt-5 text-sm text-success">
+          &#10003; Everything on your side is in place. What is left is ours to build.
+        </p>
+      <% end %>
+    </section>
+
+    <section class="rounded-card border border-border bg-surface p-6">
+      <h2 class="font-display text-xl font-normal">Where ads are possible</h2>
+      <p class="mt-1 text-sm text-muted">
+        Not every platform sells advertising through an API. These are the ones that do.
+      </p>
+
+      <ul class="mt-4 space-y-3">
+        <% r.rows.each do |row| %>
+          <li class="flex items-start gap-3 rounded-control border border-border bg-background p-4">
+            <%= render PlatformGlyphComponent.new(provider: row.provider, size: :small) %>
+            <span class="min-w-0 flex-1">
+              <span class="flex flex-wrap items-center gap-2">
+                <span class="text-sm font-medium text-heading"><%= row.name %></span>
+                <% if row.connected %>
+                  <%= render StatusBadgeComponent.new(label: "Connected", tone: :success) %>
+                <% else %>
+                  <%= render StatusBadgeComponent.new(label: "Not connected", tone: :neutral) %>
+                <% end %>
+              </span>
+              <span class="mt-1 block text-xs text-muted"><%= row.notes %></span>
+            </span>
+          </li>
+        <% end %>
+      </ul>
+
+      <%# Named, so their absence is not mistaken for an oversight. %>
+      <p class="mt-4 text-xs text-muted">
+        YouTube, TikTok and Google Business Profile are not listed because Prachar does
+        not use an advertising API for them.
+      </p>
+    </section>
+  </div>
+
+  <aside class="space-y-5">
+    <section class="rounded-card border border-border bg-blue-soft p-5">
+      <h2 class="font-display text-lg font-normal">What this will do</h2>
+      <p class="mt-2 text-sm text-body">
+        When an advertising connection exists, you will be able to put money behind a post
+        that already went out, choose who should see it, set a budget in rupees, and stop it
+        at any point.
+      </p>
+      <p class="mt-3 text-sm text-muted">
+        It will always be a post you published first. Advertising something you have never
+        run organically means paying to find out what a free post would have told you.
+      </p>
+    </section>
+
+    <section class="rounded-card border border-border bg-surface p-5">
+      <h2 class="font-display text-lg font-normal">In the meantime</h2>
+      <p class="mt-2 text-sm text-body">
+        The best preparation is posts that already work. Keep publishing, and when ads
+        arrive you will know which post deserves the money.
+      </p>
+      <%= link_to "Plan a post", workspace_create_path(**slug),
+            class: "mt-3 inline-flex h-10 items-center rounded-control bg-primary px-4 text-sm font-medium text-primary-contrast hover:bg-primary-hover" %>
+    </section>
+  </aside>
+</div>

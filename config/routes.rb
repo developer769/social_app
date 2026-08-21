@@ -61,6 +61,18 @@ Rails.application.routes.draw do
     get "create", to: "create#show", as: :create
     get "analytics", to: "analytics#show", as: :analytics
 
+    get "ads", to: "ads#show", as: :ads
+
+    get "inbox", to: "inbox#show", as: :inbox
+    resources :conversations, only: %i[show] do
+      member do
+        post :reply
+        patch :close
+        patch :reopen
+      end
+    end
+    resources :saved_replies, only: %i[index new create edit update destroy]
+
     get "calendar", to: "calendar#show", as: :calendar
 
     resources :posts, except: %i[index] do

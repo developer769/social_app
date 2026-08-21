@@ -10,6 +10,8 @@ class SocialAccount < ApplicationRecord
   enum :connection_status, CONNECTION_STATUSES.index_by(&:itself), prefix: :connection, validate: true
   enum :permission_status, PERMISSION_STATUSES.index_by(&:itself), prefix: :permission, validate: true
 
+  has_many :conversations, dependent: :destroy
+
   scope :connected, -> { where(connection_status: "connected") }
   scope :for_provider, ->(provider) { where(provider: provider) }
 

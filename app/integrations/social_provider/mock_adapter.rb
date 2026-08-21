@@ -62,7 +62,29 @@ module SocialProvider
     end
 
     def fetch_analytics(since:, until_date:)
-      raise NotImplementedError, "mock analytics arrives with the analytics phase"
+      raise PermanentError.new(
+        "Prachar cannot read figures from #{definition&.name || key} yet.",
+        code: "provider_not_connected"
+      )
+    end
+
+    # Refuses rather than inventing a plausible customer asking a plausible
+    # question. A fabricated inbox is worse than an empty one: somebody would
+    # try to answer it (spec 27).
+    def fetch_conversations(since:)
+      require_capability!(:read_comments)
+
+      raise PermanentError.new(
+        "Prachar cannot read messages from #{definition&.name || key} yet. "         "No connection to #{definition&.name || key} has been built.",
+        code: "provider_not_connected"
+      )
+    end
+
+    def send_reply(conversation:, body:)
+      raise PermanentError.new(
+        "Prachar cannot reply on #{definition&.name || key} yet, so nothing was sent.",
+        code: "provider_not_connected"
+      )
     end
 
     private

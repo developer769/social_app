@@ -1,0 +1,44 @@
+<% slug = { workspace_slug: current_workspace.slug } %>
+
+<%= form_with model: @saved_reply,
+              url: (@saved_reply.persisted? ?
+                    workspace_saved_reply_path(**slug, id: @saved_reply) :
+                    workspace_saved_replies_path(**slug)),
+              method: (@saved_reply.persisted? ? :patch : :post),
+              class: "max-w-2xl space-y-5" do |form| %>
+
+  <% if @saved_reply.errors.any? %>
+    <div class="rounded-card border border-danger/30 bg-danger-soft px-5 py-4">
+      <p class="text-sm font-medium text-danger">This could not be saved</p>
+      <ul class="mt-1.5 space-y-1 text-sm text-body">
+        <% @saved_reply.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="rounded-card border border-border bg-surface p-6">
+    <div>
+      <%= form.label :title, "What is it for", class: "text-sm font-medium text-heading" %>
+      <p class="mt-0.5 text-xs text-muted">Only you see this. It is how you will find it.</p>
+      <%= form.text_field :title, maxlength: 80, placeholder: "Delivery areas",
+            class: "mt-2 w-full rounded-control border border-border bg-background px-3.5 py-2.5 text-sm text-heading placeholder:text-muted focus:border-border-strong focus:outline-none" %>
+    </div>
+
+    <div class="mt-5">
+      <%= form.label :body, "The reply", class: "text-sm font-medium text-heading" %>
+      <p class="mt-0.5 text-xs text-muted">Write it as you would send it.</p>
+      <%= form.text_area :body, rows: 6, maxlength: 2_000,
+            placeholder: "Yes! We deliver across Jaipur. Orders before 4 PM go out the same day.",
+            class: "mt-2 w-full rounded-control border border-border bg-background px-3.5 py-2.5 text-sm text-heading placeholder:text-muted focus:border-border-strong focus:outline-none" %>
+    </div>
+  </div>
+
+  <div class="flex items-center gap-3">
+    <%= form.submit(@saved_reply.persisted? ? "Save changes" : "Save this reply",
+          class: "h-11 cursor-pointer rounded-control bg-primary px-5 text-sm font-medium text-primary-contrast hover:bg-primary-hover") %>
+    <%= link_to "Cancel", workspace_saved_replies_path(**slug),
+          class: "text-sm text-muted underline underline-offset-4 hover:text-heading" %>
+  </div>
+<% end %>

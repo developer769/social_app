@@ -12,8 +12,8 @@ module Navigation
     { key: :create,    label: "Create",    icon: "create",    route: :workspace_create_path },
     { key: :calendar,  label: "Calendar",  icon: "calendar",  route: :workspace_calendar_path },
     { key: :analytics, label: "Analytics", icon: "analytics", route: :workspace_analytics_path },
-    { key: :inbox,     label: "Inbox",     icon: "inbox",     route: nil },
-    { key: :ads,       label: "Ads",       icon: "ads",       route: nil },
+    { key: :inbox,     label: "Inbox",     icon: "inbox",     route: :workspace_inbox_path },
+    { key: :ads,       label: "Ads",       icon: "ads",       route: :workspace_ads_path },
     { key: :settings,  label: "Settings",  icon: "settings",  route: :workspace_settings_root_path }
   ].freeze
 

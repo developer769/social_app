@@ -1,0 +1,136 @@
+<% content_for :title, "Conversation" %>
+<% slug = { workspace_slug: current_workspace.slug } %>
+<% zone = current_workspace.timezone %>
+
+<header class="mb-6 flex flex-wrap items-start justify-between gap-4">
+  <div class="min-w-0">
+    <%= link_to "← Inbox", workspace_inbox_path(**slug),
+          class: "text-sm text-muted underline underline-offset-4 hover:text-heading" %>
+    <h1 class="mt-3 flex items-center gap-2.5 font-display text-3xl font-normal">
+      <%= render PlatformGlyphComponent.new(provider: @conversation.provider, size: :medium) %>
+      <%= @conversation.participant_label %>
+    </h1>
+    <p class="mt-1.5 text-sm text-muted">
+      <%= @conversation.kind_label %> on <%= @conversation.provider_name %>
+      <% if @conversation.participant_handle.present? %> · <%= @conversation.participant_handle %><% end %>
+    </p>
+  </div>
+
+  <div class="flex shrink-0 items-center gap-3">
+    <% if @conversation.closed? %>
+      <%= button_to "Reopen", reopen_workspace_conversation_path(**slug, id: @conversation), method: :patch,
+            class: "h-10 cursor-pointer rounded-control border border-border px-4 text-sm font-medium text-body hover:bg-surface-sunk" %>
+    <% else %>
+      <%= button_to "Mark done", close_workspace_conversation_path(**slug, id: @conversation), method: :patch,
+            class: "h-10 cursor-pointer rounded-control border border-border px-4 text-sm font-medium text-body hover:bg-surface-sunk" %>
+    <% end %>
+    <% if @conversation.permalink.present? %>
+      <%= link_to "Open on #{@conversation.provider_name}", @conversation.permalink, rel: "noopener", target: "_blank",
+            class: "flex h-10 items-center rounded-control bg-primary px-4 text-sm font-medium text-primary-contrast hover:bg-primary-hover" %>
+    <% end %>
+  </div>
+</header>
+
+<%= render "shared/flash" %>
+
+<div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+  <div class="min-w-0 space-y-5">
+    <% if @conversation.kind_review? && @conversation.rating %>
+      <div class="rounded-card border border-border bg-gold-tint px-5 py-4">
+        <p class="text-sm text-body">
+          Rated <span class="font-medium text-heading"><%= @conversation.rating %> out of 5</span>
+        </p>
+      </div>
+    <% end %>
+
+    <ol class="space-y-3">
+      <% @conversation.messages.each do |message| %>
+        <li class="<%= message.outbound? ? "ml-8" : "mr-8" %>">
+          <div class="rounded-card border border-border <%= message.outbound? ? "bg-blue-soft" : "bg-surface" %> px-5 py-4">
+            <p class="text-xs font-medium text-muted"><%= message.author_label %></p>
+            <p class="mt-1.5 whitespace-pre-wrap text-sm text-body"><%= message.body %></p>
+
+            <div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted">
+              <% if message.sent_at %>
+                <time datetime="<%= message.sent_at.iso8601 %>">
+                  <%= message.sent_at.in_time_zone(zone).strftime("%-d %b, %-l:%M %p") %>
+                </time>
+              <% end %>
+
+              <%# A reply that did not leave the building must say so on itself,
+                  not only in a flash message that has already gone. %>
+              <% if message.failed? %>
+                <span class="text-danger">· Not sent — <%= message.error_message %></span>
+              <% elsif message.outbound? && message.delivery_sending? %>
+                <span>· Sending</span>
+              <% end %>
+            </div>
+          </div>
+        </li>
+      <% end %>
+    </ol>
+
+    <section class="rounded-card border border-border bg-surface p-5">
+      <% if @conversation.repliable? %>
+        <%= form_with url: reply_workspace_conversation_path(**slug, id: @conversation), method: :post do %>
+          <label for="body" class="text-sm font-medium text-heading">Your reply</label>
+          <%= text_area_tag :body, nil, rows: 4, maxlength: 5_000, id: "body",
+                class: "mt-2 w-full rounded-control border border-border bg-background px-3.5 py-2.5 text-sm text-heading placeholder:text-muted focus:border-border-strong focus:outline-none",
+                placeholder: "Thank you! We deliver across Jaipur." %>
+
+          <div class="mt-3 flex flex-wrap items-center justify-between gap-3">
+            <p class="text-xs text-muted">
+              This goes to <%= @conversation.provider_name %> as
+              <%= @conversation.social_account.handle %>.
+            </p>
+            <%= submit_tag "Send reply",
+                  class: "h-10 cursor-pointer rounded-control bg-primary px-5 text-sm font-medium text-primary-contrast hover:bg-primary-hover" %>
+          </div>
+        <% end %>
+      <% else %>
+        <%# Spec 30: not a broken form, no form at all. %>
+        <p class="text-sm font-medium text-heading">Replying is not possible here</p>
+        <p class="mt-1.5 text-sm text-body">
+          <%= @conversation.provider_name %> does not allow another app to reply to
+          <%= @conversation.kind_label.downcase %>s. You can open it on
+          <%= @conversation.provider_name %> and answer there.
+        </p>
+      <% end %>
+    </section>
+  </div>
+
+  <aside class="space-y-5">
+    <section class="rounded-card border border-border bg-surface p-5">
+      <h2 class="font-display text-lg font-normal">Saved replies</h2>
+      <% if @saved_replies.empty? %>
+        <p class="mt-2 text-sm text-muted">You have not written any yet.</p>
+      <% else %>
+        <p class="mt-1 text-xs text-muted">Click to copy into the box.</p>
+        <ul class="mt-3 space-y-2" data-controller="saved-reply">
+          <% @saved_replies.each do |reply| %>
+            <li>
+              <button type="button"
+                      class="w-full cursor-pointer rounded-control border border-border bg-background px-3.5 py-2.5 text-left hover:bg-surface-sunk"
+                      data-action="saved-reply#insert"
+                      data-saved-reply-body-param="<%= reply.body %>">
+                <span class="block text-sm font-medium text-heading"><%= reply.title %></span>
+                <span class="mt-0.5 block line-clamp-2 text-xs text-muted"><%= reply.body %></span>
+              </button>
+            </li>
+          <% end %>
+        </ul>
+      <% end %>
+      <%= link_to "Manage saved replies", workspace_saved_replies_path(**slug),
+            class: "mt-3 inline-block text-sm font-medium text-primary underline underline-offset-4" %>
+    </section>
+
+    <% if @conversation.post %>
+      <section class="rounded-card border border-border bg-blue-soft p-5">
+        <h2 class="font-display text-lg font-normal">About this post</h2>
+        <p class="mt-2 text-sm text-body"><%= @conversation.post.caption&.truncate(90) %></p>
+        <%= link_to "Open the post", workspace_post_path(**slug, id: @conversation.post),
+              class: "mt-3 inline-block text-sm font-medium text-primary underline underline-offset-4" %>
+      </section>
+    <% end %>
+  </aside>
+</div>

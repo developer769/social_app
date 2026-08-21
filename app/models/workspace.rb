@@ -21,6 +21,8 @@ class Workspace < ApplicationRecord
 
   has_many :workspace_memberships, dependent: :destroy
   has_many :members, through: :workspace_memberships, source: :user
+  has_many :conversations, dependent: :destroy
+  has_many :saved_replies, dependent: :destroy
   has_many :audit_events, dependent: :nullify
 
   enum :onboarding_step, ONBOARDING_STEPS.index_by(&:itself), validate: true

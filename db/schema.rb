@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_21_183000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_21_200000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
@@ -142,6 +142,37 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_183000) do
     t.check_constraint "tone::text = ANY (ARRAY['friendly'::character varying::text, 'elegant'::character varying::text, 'playful'::character varying::text, 'professional'::character varying::text, 'premium'::character varying::text, 'educational'::character varying::text, 'bold'::character varying::text, 'minimal'::character varying::text])", name: "brand_tones_tone_is_known"
   end
 
+  create_table "conversations", force: :cascade do |t|
+    t.datetime "closed_at"
+    t.bigint "closed_by_id"
+    t.datetime "created_at", null: false
+    t.string "external_id", null: false
+    t.string "kind", null: false
+    t.datetime "last_inbound_at"
+    t.datetime "last_message_at"
+    t.string "participant_external_id"
+    t.string "participant_handle"
+    t.string "participant_name"
+    t.string "permalink"
+    t.bigint "post_id"
+    t.text "preview"
+    t.string "provider", null: false
+    t.integer "rating"
+    t.bigint "social_account_id", null: false
+    t.string "status", default: "open", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "workspace_id", null: false
+    t.index ["closed_by_id"], name: "index_conversations_on_closed_by_id"
+    t.index ["post_id"], name: "index_conversations_on_post_id"
+    t.index ["social_account_id", "external_id"], name: "index_conversations_on_social_account_id_and_external_id", unique: true
+    t.index ["social_account_id"], name: "index_conversations_on_social_account_id"
+    t.index ["workspace_id", "status", "last_message_at"], name: "index_conversations_for_listing", order: { last_message_at: :desc }
+    t.index ["workspace_id"], name: "index_conversations_on_workspace_id"
+    t.check_constraint "kind::text = ANY (ARRAY['comment'::character varying, 'direct_message'::character varying, 'review'::character varying]::text[])", name: "conversations_kind_is_known"
+    t.check_constraint "rating IS NULL OR rating >= 1 AND rating <= 5", name: "conversations_rating_in_range"
+    t.check_constraint "status::text = ANY (ARRAY['open'::character varying, 'closed'::character varying]::text[])", name: "conversations_status_is_known"
+  end
+
   create_table "creative_outputs", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "creative_request_id", null: false
@@ -214,6 +245,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_183000) do
     t.index ["workspace_id"], name: "index_media_assets_on_workspace_id"
     t.check_constraint "kind::text = ANY (ARRAY['image'::character varying::text, 'video'::character varying::text])", name: "media_assets_kind_is_known"
     t.check_constraint "origin::text = ANY (ARRAY['upload'::character varying::text, 'generated'::character varying::text])", name: "media_assets_origin_is_known"
+  end
+
+  create_table "messages", force: :cascade do |t|
+    t.string "author_handle"
+    t.string "author_name"
+    t.text "body", null: false
+    t.bigint "conversation_id", null: false
+    t.datetime "created_at", null: false
+    t.string "delivery_status"
+    t.string "direction", null: false
+    t.string "error_message"
+    t.string "external_id"
+    t.datetime "sent_at"
+    t.bigint "sent_by_id"
+    t.datetime "updated_at", null: false
+    t.index ["conversation_id", "external_id"], name: "index_messages_on_conversation_id_and_external_id", unique: true, where: "(external_id IS NOT NULL)"
+    t.index ["conversation_id", "sent_at"], name: "index_messages_on_conversation_id_and_sent_at"
+    t.index ["conversation_id"], name: "index_messages_on_conversation_id"
+    t.index ["sent_by_id"], name: "index_messages_on_sent_by_id"
+    t.check_constraint "delivery_status IS NULL OR (delivery_status::text = ANY (ARRAY['pending'::character varying, 'sending'::character varying, 'sent'::character varying, 'failed'::character varying]::text[]))", name: "messages_delivery_status_is_known"
+    t.check_constraint "direction::text <> 'outbound'::text OR delivery_status IS NOT NULL", name: "messages_outbound_has_delivery_status"
+    t.check_constraint "direction::text = ANY (ARRAY['inbound'::character varying, 'outbound'::character varying]::text[])", name: "messages_direction_is_known"
   end
 
   create_table "notification_preferences", force: :cascade do |t|
@@ -357,9 +410,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_183000) do
     t.index ["workspace_id", "scheduled_at"], name: "index_posts_on_workspace_id_and_scheduled_at"
     t.index ["workspace_id", "status"], name: "index_posts_on_workspace_id_and_status"
     t.index ["workspace_id"], name: "index_posts_on_workspace_id"
-    t.check_constraint "publish_mode::text = ANY (ARRAY['automatic'::character varying, 'reminder'::character varying]::text[])", name: "posts_publish_mode_is_known"
+    t.check_constraint "publish_mode::text = ANY (ARRAY['automatic'::character varying::text, 'reminder'::character varying::text])", name: "posts_publish_mode_is_known"
     t.check_constraint "status::text <> 'scheduled'::text OR scheduled_at IS NOT NULL AND scheduled_timezone IS NOT NULL", name: "posts_scheduled_has_a_time"
-    t.check_constraint "status::text = ANY (ARRAY['draft'::character varying, 'awaiting_approval'::character varying, 'approved'::character varying, 'scheduled'::character varying, 'publishing'::character varying, 'published'::character varying, 'partially_published'::character varying, 'reminded'::character varying, 'failed'::character varying, 'cancelled'::character varying]::text[])", name: "posts_status_is_known"
+    t.check_constraint "status::text = ANY (ARRAY['draft'::character varying::text, 'awaiting_approval'::character varying::text, 'approved'::character varying::text, 'scheduled'::character varying::text, 'publishing'::character varying::text, 'published'::character varying::text, 'partially_published'::character varying::text, 'reminded'::character varying::text, 'failed'::character varying::text, 'cancelled'::character varying::text])", name: "posts_status_is_known"
   end
 
   create_table "products", force: :cascade do |t|
@@ -386,6 +439,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_183000) do
     t.check_constraint "description IS NULL OR char_length(description) <= 200", name: "products_description_within_limit"
     t.check_constraint "price_minor IS NULL OR price_minor >= 0", name: "products_price_not_negative"
     t.check_constraint "stock_status::text = ANY (ARRAY['in_stock'::character varying::text, 'low_stock'::character varying::text, 'out_of_stock'::character varying::text])", name: "products_stock_status_is_known"
+  end
+
+  create_table "saved_replies", force: :cascade do |t|
+    t.text "body", null: false
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id"
+    t.integer "position", default: 0, null: false
+    t.integer "times_used", default: 0, null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "workspace_id", null: false
+    t.index ["created_by_id"], name: "index_saved_replies_on_created_by_id"
+    t.index ["workspace_id", "position"], name: "index_saved_replies_on_workspace_id_and_position"
+    t.index ["workspace_id", "title"], name: "index_saved_replies_on_workspace_id_and_title", unique: true
+    t.index ["workspace_id"], name: "index_saved_replies_on_workspace_id"
   end
 
   create_table "services", force: :cascade do |t|
@@ -684,6 +752,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_183000) do
   add_foreign_key "brand_kits", "workspaces"
   add_foreign_key "brand_profiles", "workspaces"
   add_foreign_key "brand_tones", "workspaces"
+  add_foreign_key "conversations", "posts"
+  add_foreign_key "conversations", "social_accounts"
+  add_foreign_key "conversations", "users", column: "closed_by_id"
+  add_foreign_key "conversations", "workspaces"
   add_foreign_key "creative_outputs", "creative_requests"
   add_foreign_key "creative_outputs", "media_assets"
   add_foreign_key "creative_requests", "creative_outputs", column: "selected_output_id"
@@ -693,6 +765,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_183000) do
   add_foreign_key "creative_requests", "workspaces"
   add_foreign_key "media_assets", "users", column: "uploaded_by_id"
   add_foreign_key "media_assets", "workspaces"
+  add_foreign_key "messages", "conversations"
+  add_foreign_key "messages", "users", column: "sent_by_id"
   add_foreign_key "notification_preferences", "users"
   add_foreign_key "notification_preferences", "workspaces"
   add_foreign_key "plan_entitlements", "plans"
@@ -706,6 +780,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_183000) do
   add_foreign_key "posts", "users", column: "created_by_id"
   add_foreign_key "posts", "workspaces"
   add_foreign_key "products", "workspaces"
+  add_foreign_key "saved_replies", "users", column: "created_by_id"
+  add_foreign_key "saved_replies", "workspaces"
   add_foreign_key "services", "workspaces"
   add_foreign_key "sessions", "users"
   add_foreign_key "social_accounts", "users", column: "connected_by_id"
