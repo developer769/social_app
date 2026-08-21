@@ -8,7 +8,7 @@
 
 <% if SocialProvider::Registry.any_real? == false %>
   <div role="note" class="mb-6 flex gap-3 rounded-card border border-border bg-blue-soft px-5 py-4">
-    <span aria-hidden="true" class="text-primary">&#9432;</span>
+    <%= render "shared/note_icon", tone: "text-primary" %>
     <p class="text-sm text-body">
       <span class="font-medium text-heading">These connections are simulated.</span>
       Real accounts need each platform's API credentials and app review, which are approved

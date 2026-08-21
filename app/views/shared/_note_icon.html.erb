@@ -1,0 +1,9 @@
+<%#
+  A circled "i", drawn with a border rather than taken from the font.
+
+  U+24D8 was used here and rendered as a missing-glyph box in both Figtree and
+  Fraunces, so every informational note in the app was headed by a small empty
+  rectangle. Drawing it guarantees it appears.
+%>
+<span aria-hidden="true"
+      class="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-current text-[10px] font-semibold leading-none <%= local_assigns.fetch(:tone, "text-primary") %>">i</span>

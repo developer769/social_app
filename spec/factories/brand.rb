@@ -16,3 +16,15 @@ FactoryBot.define do
     tone { "friendly" }
   end
 end
+
+FactoryBot.define do
+  factory :posting_preference do
+    workspace
+    posts_per_week { 3 }
+    preferred_days { [ 1, 3, 5 ] }
+    preferred_time { "10:00" }
+    caption_style { "balanced" }
+    hashtag_style { "balanced" }
+    emoji_level { "minimal" }
+  end
+end

@@ -59,6 +59,7 @@ Rails.application.routes.draw do
     end
 
     get "create", to: "create#show", as: :create
+    get "analytics", to: "analytics#show", as: :analytics
 
     get "calendar", to: "calendar#show", as: :calendar
 

@@ -96,7 +96,7 @@
                 <% end %>
                 <% result.advisory.each do |issue| %>
                   <p class="mt-2.5 flex gap-2 text-sm text-muted">
-                    <span aria-hidden="true">&#9432;</span><%= issue.message %>
+                    <%= render "shared/note_icon", tone: "text-muted" %><%= issue.message %>
                   </p>
                 <% end %>
               <% end %>

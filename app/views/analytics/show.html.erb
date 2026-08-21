@@ -1,0 +1,240 @@
+<% content_for :title, "Analytics" %>
+<% slug = { workspace_slug: current_workspace.slug } %>
+<% o = @overview %>
+
+<header class="mb-7 flex flex-wrap items-end justify-between gap-4">
+  <div>
+    <h1 class="font-display text-3xl font-normal sm:text-4xl">
+      Analytics<span aria-hidden="true" class="ml-1 align-super text-base text-warning">&#10022;</span>
+    </h1>
+    <p class="mt-1.5 text-sm text-muted">
+      What Prachar has recorded for <%= current_workspace.name %>, <%= o.period_label.downcase %>.
+    </p>
+  </div>
+
+  <nav class="flex gap-1 rounded-control border border-border bg-surface p-1">
+    <% Analytics::OverviewQuery::PERIODS.each do |days, label| %>
+      <%= link_to label.sub("Last ", ""), workspace_analytics_path(**slug, days: days),
+            class: class_names(
+              "rounded-control px-3 py-1.5 text-sm font-medium",
+              "bg-primary text-primary-contrast" => o.days == days,
+              "text-body hover:bg-surface-sunk" => o.days != days) %>
+    <% end %>
+  </nav>
+</header>
+
+<%= render "shared/flash" %>
+
+<% unless o.anything_happened? %>
+  <%= render EmptyStateComponent.new(
+        title: "Nothing to report yet",
+        body: "Once you schedule a post, what happened to it will be shown here.") do |state| %>
+    <% state.with_action do %>
+      <%= link_to "Create a post", workspace_create_path(**slug),
+            class: "inline-flex h-11 items-center rounded-control bg-primary px-5 text-sm font-medium text-primary-contrast hover:bg-primary-hover" %>
+    <% end %>
+  <% end %>
+<% else %>
+
+<%#
+  Said before any number, because a page headed "Analytics" sets an
+  expectation of likes and reach. What follows is real, and it is not that
+  (spec 22, 27).
+%>
+<section class="mb-6 flex gap-3 rounded-card border border-border bg-gold-tint px-5 py-4">
+  <%= render "shared/note_icon", tone: "text-warning" %>
+  <div class="text-sm text-body">
+    <p>
+      <span class="font-medium text-heading">These are Prachar's own records, not platform figures.</span>
+      Every number below is counted from what this app did: what you scheduled, what
+      went out, and what stopped it.
+    </p>
+    <p class="mt-1.5">
+      Likes, reach and follower numbers live inside
+      <%= o.platforms_awaiting_analytics.presence&.to_sentence || "the platforms" %>
+      and Prachar cannot read them yet, so they are not shown at all rather than shown as zero.
+    </p>
+  </div>
+</section>
+
+<section class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+  <% [["Went out", o.counts[:published], :success, "Reached at least one platform"],
+      ["You were reminded", o.counts[:reminded], :info, "Prachar could not post these for you"],
+      ["Did not go out", o.counts[:failed], :danger, "Something stopped these"],
+      ["Waiting to go", o.counts[:scheduled], :neutral, "Scheduled, not yet due"]].each do |label, value, tone, hint| %>
+    <div class="rounded-card border border-border bg-surface p-5">
+      <p class="text-sm text-muted"><%= label %></p>
+      <p class="mt-1 font-display text-3xl tabular-nums text-heading"><%= value %></p>
+      <p class="mt-1.5 text-xs text-muted"><%= hint %></p>
+    </div>
+  <% end %>
+</section>
+
+<div class="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+  <div class="min-w-0 space-y-6">
+    <section class="rounded-card border border-border bg-surface p-6">
+      <h2 class="font-display text-xl font-normal">Your posting rhythm</h2>
+      <p class="mt-1 text-sm text-muted">
+        <% if o.target_per_week.blank? %>
+          Set a target under Posting preferences and this will compare against it.
+        <% elsif o.enough_history_to_compare? %>
+          You said you wanted <%= pluralize(o.target_per_week, "post") %> a week.
+          Over whole weeks you have averaged <%= o.average_per_week %>.
+        <% else %>
+          You said you wanted <%= pluralize(o.target_per_week, "post") %> a week.
+          <%= pluralize(o.this_week_count, "post") %> so far this week.
+        <% end %>
+      </p>
+
+      <%# A plain bar chart of real counts. Weeks that have not happened are not
+          drawn, and nothing is projected forward. %>
+      <% peak = [o.weekly_activity.map(&:count).max || 0, o.target_per_week || 0, 1].max %>
+      <ol class="mt-5 flex items-end gap-1.5" style="height: 9rem;">
+        <% o.weekly_activity.each do |point| %>
+          <li class="flex h-full flex-1 flex-col justify-end"
+              title="Week of <%= point.starts_on.strftime('%-d %b') %>: <%= pluralize(point.count, 'post') %>">
+            <span class="block w-full rounded-t-sm <%= point.count.zero? ? "bg-border" : "bg-primary" %>"
+                  style="height: <%= [(point.count.to_f / peak * 100).round, 2].max %>%"></span>
+          </li>
+        <% end %>
+      </ol>
+      <div class="mt-2 flex justify-between text-xs text-muted">
+        <span><%= o.weekly_activity.first&.starts_on&.strftime("%-d %b") %></span>
+        <span>This week</span>
+      </div>
+
+      <%#
+        No verdict until there is a finished week to judge. Saying "you are
+        posting less than you planned" to somebody who started on Monday is
+        both true and useless.
+      %>
+      <% if o.target_per_week.present? %>
+        <p class="mt-4 text-sm <%= o.keeping_up? ? "text-success" : "text-body" %>">
+          <% if !o.enough_history_to_compare? %>
+            Not enough weeks yet to say whether you are keeping up. Come back after
+            a full week.
+          <% elsif o.keeping_up? %>
+            &#10003; You are keeping up with what you set out to do.
+          <% else %>
+            You are posting less often than you planned. Nothing is wrong &mdash; it may
+            just be that the target was ambitious.
+          <% end %>
+        </p>
+      <% end %>
+    </section>
+
+    <section class="rounded-card border border-border bg-surface p-6">
+      <h2 class="font-display text-xl font-normal">Where your posts went</h2>
+
+      <% if o.by_platform.empty? %>
+        <p class="mt-3 text-sm text-muted">No posts have been sent anywhere yet.</p>
+      <% else %>
+        <div class="mt-4 overflow-x-auto">
+          <table class="w-full min-w-[26rem] text-sm">
+            <thead>
+              <tr class="border-b border-border text-left text-xs uppercase tracking-wide text-muted">
+                <th class="pb-2 font-medium">Platform</th>
+                <th class="pb-2 text-right font-medium">Posted</th>
+                <th class="pb-2 text-right font-medium">Not posted</th>
+                <th class="pb-2 text-right font-medium">Failed</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-border">
+              <% o.by_platform.each do |row| %>
+                <tr>
+                  <td class="py-3">
+                    <span class="flex items-center gap-2.5">
+                      <%= render PlatformGlyphComponent.new(provider: row.provider, size: :small) %>
+                      <span class="text-heading"><%= row.name %></span>
+                    </span>
+                  </td>
+                  <td class="py-3 text-right tabular-nums text-heading"><%= row.published %></td>
+                  <td class="py-3 text-right tabular-nums text-muted"><%= row.not_posted %></td>
+                  <td class="py-3 text-right tabular-nums <%= row.failed.positive? ? "text-danger" : "text-muted" %>">
+                    <%= row.failed %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% end %>
+    </section>
+
+    <% if o.failure_reasons.any? %>
+      <section class="rounded-card border border-border bg-surface p-6">
+        <h2 class="font-display text-xl font-normal">What stopped things going out</h2>
+        <p class="mt-1 text-sm text-muted">Grouped by reason, most common first.</p>
+
+        <ul class="mt-4 space-y-2.5">
+          <% o.failure_reasons.each do |row| %>
+            <li class="flex items-start justify-between gap-4 rounded-control border border-border bg-background px-4 py-3">
+              <span class="text-sm text-body"><%= row.reason %></span>
+              <span class="shrink-0 text-sm tabular-nums text-muted">
+                <%= pluralize(row.count, "time") %>
+              </span>
+            </li>
+          <% end %>
+        </ul>
+      </section>
+    <% end %>
+  </div>
+
+  <aside class="space-y-5">
+    <%#
+      The absent half, named rather than omitted. Listing what WOULD appear
+      makes the gap specific instead of a shrug.
+    %>
+    <section class="rounded-card border border-dashed border-border-strong bg-surface p-5">
+      <h2 class="font-display text-lg font-normal">Likes, reach and followers</h2>
+      <%= render StatusBadgeComponent.new(label: "Not available", tone: :neutral) %>
+      <p class="mt-3 text-sm text-body">
+        These come from the platforms themselves. Prachar has no connection to
+        <%= o.platforms_awaiting_analytics.presence&.to_sentence || "any platform" %> yet,
+        so there is nothing to read.
+      </p>
+      <p class="mt-3 text-sm text-muted">
+        When that connection exists, this is where engagement per post, follower
+        growth and best-performing content will appear. Until then it stays empty
+        rather than showing you a zero.
+      </p>
+    </section>
+
+    <section class="rounded-card border border-border bg-surface p-5">
+      <h2 class="font-display text-lg font-normal">What you have featured</h2>
+
+      <% if o.featured.empty? %>
+        <p class="mt-2 text-sm text-muted">
+          No post has been tied to a product or service yet.
+        </p>
+      <% else %>
+        <ul class="mt-3 space-y-2">
+          <% o.featured.first(5).each do |row| %>
+            <li class="flex items-center justify-between gap-3 text-sm">
+              <span class="min-w-0 truncate text-body"><%= row.subject.name %></span>
+              <span class="shrink-0 tabular-nums text-muted"><%= row.count %></span>
+            </li>
+          <% end %>
+        </ul>
+      <% end %>
+
+      <% if o.never_featured.any? %>
+        <div class="mt-4 border-t border-border pt-4">
+          <p class="text-sm font-medium text-heading">Never posted about</p>
+          <p class="mt-1 text-xs text-muted">
+            <%= pluralize(o.never_featured.size, "item") %> in your catalog that no post
+            has featured.
+          </p>
+          <ul class="mt-2.5 space-y-1.5">
+            <% o.never_featured.first(5).each do |item| %>
+              <li class="truncate text-sm text-body"><%= item.name %></li>
+            <% end %>
+          </ul>
+          <%= link_to "Make a post about one", workspace_gallery_path(**slug),
+                class: "mt-3 inline-block text-sm font-medium text-primary underline underline-offset-4" %>
+        </div>
+      <% end %>
+    </section>
+  </aside>
+</div>
+<% end %>
