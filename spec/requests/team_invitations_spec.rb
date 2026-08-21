@@ -156,15 +156,36 @@ RSpec.describe "Team invitations" do
   describe "removing someone" do
     before { sign_in(owner) }
 
-    it "ends their access immediately, signing them out" do
+    it "ends their access immediately" do
       teammate = create(:user)
       membership = create(:workspace_membership, workspace: workspace, user: teammate)
-      teammate_session = Session.start!(user: teammate)
 
       delete workspace_settings_team_path(**slug, id: membership)
 
       expect(membership.reload).not_to be_grants_access
-      expect(teammate_session.reload.revoked_at).to be_present
+    end
+
+    # Access is resolved from an accepted, active membership on every request,
+    # so removal bites on their next click without touching anything else.
+    # Revoking their sessions here signed them out of every OTHER workspace
+    # they belong to, including one they own.
+    it "does not sign them out of a workspace they still belong to" do
+      teammate = create(:user)
+      membership = create(:workspace_membership, workspace: workspace, user: teammate)
+      theirs = create(:workspace, owner_user: teammate)
+      create(:workspace_membership, workspace: theirs, user: teammate)
+      teammate_session = Session.start!(user: teammate)
+
+      delete workspace_settings_team_path(**slug, id: membership)
+
+      expect(teammate_session.reload.revoked_at).to be_nil
+
+      sign_in(teammate)
+      get workspace_settings_root_path(workspace_slug: theirs.slug)
+      expect(response).to have_http_status(:ok)
+
+      get workspace_settings_root_path(**slug)
+      expect(response).to have_http_status(:not_found)
     end
 
     # The creator holds operations nobody else can perform yet, so removing

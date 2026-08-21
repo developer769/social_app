@@ -45,6 +45,10 @@ module SettingsMenu
       summary: "Choose what Prachar emails you. Your choices, not the workspace's.",
       route: :workspace_settings_notifications_path, tone: :gold),
 
+    Entry.new(key: :activity, title: "Activity",
+      summary: "Everything that has happened in this workspace, and who did it.",
+      route: :workspace_settings_activity_path, tone: :lavender),
+
     Entry.new(key: :integrations, title: "Integrations",
       summary: "Connect other tools to Prachar.",
       route: nil, tone: :lavender,

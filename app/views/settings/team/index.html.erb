@@ -153,6 +153,24 @@
       <% end %>
     </section>
 
+    <%# Leaving was the one direction this page did not offer. Removal only
+        worked top-down, so somebody invited to help with a friend's bakery had
+        no way out of it themselves. %>
+    <% unless current_workspace.owned_by?(current_user) %>
+      <section class="rounded-card border border-border bg-surface p-5">
+        <h2 class="font-display text-lg font-normal">Leave this workspace</h2>
+        <p class="mt-2 text-sm text-body">
+          You will lose access to <%= current_workspace.name %> straight away.
+          Anything you made stays with the workspace.
+        </p>
+        <%= button_to "Leave this workspace",
+              leave_workspace_settings_team_index_path(workspace_slug: current_workspace.slug),
+              method: :delete,
+              form: { data: { turbo_confirm: "Leave #{current_workspace.name}? You will need a new invitation to come back." } },
+              class: "mt-3 h-10 w-full cursor-pointer rounded-control border border-danger/40 px-4 text-sm font-medium text-danger hover:bg-danger-soft" %>
+      </section>
+    <% end %>
+
     <section class="rounded-card border border-border bg-surface p-5">
       <h2 class="font-display text-lg font-normal">What a teammate can do</h2>
       <ul class="mt-3 space-y-2 text-sm text-body">

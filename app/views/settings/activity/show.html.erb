@@ -1,0 +1,74 @@
+<% content_for :title, "Activity" %>
+<% slug = { workspace_slug: current_workspace.slug } %>
+<% zone = current_workspace.timezone %>
+
+<%= render "settings/page_header", title: "Activity",
+      subtitle: "What has happened in #{current_workspace.name}, newest first. " \
+                "This record cannot be edited or removed by anyone." %>
+
+<%= render "shared/flash" %>
+
+<% if @entries.empty? %>
+  <%= render EmptyStateComponent.new(
+        title: @page > 1 ? "Nothing further back" : "Nothing has happened yet",
+        body: @page > 1 ? "You have reached the end of this record." :
+              "Once you connect an account or start a post, it will be listed here.") %>
+<% else %>
+  <ol class="divide-y divide-border rounded-card border border-border bg-surface">
+    <% previous_day = nil %>
+    <% @entries.each do |entry| %>
+      <% day = entry.occurred_at.in_time_zone(zone).to_date %>
+
+      <% if day != previous_day %>
+        <% previous_day = day %>
+        <li class="bg-surface-sunk px-5 py-2">
+          <h2 class="text-xs font-medium uppercase tracking-wide text-muted">
+            <%= day == Time.current.in_time_zone(zone).to_date ? "Today" : day.strftime("%-d %B %Y") %>
+          </h2>
+        </li>
+      <% end %>
+
+      <li class="flex items-start gap-3.5 px-5 py-3.5">
+        <%
+          dot = { success: "bg-success", danger: "bg-danger", neutral: "bg-border-strong" }
+                  .fetch(entry.tone, "bg-border-strong")
+        %>
+        <span aria-hidden="true"
+              class="mt-1.5 h-2 w-2 shrink-0 rounded-full <%= dot %>"></span>
+
+        <p class="min-w-0 flex-1 text-sm text-body">
+          <span class="font-medium text-heading"><%= entry.actor_name %></span>
+          <%= entry.sentence %>
+        </p>
+
+        <%# The workspace's own clock, not the reader's browser: a shop in
+            Jaipur and its accountant in Dubai must read the same line. %>
+        <time datetime="<%= entry.occurred_at.iso8601 %>"
+              class="shrink-0 text-xs tabular-nums text-muted">
+          <%= entry.occurred_at.in_time_zone(zone).strftime("%-l:%M %p").downcase %>
+        </time>
+      </li>
+    <% end %>
+  </ol>
+
+  <nav class="mt-5 flex items-center justify-between gap-4">
+    <% if @page > 1 %>
+      <%= link_to "← Newer", workspace_settings_activity_path(**slug, page: @page - 1),
+            class: "flex h-10 items-center rounded-control border border-border px-4 text-sm font-medium text-body hover:bg-surface-sunk" %>
+    <% else %>
+      <span></span>
+    <% end %>
+
+    <% if @more %>
+      <%= link_to "Older →", workspace_settings_activity_path(**slug, page: @page + 1),
+            class: "flex h-10 items-center rounded-control border border-border px-4 text-sm font-medium text-body hover:bg-surface-sunk" %>
+    <% else %>
+      <span class="text-xs text-muted">End of the record</span>
+    <% end %>
+  </nav>
+<% end %>
+
+<p class="mt-6 max-w-prose text-xs text-muted">
+  Sign-ins and password changes are shown only to the person they belong to.
+  Everything else in this workspace is visible to everyone who works in it.
+</p>

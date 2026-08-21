@@ -46,7 +46,12 @@ Rails.application.routes.draw do
       resource  :notifications, only: %i[show update], controller: "notifications"
       resources :team, only: %i[index create destroy] do
         member { post :resend }
+        # Leaving is your own decision and needs no permission level, which is
+        # exactly why it is a collection route and not a member one: you cannot
+        # aim it at anybody else.
+        collection { delete :leave }
       end
+      get "activity", to: "activity#show", as: :activity
     end
 
     resources :creative_requests, only: [] do

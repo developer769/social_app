@@ -14,9 +14,13 @@ module Team
 
       ActiveRecord::Base.transaction do
         @membership.remove!
-        # Access ends now, not when their session happens to expire.
-        Session.where(user_id: @membership.user_id).update_all(revoked_at: Time.current) if @membership.user_id
 
+        # Their sessions are deliberately left alone. Access to a workspace is
+        # resolved from an accepted, active membership on every single request,
+        # so removal takes effect on their very next click without touching
+        # anything. Revoking sessions here also signed them out of every OTHER
+        # workspace they belong to -- including their own -- which is not what
+        # removing somebody from one workspace should ever do.
         AuditEvent.record!(
           action: "workspace_membership.removed",
           workspace: @workspace, actor_user: @actor, auditable: @membership,

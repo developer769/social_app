@@ -34,6 +34,26 @@ module Settings
                   notice: "Invitation resent to #{membership.invitation_email}."
     end
 
+    # Leaving of your own accord.
+    #
+    # Aimed at your own membership and nowhere else, so it needs no permission
+    # level to be safe -- which matters, because there are none (spec 2). The
+    # creator cannot leave: RemoveMember refuses, since a workspace with nobody
+    # able to hold billing or ownership is a workspace nobody can look after.
+    def leave
+      result = ::Team::RemoveMember.call(
+        workspace: current_workspace, membership: current_membership, actor: current_user
+      )
+
+      if result.success?
+        AuditEvent.record!(action: "workspace_membership.left", workspace: current_workspace,
+                           actor_user: current_user, auditable: current_membership)
+        redirect_to root_path, notice: "You have left #{current_workspace.name}."
+      else
+        redirect_to workspace_settings_team_index_path(**slug), alert: leave_error(result.error)
+      end
+    end
+
     def destroy
       membership = current_workspace.workspace_memberships.find(params[:id])
 
@@ -54,6 +74,15 @@ module Settings
     end
 
     private
+
+    def leave_error(error)
+      case error
+      when :cannot_remove_owner
+        "You created this workspace, so you cannot leave it. Someone has to look after billing."
+      else
+        "You could not be removed from this workspace."
+      end
+    end
 
     def seats_exhausted?
       index_counts
