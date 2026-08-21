@@ -1,0 +1,183 @@
+<% content_for :title, "Post" %>
+<% slug = { workspace_slug: current_workspace.slug } %>
+<% zone = current_workspace.timezone %>
+
+<header class="mb-6 flex flex-wrap items-start justify-between gap-4">
+  <div class="min-w-0">
+    <%= link_to "← Calendar", workspace_calendar_path(**slug),
+          class: "text-sm text-muted underline underline-offset-4 hover:text-heading" %>
+    <h1 class="mt-3 font-display text-3xl font-normal sm:text-4xl">
+      <%= @post.caption.presence&.truncate(48) || @post.template&.name || "Untitled post" %>
+    </h1>
+    <p class="mt-1.5 text-sm text-muted">
+      <% if @post.scheduled_at_local %>
+        <%= @post.published_at ? "Went out" : "Due" %>
+        <%= @post.scheduled_at_local.strftime("%-d %B %Y at %-l:%M %p") %>
+        <%= zone == "Asia/Kolkata" ? "IST" : zone %>
+      <% else %>
+        Not scheduled yet
+      <% end %>
+    </p>
+  </div>
+
+  <div class="flex shrink-0 items-center gap-3">
+    <%= render StatusBadgeComponent.new(label: @post.status_label, tone: @post.status_tone) %>
+    <% unless @post.settled? %>
+      <%= link_to "Edit", edit_workspace_post_path(**slug, id: @post),
+            class: "flex h-10 items-center rounded-control border border-border px-4 text-sm font-medium text-body hover:bg-surface-sunk" %>
+    <% end %>
+  </div>
+</header>
+
+<%= render "shared/flash" %>
+
+<div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+  <div class="min-w-0 space-y-6">
+    <%#
+      Reminder posts are the common case today, and the one most likely to be
+      misread. It is said here, at the top, before any status badge can be
+      mistaken for "it went out" (spec 27).
+    %>
+    <% if @post.publish_reminder? && !@post.published? %>
+      <section class="rounded-card border border-border bg-gold-tint p-5">
+        <h2 class="font-display text-lg font-normal">
+          <%= @post.reminded? ? "You were reminded about this" : "Prachar will remind you to post this" %>
+        </h2>
+        <p class="mt-2 text-sm text-body">
+          <% if @post.reminded? %>
+            Nothing was posted automatically. We emailed you at the scheduled time with
+            the caption and the picture, ready to post yourself.
+          <% else %>
+            No connection to <%= @post.post_targets.map(&:provider_name).uniq.to_sentence %>
+            has been built yet, so Prachar cannot post for you. At the scheduled time you
+            will get an email with everything ready to post by hand.
+          <% end %>
+        </p>
+      </section>
+    <% end %>
+
+    <section class="rounded-card border border-border bg-surface p-6">
+      <h2 class="font-display text-xl font-normal">Where it goes</h2>
+
+      <% if @preflight.empty? %>
+        <p class="mt-3 text-sm text-muted">No accounts chosen yet.</p>
+      <% else %>
+        <ul class="mt-4 space-y-3">
+          <% @preflight.each do |result| %>
+            <% target = result.target %>
+            <li class="rounded-control border border-border bg-background p-4">
+              <div class="flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-2.5">
+                  <%= render PlatformGlyphComponent.new(provider: target.provider, size: :small) %>
+                  <span class="text-sm font-medium text-heading"><%= target.provider_name %></span>
+                  <span class="text-xs text-muted"><%= target.social_account&.handle %></span>
+                </div>
+
+                <%= render StatusBadgeComponent.new(**target_badge(target)) %>
+              </div>
+
+              <% if target.published? && target.permalink.present? %>
+                <p class="mt-2.5 text-sm">
+                  <%= link_to "See it on #{target.provider_name}", target.permalink,
+                        class: "text-primary underline underline-offset-4", rel: "noopener", target: "_blank" %>
+                </p>
+              <% end %>
+
+              <% if target.error_message.present? %>
+                <p class="mt-2.5 text-sm text-body"><%= target.error_message %></p>
+              <% end %>
+
+              <%# Shown before it goes out, so there is still time to act. %>
+              <% unless @post.settled? %>
+                <% result.blocking.each do |issue| %>
+                  <p class="mt-2.5 flex gap-2 text-sm text-danger">
+                    <span aria-hidden="true">&#9888;</span><%= issue.message %>
+                  </p>
+                <% end %>
+                <% result.advisory.each do |issue| %>
+                  <p class="mt-2.5 flex gap-2 text-sm text-muted">
+                    <span aria-hidden="true">&#9432;</span><%= issue.message %>
+                  </p>
+                <% end %>
+              <% end %>
+            </li>
+          <% end %>
+        </ul>
+      <% end %>
+    </section>
+
+    <section class="rounded-card border border-border bg-surface p-6">
+      <h2 class="font-display text-xl font-normal">The post</h2>
+
+      <% if @post.primary_media&.file&.attached? && @post.primary_media.image? %>
+        <%= image_tag @post.primary_media.file.variant(resize_to_limit: [720, 720]), alt: "",
+              class: "mt-4 max-h-96 rounded-control object-contain" %>
+      <% end %>
+
+      <% if @post.caption.present? %>
+        <p class="mt-4 whitespace-pre-wrap text-sm text-body"><%= @post.caption %></p>
+      <% end %>
+
+      <% if @post.hashtags.any? %>
+        <p class="mt-3 text-sm text-primary">
+          <%= @post.hashtags.map { |tag| "##{tag}" }.join(" ") %>
+        </p>
+      <% end %>
+
+      <% if @post.first_comment.present? %>
+        <div class="mt-4 rounded-control bg-surface-sunk p-3.5">
+          <p class="text-xs font-medium uppercase tracking-wide text-muted">First comment</p>
+          <p class="mt-1 whitespace-pre-wrap text-sm text-body"><%= @post.first_comment %></p>
+        </div>
+      <% end %>
+    </section>
+  </div>
+
+  <aside class="space-y-5">
+    <% unless @post.settled? %>
+      <section class="rounded-card border border-border bg-surface p-5">
+        <h2 class="font-display text-lg font-normal">Actions</h2>
+        <div class="mt-3 space-y-2.5">
+          <% if @post.scheduled? %>
+            <%= button_to "Move back to draft", unschedule_workspace_post_path(**slug, id: @post),
+                  method: :patch,
+                  class: "h-10 w-full cursor-pointer rounded-control border border-border text-sm font-medium text-body hover:bg-surface-sunk" %>
+            <%= button_to "Cancel this post", cancel_workspace_post_path(**slug, id: @post),
+                  method: :post,
+                  form: { data: { turbo_confirm: "Cancel this post? It will not go out." } },
+                  class: "h-10 w-full cursor-pointer rounded-control border border-danger/40 text-sm font-medium text-danger hover:bg-danger-soft" %>
+          <% end %>
+        </div>
+      </section>
+    <% end %>
+
+    <% if @post.failed? || @post.partially_published? %>
+      <section class="rounded-card border border-border bg-surface p-5">
+        <h2 class="font-display text-lg font-normal">Try again</h2>
+        <p class="mt-2 text-sm text-body">
+          Fix what is listed above, then put it back in the queue. Anything that already
+          went out will not be posted twice.
+        </p>
+        <%= button_to "Schedule it again", edit_workspace_post_path(**slug, id: @post),
+              method: :get,
+              class: "mt-3 h-10 w-full cursor-pointer rounded-control bg-primary text-sm font-medium text-primary-contrast hover:bg-primary-hover" %>
+      </section>
+    <% end %>
+
+    <section class="rounded-card border border-border bg-blue-soft p-5">
+      <h2 class="font-display text-lg font-normal">History</h2>
+      <ul class="mt-3 space-y-2.5 text-sm text-body">
+        <li>Created <%= @post.created_at.in_time_zone(zone).strftime("%-d %b, %-l:%M %p") %></li>
+        <% if @post.publish_started_at %>
+          <li>Publishing started <%= @post.publish_started_at.in_time_zone(zone).strftime("%-d %b, %-l:%M %p") %></li>
+        <% end %>
+        <% if @post.reminded_at %>
+          <li>Reminder sent <%= @post.reminded_at.in_time_zone(zone).strftime("%-d %b, %-l:%M %p") %></li>
+        <% end %>
+        <% if @post.published_at %>
+          <li>Went out <%= @post.published_at.in_time_zone(zone).strftime("%-d %b, %-l:%M %p") %></li>
+        <% end %>
+      </ul>
+    </section>
+  </aside>
+</div>

@@ -22,6 +22,7 @@ class PostsController < ApplicationController
 
   def show
     @accounts = connectable_accounts
+    @preflight = Publishing::Preflight.new(@post).call
   end
 
   def edit
@@ -43,12 +44,17 @@ class PostsController < ApplicationController
   end
 
   def schedule
-    @post.schedule_for!(@post.scheduled_at, timezone: current_workspace.timezone)
-    redirect_to workspace_calendar_path(workspace_slug: current_workspace.slug),
-                notice: "Scheduled."
-  rescue ActiveRecord::RecordInvalid
-    redirect_to edit_workspace_post_path(workspace_slug: current_workspace.slug, id: @post),
-                alert: "Choose a date and time before scheduling."
+    result = Publishing::SchedulePost.call(
+      post: @post, workspace: current_workspace, actor: current_user
+    )
+
+    if result.success?
+      redirect_to workspace_post_path(workspace_slug: current_workspace.slug, id: @post),
+                  notice: scheduled_notice(@post.reload)
+    else
+      redirect_to edit_workspace_post_path(workspace_slug: current_workspace.slug, id: @post),
+                  alert: schedule_error(result.error)
+    end
   end
 
   def unschedule
@@ -72,6 +78,28 @@ class PostsController < ApplicationController
   end
 
   private
+
+  def scheduled_notice(post)
+    when_it_goes = post.scheduled_at_local&.strftime("%-d %b at %-l:%M %p")
+
+    if post.publish_reminder?
+      "Saved for #{when_it_goes}. Prachar cannot post there yet, so you will get a reminder with the caption ready."
+    else
+      "Scheduled for #{when_it_goes}."
+    end
+  end
+
+  # Preflight hands back the issues themselves, so the owner is told what to fix
+  # rather than that something is wrong.
+  def schedule_error(error)
+    case error
+    when :no_time then "Choose a date and time before scheduling."
+    when :in_the_past then "That time has already passed. Pick a later one."
+    when :no_targets then "Choose at least one account to post to."
+    when Array then error.map(&:message).uniq.to_sentence
+    else "That could not be scheduled."
+    end
+  end
 
   # Scoped through the workspace, so another tenant's post id is simply absent.
   def set_post = @post = current_workspace.posts.find(params[:id])

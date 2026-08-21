@@ -1,0 +1,30 @@
+It is time to post this on <%= @providers.to_sentence %>.
+
+Prachar could not post this for you. No connection to <%= @providers.to_sentence %>
+has been built yet, so nothing was sent. Everything you need to post it
+yourself is below.
+
+<% if @caption.present? -%>
+YOUR CAPTION -- copy all of it:
+
+<%= @caption %>
+
+<% end -%>
+<% if @post.first_comment.present? -%>
+TO ADD AS THE FIRST COMMENT:
+
+<%= @post.first_comment %>
+
+<% end -%>
+<% if @post.link_url.present? -%>
+Link: <%= @post.link_url %>
+
+<% end -%>
+<% if attachments.any? -%>
+The picture is attached to this email.
+
+<% end -%>
+Open this post in Prachar: <%= @post_url %>
+
+You are getting this because Prachar cannot publish for you yet.
+Turn these off under Settings > Notifications.

@@ -1,0 +1,8 @@
+Your post could not go out. Nothing was posted.
+
+What stopped it:
+<% @failures.each do |target| -%>
+- <%= target.provider_name %><%= " -- #{target.error_message}" if target.error_message.present? %>
+<% end -%>
+
+Open this post: <%= @post_url %>

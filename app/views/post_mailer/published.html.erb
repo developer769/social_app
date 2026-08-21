@@ -1,0 +1,33 @@
+<div style="font-family: -apple-system, Segoe UI, sans-serif; color: #485064; line-height: 1.6;">
+  <p style="font-size: 20px; color: #22113A; margin: 0 0 16px;">
+    <% if @unpublished.any? %>
+      Part of your post went out
+    <% else %>
+      Your post went out
+    <% end %>
+  </p>
+
+  <ul style="padding-left: 18px; margin: 0 0 20px;">
+    <% @published.each do |target| %>
+      <li>
+        Posted to <strong><%= target.provider_name %></strong><%
+          %><% if target.permalink.present? %> &mdash; <a href="<%= target.permalink %>">see it</a><% end %>
+      </li>
+    <% end %>
+    <%# Naming what did NOT go out matters more than naming what did: it is the
+        half that still needs somebody to do something. %>
+    <% @unpublished.each do |target| %>
+      <li style="color:#B4413A;">
+        Not posted to <strong><%= target.provider_name %></strong>
+        <% if target.error_message.present? %> &mdash; <%= target.error_message %><% end %>
+      </li>
+    <% end %>
+  </ul>
+
+  <p style="margin: 28px 0;">
+    <a href="<%= @post_url %>"
+       style="background:#341044; color:#FFFDF9; padding:12px 24px; border-radius:8px; text-decoration:none; font-weight:500;">
+      Open this post
+    </a>
+  </p>
+</div>

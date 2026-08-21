@@ -1,0 +1,14 @@
+<% if @unpublished.any? -%>
+Part of your post went out.
+<% else -%>
+Your post went out.
+<% end -%>
+
+<% @published.each do |target| -%>
+- Posted to <%= target.provider_name %><%= " -- #{target.permalink}" if target.permalink.present? %>
+<% end -%>
+<% @unpublished.each do |target| -%>
+- NOT posted to <%= target.provider_name %><%= " -- #{target.error_message}" if target.error_message.present? %>
+<% end -%>
+
+Open this post: <%= @post_url %>

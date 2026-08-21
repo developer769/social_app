@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_21_110000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_21_183000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
@@ -70,7 +70,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_110000) do
     t.index ["requested_by_id"], name: "index_brand_analyses_on_requested_by_id"
     t.index ["workspace_id", "created_at"], name: "index_brand_analyses_on_workspace_id_and_created_at", order: { created_at: :desc }
     t.index ["workspace_id"], name: "index_brand_analyses_on_workspace_id"
-    t.check_constraint "status::text = ANY (ARRAY['queued'::character varying, 'analyzing'::character varying, 'partially_complete'::character varying, 'complete'::character varying, 'failed'::character varying]::text[])", name: "brand_analyses_status_is_known"
+    t.check_constraint "status::text = ANY (ARRAY['queued'::character varying::text, 'analyzing'::character varying::text, 'partially_complete'::character varying::text, 'complete'::character varying::text, 'failed'::character varying::text])", name: "brand_analyses_status_is_known"
   end
 
   create_table "brand_analysis_tasks", force: :cascade do |t|
@@ -86,8 +86,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_110000) do
     t.datetime "updated_at", null: false
     t.index ["brand_analysis_id", "task_key"], name: "index_brand_analysis_tasks_on_brand_analysis_id_and_task_key", unique: true
     t.index ["brand_analysis_id"], name: "index_brand_analysis_tasks_on_brand_analysis_id"
-    t.check_constraint "outcome IS NULL OR (outcome::text = ANY (ARRAY['analysed'::character varying, 'insufficient_data'::character varying, 'not_supported'::character varying, 'error'::character varying]::text[]))", name: "brand_analysis_tasks_outcome_is_known"
-    t.check_constraint "status::text = ANY (ARRAY['queued'::character varying, 'analyzing'::character varying, 'complete'::character varying, 'failed'::character varying]::text[])", name: "brand_analysis_tasks_status_is_known"
+    t.check_constraint "outcome IS NULL OR (outcome::text = ANY (ARRAY['analysed'::character varying::text, 'insufficient_data'::character varying::text, 'not_supported'::character varying::text, 'error'::character varying::text]))", name: "brand_analysis_tasks_outcome_is_known"
+    t.check_constraint "status::text = ANY (ARRAY['queued'::character varying::text, 'analyzing'::character varying::text, 'complete'::character varying::text, 'failed'::character varying::text])", name: "brand_analysis_tasks_status_is_known"
   end
 
   create_table "brand_goals", force: :cascade do |t|
@@ -97,7 +97,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_110000) do
     t.bigint "workspace_id", null: false
     t.index ["workspace_id", "goal"], name: "index_brand_goals_on_workspace_id_and_goal", unique: true
     t.index ["workspace_id"], name: "index_brand_goals_on_workspace_id"
-    t.check_constraint "goal::text = ANY (ARRAY['increase_sales'::character varying, 'generate_leads'::character varying, 'grow_followers'::character varying, 'boost_engagement'::character varying, 'brand_awareness'::character varying, 'website_visits'::character varying]::text[])", name: "brand_goals_goal_is_known"
+    t.check_constraint "goal::text = ANY (ARRAY['increase_sales'::character varying::text, 'generate_leads'::character varying::text, 'grow_followers'::character varying::text, 'boost_engagement'::character varying::text, 'brand_awareness'::character varying::text, 'website_visits'::character varying::text])", name: "brand_goals_goal_is_known"
   end
 
   create_table "brand_kits", force: :cascade do |t|
@@ -129,7 +129,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_110000) do
     t.bigint "workspace_id", null: false
     t.index ["workspace_id"], name: "index_brand_profiles_on_workspace_id", unique: true
     t.check_constraint "about IS NULL OR char_length(about) <= 500", name: "brand_profiles_about_within_limit"
-    t.check_constraint "business_type IS NULL OR (business_type::text = ANY (ARRAY['sole_proprietor'::character varying, 'small_business'::character varying, 'partnership'::character varying, 'private_limited'::character varying, 'llp'::character varying, 'other'::character varying]::text[]))", name: "brand_profiles_business_type_is_known"
+    t.check_constraint "business_type IS NULL OR (business_type::text = ANY (ARRAY['sole_proprietor'::character varying::text, 'small_business'::character varying::text, 'partnership'::character varying::text, 'private_limited'::character varying::text, 'llp'::character varying::text, 'other'::character varying::text]))", name: "brand_profiles_business_type_is_known"
   end
 
   create_table "brand_tones", force: :cascade do |t|
@@ -139,7 +139,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_110000) do
     t.bigint "workspace_id", null: false
     t.index ["workspace_id", "tone"], name: "index_brand_tones_on_workspace_id_and_tone", unique: true
     t.index ["workspace_id"], name: "index_brand_tones_on_workspace_id"
-    t.check_constraint "tone::text = ANY (ARRAY['friendly'::character varying, 'elegant'::character varying, 'playful'::character varying, 'professional'::character varying, 'premium'::character varying, 'educational'::character varying, 'bold'::character varying, 'minimal'::character varying]::text[])", name: "brand_tones_tone_is_known"
+    t.check_constraint "tone::text = ANY (ARRAY['friendly'::character varying::text, 'elegant'::character varying::text, 'playful'::character varying::text, 'professional'::character varying::text, 'premium'::character varying::text, 'educational'::character varying::text, 'bold'::character varying::text, 'minimal'::character varying::text])", name: "brand_tones_tone_is_known"
   end
 
   create_table "creative_outputs", force: :cascade do |t|
@@ -156,8 +156,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_110000) do
     t.index ["creative_request_id", "position"], name: "index_creative_outputs_on_creative_request_id_and_position", unique: true
     t.index ["creative_request_id"], name: "index_creative_outputs_on_creative_request_id"
     t.index ["media_asset_id"], name: "index_creative_outputs_on_media_asset_id"
-    t.check_constraint "outcome IS NULL OR (outcome::text = ANY (ARRAY['generated'::character varying, 'refused'::character varying, 'provider_error'::character varying, 'unavailable'::character varying]::text[]))", name: "creative_outputs_outcome_is_known"
-    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying, 'generating'::character varying, 'ready'::character varying, 'failed'::character varying]::text[])", name: "creative_outputs_status_is_known"
+    t.check_constraint "outcome IS NULL OR (outcome::text = ANY (ARRAY['generated'::character varying::text, 'refused'::character varying::text, 'provider_error'::character varying::text, 'unavailable'::character varying::text]))", name: "creative_outputs_outcome_is_known"
+    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying::text, 'generating'::character varying::text, 'ready'::character varying::text, 'failed'::character varying::text])", name: "creative_outputs_status_is_known"
   end
 
   create_table "creative_requests", force: :cascade do |t|
@@ -189,8 +189,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_110000) do
     t.index ["workspace_id", "created_at"], name: "index_creative_requests_on_workspace_id_and_created_at", order: { created_at: :desc }
     t.index ["workspace_id"], name: "index_creative_requests_on_workspace_id"
     t.check_constraint "media_format::text <> 'video'::text OR variant_count = 1", name: "creative_requests_video_is_single"
-    t.check_constraint "media_format::text = ANY (ARRAY['image'::character varying, 'video'::character varying]::text[])", name: "creative_requests_media_format_is_known"
-    t.check_constraint "status::text = ANY (ARRAY['queued'::character varying, 'generating'::character varying, 'ready'::character varying, 'partially_ready'::character varying, 'failed'::character varying, 'cancelled'::character varying]::text[])", name: "creative_requests_status_is_known"
+    t.check_constraint "media_format::text = ANY (ARRAY['image'::character varying::text, 'video'::character varying::text])", name: "creative_requests_media_format_is_known"
+    t.check_constraint "status::text = ANY (ARRAY['queued'::character varying::text, 'generating'::character varying::text, 'ready'::character varying::text, 'partially_ready'::character varying::text, 'failed'::character varying::text, 'cancelled'::character varying::text])", name: "creative_requests_status_is_known"
     t.check_constraint "variant_count >= 1 AND variant_count <= 3", name: "creative_requests_variant_count_in_range"
   end
 
@@ -212,14 +212,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_110000) do
     t.index ["workspace_id", "checksum"], name: "index_media_assets_on_workspace_id_and_checksum"
     t.index ["workspace_id", "created_at"], name: "index_media_assets_on_workspace_id_and_created_at", order: { created_at: :desc }
     t.index ["workspace_id"], name: "index_media_assets_on_workspace_id"
-    t.check_constraint "kind::text = ANY (ARRAY['image'::character varying, 'video'::character varying]::text[])", name: "media_assets_kind_is_known"
-    t.check_constraint "origin::text = ANY (ARRAY['upload'::character varying, 'generated'::character varying]::text[])", name: "media_assets_origin_is_known"
+    t.check_constraint "kind::text = ANY (ARRAY['image'::character varying::text, 'video'::character varying::text])", name: "media_assets_kind_is_known"
+    t.check_constraint "origin::text = ANY (ARRAY['upload'::character varying::text, 'generated'::character varying::text])", name: "media_assets_origin_is_known"
   end
 
   create_table "notification_preferences", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.boolean "email_post_failed", default: true, null: false
     t.boolean "email_post_published", default: true, null: false
+    t.boolean "email_post_reminder", default: true, null: false
     t.boolean "email_product_news", default: false, null: false
     t.boolean "email_team_activity", default: false, null: false
     t.boolean "email_weekly_summary", default: true, null: false
@@ -257,7 +258,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_110000) do
     t.datetime "updated_at", null: false
     t.index ["active", "position"], name: "index_plans_on_active_and_position"
     t.index ["code", "interval"], name: "index_plans_on_code_and_interval", unique: true
-    t.check_constraint "\"interval\"::text = ANY (ARRAY['month'::character varying, 'year'::character varying]::text[])", name: "plans_interval_is_known"
+    t.check_constraint "\"interval\"::text = ANY (ARRAY['month'::character varying::text, 'year'::character varying::text])", name: "plans_interval_is_known"
     t.check_constraint "char_length(currency::text) = 3", name: "plans_currency_is_iso4217"
     t.check_constraint "price_minor >= 0", name: "plans_price_not_negative"
   end
@@ -280,9 +281,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_110000) do
     t.string "error_code"
     t.string "error_message"
     t.string "idempotency_key", null: false
+    t.datetime "last_attempt_at"
+    t.datetime "next_attempt_at"
     t.string "permalink"
     t.bigint "post_id", null: false
     t.string "provider", null: false
+    t.jsonb "provider_response", default: {}, null: false
     t.datetime "published_at"
     t.string "remote_post_id"
     t.bigint "social_account_id", null: false
@@ -293,8 +297,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_110000) do
     t.index ["post_id"], name: "index_post_targets_on_post_id"
     t.index ["social_account_id"], name: "index_post_targets_on_social_account_id"
     t.index ["status", "published_at"], name: "index_post_targets_on_status_and_published_at"
-    t.check_constraint "provider::text = ANY (ARRAY['instagram'::character varying, 'facebook'::character varying, 'linkedin'::character varying, 'youtube'::character varying, 'tiktok'::character varying, 'google_business'::character varying, 'x'::character varying]::text[])", name: "post_targets_provider_is_known"
-    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying, 'validating'::character varying, 'publishing'::character varying, 'published'::character varying, 'failed'::character varying, 'skipped'::character varying]::text[])", name: "post_targets_status_is_known"
+    t.check_constraint "provider::text = ANY (ARRAY['instagram'::character varying::text, 'facebook'::character varying::text, 'linkedin'::character varying::text, 'youtube'::character varying::text, 'tiktok'::character varying::text, 'google_business'::character varying::text, 'x'::character varying::text])", name: "post_targets_provider_is_known"
+    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying::text, 'validating'::character varying::text, 'publishing'::character varying::text, 'published'::character varying::text, 'failed'::character varying::text, 'skipped'::character varying::text])", name: "post_targets_status_is_known"
   end
 
   create_table "posting_preferences", force: :cascade do |t|
@@ -315,9 +319,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_110000) do
     t.datetime "updated_at", null: false
     t.bigint "workspace_id", null: false
     t.index ["workspace_id"], name: "index_posting_preferences_on_workspace_id", unique: true
-    t.check_constraint "caption_style::text = ANY (ARRAY['short'::character varying, 'balanced'::character varying, 'storytelling'::character varying]::text[])", name: "posting_caption_style_is_known"
-    t.check_constraint "emoji_level::text = ANY (ARRAY['none'::character varying, 'minimal'::character varying, 'moderate'::character varying, 'expressive'::character varying]::text[])", name: "posting_emoji_level_is_known"
-    t.check_constraint "hashtag_style::text = ANY (ARRAY['none'::character varying, 'minimal'::character varying, 'balanced'::character varying, 'trending'::character varying]::text[])", name: "posting_hashtag_style_is_known"
+    t.check_constraint "caption_style::text = ANY (ARRAY['short'::character varying::text, 'balanced'::character varying::text, 'storytelling'::character varying::text])", name: "posting_caption_style_is_known"
+    t.check_constraint "emoji_level::text = ANY (ARRAY['none'::character varying::text, 'minimal'::character varying::text, 'moderate'::character varying::text, 'expressive'::character varying::text])", name: "posting_emoji_level_is_known"
+    t.check_constraint "hashtag_style::text = ANY (ARRAY['none'::character varying::text, 'minimal'::character varying::text, 'balanced'::character varying::text, 'trending'::character varying::text])", name: "posting_hashtag_style_is_known"
     t.check_constraint "posts_per_week >= 1 AND posts_per_week <= 21", name: "posting_posts_per_week_in_range"
     t.check_constraint "preferred_time::text ~ '^([01][0-9]|2[0-3]):[0-5][0-9]$'::text", name: "posting_preferred_time_is_a_time"
   end
@@ -333,7 +337,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_110000) do
     t.string "hashtags", default: [], null: false, array: true
     t.string "link_url"
     t.string "location_name"
+    t.string "publish_mode", default: "automatic", null: false
+    t.datetime "publish_started_at"
     t.datetime "published_at"
+    t.datetime "reminded_at"
     t.datetime "scheduled_at"
     t.string "scheduled_timezone"
     t.string "status", default: "draft", null: false
@@ -344,13 +351,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_110000) do
     t.bigint "workspace_id", null: false
     t.index ["approved_by_id"], name: "index_posts_on_approved_by_id"
     t.index ["created_by_id"], name: "index_posts_on_created_by_id"
+    t.index ["status", "scheduled_at"], name: "index_posts_due_for_publishing", where: "((status)::text = 'scheduled'::text)"
     t.index ["subject_type", "subject_id"], name: "index_posts_on_subject"
     t.index ["template_id"], name: "index_posts_on_template_id"
     t.index ["workspace_id", "scheduled_at"], name: "index_posts_on_workspace_id_and_scheduled_at"
     t.index ["workspace_id", "status"], name: "index_posts_on_workspace_id_and_status"
     t.index ["workspace_id"], name: "index_posts_on_workspace_id"
+    t.check_constraint "publish_mode::text = ANY (ARRAY['automatic'::character varying, 'reminder'::character varying]::text[])", name: "posts_publish_mode_is_known"
     t.check_constraint "status::text <> 'scheduled'::text OR scheduled_at IS NOT NULL AND scheduled_timezone IS NOT NULL", name: "posts_scheduled_has_a_time"
-    t.check_constraint "status::text = ANY (ARRAY['draft'::character varying, 'awaiting_approval'::character varying, 'approved'::character varying, 'scheduled'::character varying, 'publishing'::character varying, 'published'::character varying, 'failed'::character varying, 'cancelled'::character varying]::text[])", name: "posts_status_is_known"
+    t.check_constraint "status::text = ANY (ARRAY['draft'::character varying, 'awaiting_approval'::character varying, 'approved'::character varying, 'scheduled'::character varying, 'publishing'::character varying, 'published'::character varying, 'partially_published'::character varying, 'reminded'::character varying, 'failed'::character varying, 'cancelled'::character varying]::text[])", name: "posts_status_is_known"
   end
 
   create_table "products", force: :cascade do |t|
@@ -372,11 +381,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_110000) do
     t.index ["workspace_id", "featured"], name: "index_products_on_workspace_id_and_featured"
     t.index ["workspace_id", "position"], name: "index_products_on_workspace_id_and_position"
     t.index ["workspace_id"], name: "index_products_on_workspace_id"
-    t.check_constraint "availability_status::text = ANY (ARRAY['available'::character varying, 'unavailable'::character varying, 'coming_soon'::character varying]::text[])", name: "products_availability_is_known"
+    t.check_constraint "availability_status::text = ANY (ARRAY['available'::character varying::text, 'unavailable'::character varying::text, 'coming_soon'::character varying::text])", name: "products_availability_is_known"
     t.check_constraint "char_length(currency::text) = 3", name: "products_currency_is_iso4217"
     t.check_constraint "description IS NULL OR char_length(description) <= 200", name: "products_description_within_limit"
     t.check_constraint "price_minor IS NULL OR price_minor >= 0", name: "products_price_not_negative"
-    t.check_constraint "stock_status::text = ANY (ARRAY['in_stock'::character varying, 'low_stock'::character varying, 'out_of_stock'::character varying]::text[])", name: "products_stock_status_is_known"
+    t.check_constraint "stock_status::text = ANY (ARRAY['in_stock'::character varying::text, 'low_stock'::character varying::text, 'out_of_stock'::character varying::text])", name: "products_stock_status_is_known"
   end
 
   create_table "services", force: :cascade do |t|
@@ -398,7 +407,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_110000) do
     t.index ["workspace_id", "featured"], name: "index_services_on_workspace_id_and_featured"
     t.index ["workspace_id", "position"], name: "index_services_on_workspace_id_and_position"
     t.index ["workspace_id"], name: "index_services_on_workspace_id"
-    t.check_constraint "availability_status::text = ANY (ARRAY['available'::character varying, 'unavailable'::character varying, 'coming_soon'::character varying]::text[])", name: "services_availability_is_known"
+    t.check_constraint "availability_status::text = ANY (ARRAY['available'::character varying::text, 'unavailable'::character varying::text, 'coming_soon'::character varying::text])", name: "services_availability_is_known"
     t.check_constraint "char_length(currency::text) = 3", name: "services_currency_is_iso4217"
     t.check_constraint "description IS NULL OR char_length(description) <= 200", name: "services_description_within_limit"
     t.check_constraint "duration_max_days IS NULL OR duration_min_days IS NULL OR duration_max_days >= duration_min_days", name: "services_duration_range_is_ordered"
@@ -442,9 +451,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_110000) do
     t.index ["workspace_id", "connection_status"], name: "index_social_accounts_on_workspace_id_and_connection_status"
     t.index ["workspace_id", "provider", "external_account_id"], name: "index_social_accounts_on_workspace_provider_account", unique: true
     t.index ["workspace_id"], name: "index_social_accounts_on_workspace_id"
-    t.check_constraint "connection_status::text = ANY (ARRAY['connected'::character varying, 'disconnected'::character varying, 'expired'::character varying, 'revoked'::character varying, 'error'::character varying]::text[])", name: "social_accounts_connection_status_is_known"
-    t.check_constraint "permission_status::text = ANY (ARRAY['granted'::character varying, 'partial'::character varying, 'denied'::character varying]::text[])", name: "social_accounts_permission_status_is_known"
-    t.check_constraint "provider::text = ANY (ARRAY['instagram'::character varying, 'facebook'::character varying, 'linkedin'::character varying, 'youtube'::character varying, 'tiktok'::character varying, 'google_business'::character varying, 'x'::character varying]::text[])", name: "social_accounts_provider_is_known"
+    t.check_constraint "connection_status::text = ANY (ARRAY['connected'::character varying::text, 'disconnected'::character varying::text, 'expired'::character varying::text, 'revoked'::character varying::text, 'error'::character varying::text])", name: "social_accounts_connection_status_is_known"
+    t.check_constraint "permission_status::text = ANY (ARRAY['granted'::character varying::text, 'partial'::character varying::text, 'denied'::character varying::text])", name: "social_accounts_permission_status_is_known"
+    t.check_constraint "provider::text = ANY (ARRAY['instagram'::character varying::text, 'facebook'::character varying::text, 'linkedin'::character varying::text, 'youtube'::character varying::text, 'tiktok'::character varying::text, 'google_business'::character varying::text, 'x'::character varying::text])", name: "social_accounts_provider_is_known"
   end
 
   create_table "social_credentials", force: :cascade do |t|
@@ -469,7 +478,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_110000) do
     t.index ["workspace_id", "computed_at"], name: "index_social_health_scores_on_workspace_id_and_computed_at", order: { computed_at: :desc }
     t.index ["workspace_id"], name: "index_social_health_scores_on_workspace_id"
     t.check_constraint "coverage_percentage >= 0 AND coverage_percentage <= 100", name: "social_health_coverage_in_range"
-    t.check_constraint "rating::text = ANY (ARRAY['needs_work'::character varying, 'fair'::character varying, 'good'::character varying, 'excellent'::character varying]::text[])", name: "social_health_rating_is_known"
+    t.check_constraint "rating::text = ANY (ARRAY['needs_work'::character varying::text, 'fair'::character varying::text, 'good'::character varying::text, 'excellent'::character varying::text])", name: "social_health_rating_is_known"
     t.check_constraint "score >= 0 AND score <= 100", name: "social_health_score_in_range"
   end
 
@@ -527,7 +536,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_110000) do
     t.index ["plan_id"], name: "index_subscriptions_on_plan_id"
     t.index ["selected_by_id"], name: "index_subscriptions_on_selected_by_id"
     t.index ["workspace_id"], name: "index_subscriptions_on_workspace_id", unique: true
-    t.check_constraint "status::text = ANY (ARRAY['trialing'::character varying, 'active'::character varying, 'past_due'::character varying, 'cancelled'::character varying, 'expired'::character varying]::text[])", name: "subscriptions_status_is_known"
+    t.check_constraint "status::text = ANY (ARRAY['trialing'::character varying::text, 'active'::character varying::text, 'past_due'::character varying::text, 'cancelled'::character varying::text, 'expired'::character varying::text])", name: "subscriptions_status_is_known"
   end
 
   create_table "template_favourites", force: :cascade do |t|
@@ -554,7 +563,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_110000) do
     t.datetime "updated_at", null: false
     t.integer "updated_count", default: 0, null: false
     t.index ["source", "started_at"], name: "index_template_refreshes_on_source_and_started_at", order: { started_at: :desc }
-    t.check_constraint "status::text = ANY (ARRAY['running'::character varying, 'complete'::character varying, 'failed'::character varying]::text[])", name: "template_refreshes_status_is_known"
+    t.check_constraint "status::text = ANY (ARRAY['running'::character varying::text, 'complete'::character varying::text, 'failed'::character varying::text])", name: "template_refreshes_status_is_known"
   end
 
   create_table "templates", force: :cascade do |t|
@@ -595,11 +604,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_110000) do
     t.index ["source", "source_external_id"], name: "index_templates_on_source_and_external_id", unique: true, where: "(source_external_id IS NOT NULL)"
     t.index ["style_tags"], name: "index_templates_on_style_tags", using: :gin
     t.index ["trend_score"], name: "index_templates_on_trend_score", order: :desc
-    t.check_constraint "content_category::text = ANY (ARRAY['festive'::character varying, 'offer'::character varying, 'new_launch'::character varying, 'behind_the_scenes'::character varying, 'product_showcase'::character varying, 'reels_style'::character varying, 'menu'::character varying, 'tips'::character varying, 'educational'::character varying, 'testimonials'::character varying]::text[])", name: "templates_content_category_is_known"
+    t.check_constraint "content_category::text = ANY (ARRAY['festive'::character varying::text, 'offer'::character varying::text, 'new_launch'::character varying::text, 'behind_the_scenes'::character varying::text, 'product_showcase'::character varying::text, 'reels_style'::character varying::text, 'menu'::character varying::text, 'tips'::character varying::text, 'educational'::character varying::text, 'testimonials'::character varying::text])", name: "templates_content_category_is_known"
     t.check_constraint "duration_seconds IS NULL OR duration_seconds > 0", name: "templates_duration_positive"
     t.check_constraint "media_format::text <> 'video'::text OR duration_seconds IS NOT NULL", name: "templates_video_has_duration"
-    t.check_constraint "media_format::text = ANY (ARRAY['image'::character varying, 'video'::character varying]::text[])", name: "templates_media_format_is_known"
-    t.check_constraint "source::text = ANY (ARRAY['curated'::character varying, 'trend_feed'::character varying, 'partner'::character varying]::text[])", name: "templates_source_is_known"
+    t.check_constraint "media_format::text = ANY (ARRAY['image'::character varying::text, 'video'::character varying::text])", name: "templates_media_format_is_known"
+    t.check_constraint "source::text = ANY (ARRAY['curated'::character varying::text, 'trend_feed'::character varying::text, 'partner'::character varying::text])", name: "templates_source_is_known"
     t.check_constraint "trend_score IS NULL OR trend_score >= 0 AND trend_score <= 100", name: "templates_trend_score_in_range"
   end
 
@@ -640,8 +649,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_110000) do
     t.index ["workspace_id", "user_id"], name: "index_memberships_on_workspace_and_user", unique: true, where: "(user_id IS NOT NULL)"
     t.index ["workspace_id"], name: "index_workspace_memberships_on_workspace_id"
     t.check_constraint "invitation_status::text <> 'accepted'::text OR user_id IS NOT NULL", name: "memberships_accepted_requires_user"
-    t.check_constraint "invitation_status::text = ANY (ARRAY['pending'::character varying, 'accepted'::character varying, 'declined'::character varying, 'expired'::character varying, 'cancelled'::character varying]::text[])", name: "memberships_invitation_status_is_known"
-    t.check_constraint "membership_status::text = ANY (ARRAY['active'::character varying, 'inactive'::character varying, 'removed'::character varying]::text[])", name: "memberships_membership_status_is_known"
+    t.check_constraint "invitation_status::text = ANY (ARRAY['pending'::character varying::text, 'accepted'::character varying::text, 'declined'::character varying::text, 'expired'::character varying::text, 'cancelled'::character varying::text])", name: "memberships_invitation_status_is_known"
+    t.check_constraint "membership_status::text = ANY (ARRAY['active'::character varying::text, 'inactive'::character varying::text, 'removed'::character varying::text])", name: "memberships_membership_status_is_known"
     t.check_constraint "user_id IS NOT NULL OR invitation_email IS NOT NULL", name: "memberships_identify_a_person"
   end
 
@@ -660,7 +669,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_110000) do
     t.index ["owner_user_id"], name: "index_workspaces_on_owner_user_id"
     t.index ["slug"], name: "index_workspaces_on_slug", unique: true
     t.check_constraint "char_length(currency::text) = 3", name: "workspaces_currency_is_iso4217"
-    t.check_constraint "onboarding_step::text = ANY (ARRAY['business_setup'::character varying, 'catalog'::character varying, 'connections'::character varying, 'analysis'::character varying, 'health'::character varying, 'plan'::character varying, 'completed'::character varying]::text[])", name: "workspaces_onboarding_step_is_known"
+    t.check_constraint "onboarding_step::text = ANY (ARRAY['business_setup'::character varying::text, 'catalog'::character varying::text, 'connections'::character varying::text, 'analysis'::character varying::text, 'health'::character varying::text, 'plan'::character varying::text, 'completed'::character varying::text])", name: "workspaces_onboarding_step_is_known"
     t.check_constraint "slug::text ~ '^[a-z0-9][a-z0-9-]{1,62}$'::text", name: "workspaces_slug_is_url_safe"
   end
 

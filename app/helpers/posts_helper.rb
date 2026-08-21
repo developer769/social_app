@@ -1,4 +1,23 @@
 module PostsHelper
+  # How one platform's copy of a post reads on the status screen.
+  #
+  # "Skipped" deliberately does not use the danger tone: nothing went wrong when
+  # Prachar cannot reach a platform yet, and colouring it like a failure would
+  # tell the owner their post is broken when it is not.
+  TARGET_BADGES = {
+    "pending" => [ "Waiting", :neutral ],
+    "validating" => [ "Checking", :neutral ],
+    "publishing" => [ "Posting", :warning ],
+    "published" => [ "Posted", :success ],
+    "failed" => [ "Did not post", :danger ],
+    "skipped" => [ "Not posted", :info ]
+  }.freeze
+
+  def target_badge(target)
+    label, tone = TARGET_BADGES.fetch(target.status, [ target.status.humanize, :neutral ])
+    { label: label, tone: tone }
+  end
+
   # Why an account cannot carry this post, or nil when it can. Read from real
   # provider capabilities rather than assumed, so the form never offers a
   # destination the API would refuse (spec 30).

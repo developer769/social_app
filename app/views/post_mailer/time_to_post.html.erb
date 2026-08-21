@@ -1,0 +1,47 @@
+<div style="font-family: -apple-system, Segoe UI, sans-serif; color: #485064; line-height: 1.6;">
+  <p style="font-size: 20px; color: #22113A; margin: 0 0 16px;">
+    It is time to post this on <%= @providers.to_sentence %>
+  </p>
+
+  <%#
+    Said plainly and first. An email that opened with "your post is ready"
+    would let somebody assume it had gone out (spec 27).
+  %>
+  <p style="background:#FDF4E3; border:1px solid #E8D5A8; border-radius:8px; padding:14px 16px; margin:0 0 20px;">
+    <strong style="color:#22113A;">Prachar could not post this for you.</strong>
+    No connection to <%= @providers.to_sentence %> has been built yet, so nothing
+    was sent. Everything you need to post it yourself is below.
+  </p>
+
+  <% if @caption.present? %>
+    <p style="font-size:14px; color:#6E7385; margin:0 0 6px;">Your caption &mdash; copy all of it:</p>
+    <div style="background:#FFFDF9; border:1px solid #E5E0D8; border-radius:8px; padding:16px; white-space:pre-wrap; color:#22113A;"><%= @caption %></div>
+  <% end %>
+
+  <% if @post.first_comment.present? %>
+    <p style="font-size:14px; color:#6E7385; margin:20px 0 6px;">To add as the first comment:</p>
+    <div style="background:#FFFDF9; border:1px solid #E5E0D8; border-radius:8px; padding:16px; white-space:pre-wrap; color:#22113A;"><%= @post.first_comment %></div>
+  <% end %>
+
+  <% if @post.link_url.present? %>
+    <p style="font-size:14px; margin:20px 0 0;">Link: <%= @post.link_url %></p>
+  <% end %>
+
+  <% if attachments.any? %>
+    <p style="font-size:14px; color:#6E7385; margin:20px 0 0;">
+      The picture is attached to this email.
+    </p>
+  <% end %>
+
+  <p style="margin: 28px 0;">
+    <a href="<%= @post_url %>"
+       style="background:#341044; color:#FFFDF9; padding:12px 24px; border-radius:8px; text-decoration:none; font-weight:500;">
+      Open this post in Prachar
+    </a>
+  </p>
+
+  <p style="font-size: 14px; color: #6E7385;">
+    You are getting this because Prachar cannot publish for you yet.
+    You can turn these off under Settings &rarr; Notifications.
+  </p>
+</div>

@@ -23,8 +23,47 @@ class PostTarget < ApplicationRecord
 
   def effective_caption = caption_override.presence || post.caption
 
-  def start_publishing!
-    update!(status: "publishing", attempt_count: attempt_count + 1)
+  # How long one worker's claim on this target is respected. Long enough to
+  # cover a slow upload to a platform, short enough that a worker killed
+  # mid-publish does not strand the post for ever.
+  PUBLISH_LEASE = 15.minutes
+
+  # Claims this target for publishing, atomically, and answers whether the claim
+  # was won.
+  #
+  # Reading the status and then publishing is not enough: two workers handed the
+  # same target both see "not finished", both call the provider, and the
+  # customer's followers see the post twice. That is the worst thing this system
+  # could do, and it cannot be prevented by checking first -- only by making the
+  # check and the claim the same statement.
+  #
+  # A stale claim can be taken over, so a worker killed mid-publish does not
+  # leave the target stuck in "publishing" until somebody notices.
+  def claim_for_publishing!
+    now = Time.current
+
+    claimed = PostTarget.where(id: id).where(
+      "status IN ('pending','validating') OR "       "(status = 'publishing' AND (last_attempt_at IS NULL OR last_attempt_at < :stale))",
+      stale: now - PUBLISH_LEASE
+    ).update_all([
+      "status = 'publishing', attempt_count = attempt_count + 1, last_attempt_at = ?, updated_at = ?",
+      now, now
+    ])
+
+    reload if claimed == 1
+    claimed == 1
+  end
+
+  # Hands the claim back after a failure that did not reach the platform, so
+  # this job's own retry can pick it up again rather than waiting out the lease.
+  #
+  # Safe precisely because of the idempotency key: if the request did in fact
+  # arrive and the answer was merely lost, the provider recognises the retry as
+  # the same request rather than as a second post.
+  def release_claim!
+    return unless publishing?
+
+    update_columns(status: "pending", last_attempt_at: Time.current, updated_at: Time.current)
   end
 
   def mark_published!(remote_post_id:, permalink: nil)

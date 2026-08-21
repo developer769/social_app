@@ -45,6 +45,11 @@ gem "bcrypt", "~> 3.1.7"
 
 # Background jobs (spec 31). Redis-backed; Solid Queue was skipped on purpose.
 gem "sidekiq", "~> 8.1"
+# Due posts are found by sweeping for them every minute rather than by
+# scheduling a job years ahead. A job scheduled at the moment of scheduling
+# would outlive edits to its own time and would not survive losing Redis; a
+# sweep re-derives what is due from the database every time.
+gem "sidekiq-cron", "~> 2.3"
 gem "redis", "~> 5.4"
 
 # Authorization + tenancy scoping (spec 4)

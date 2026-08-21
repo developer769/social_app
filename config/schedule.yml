@@ -1,0 +1,9 @@
+# Recurring work, loaded by sidekiq-cron in the worker process.
+#
+# Kept in one file rather than scattered across initializers so that what runs
+# on a timer is answerable in one place.
+publishing_dispatch:
+  cron: "* * * * *"
+  class: "Publishing::DispatchDueJob"
+  queue: default
+  description: "Find posts whose scheduled time has arrived and publish them"

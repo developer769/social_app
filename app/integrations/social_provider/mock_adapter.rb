@@ -39,9 +39,26 @@ module SocialProvider
       )
     end
 
+    # Refuses, always, and says why.
+    #
+    # The tempting alternative is to invent a remote id and a plausible
+    # permalink so the flow "works" in development. That would put "Published to
+    # Instagram" in front of a business owner when nothing left the building,
+    # which is the single most damaging lie this product could tell (spec 27).
+    # A refusal that names itself is worth more than a demo that lies.
     def publish(request)
-      require_capability!(:publish_image)
-      raise NotImplementedError, "mock publishing arrives with the publishing phase"
+      capability = request.video? ? :publish_video : :publish_image
+      require_capability!(capability)
+
+      raise PermanentError.new(
+        "Prachar cannot post to #{definition&.name || key} yet. "         "No connection to #{definition&.name || key} has been built, so nothing was sent.",
+        code: "provider_not_connected"
+      )
+    end
+
+    def publication_status(remote_id:)
+      raise PermanentError.new("Nothing was published, so there is no status to check.",
+                               code: "provider_not_connected")
     end
 
     def fetch_analytics(since:, until_date:)
