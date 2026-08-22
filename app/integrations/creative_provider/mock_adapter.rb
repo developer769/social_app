@@ -55,9 +55,15 @@ module CreativeProvider
 
     private
 
+    # No headline is drawn onto the picture.
+    #
+    # It used to write the product name across the top, but the style previews
+    # are crops of finished designs that already carry their own words -- so
+    # every sample came back with "COOKIES" showing through underneath
+    # "Chocolate Truffle Cake". The results screen names the product above the
+    # cards, which is where a caption belongs anyway (spec 2).
     def compose(brief:, variant_index:, width:, height:)
       base = background(brief, variant_index, width, height)
-      base = overlay_headline(base, brief, width, height)
       watermark(base, width, height)
     end
 
@@ -95,34 +101,6 @@ module CreativeProvider
       top = palette[variant_index % palette.size]
 
       Vips::Image.black(width, height).add(top).cast(:uchar).copy(interpretation: :srgb)
-    end
-
-    def overlay_headline(base, brief, width, height)
-      # A dark scrim behind the headline, because these backgrounds carry their
-      # own artwork and white text on an unknown image is unreadable.
-      base = scrim(base, width, height)
-
-      text = Vips::Image.text(
-        brief.headline.to_s.first(40),
-        width: (width * 0.8).to_i, font: "sans bold #{(width / 16.0).round}", align: :low
-      )
-
-      white = text.new_from_image([ 255, 255, 255 ]).copy(interpretation: :srgb)
-      label = white.bandjoin(text.cast(:uchar))
-
-      base.composite2(label, :over, x: (width * 0.08).to_i, y: (height * 0.1).to_i)
-    rescue Vips::Error
-      # Text is a nicety; a sample without a headline is still a usable sample.
-      base
-    end
-
-    def scrim(base, width, height)
-      band = Vips::Image.black(width, (height * 0.26).to_i).copy(interpretation: :srgb)
-      shaded = band.bandjoin(Vips::Image.black(width, (height * 0.26).to_i).add(140).cast(:uchar))
-
-      base.composite2(shaded, :over, x: 0, y: 0)
-    rescue Vips::Error
-      base
     end
 
     # The part that must never be optional.

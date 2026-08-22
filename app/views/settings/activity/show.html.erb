@@ -10,6 +10,7 @@
 
 <% if @entries.empty? %>
   <%= render EmptyStateComponent.new(
+        icon: :calendar,
         title: @page > 1 ? "Nothing further back" : "Nothing has happened yet",
         body: @page > 1 ? "You have reached the end of this record." :
               "Once you connect an account or start a post, it will be listed here.") %>

@@ -88,7 +88,8 @@
       </section>
     <% else %>
       <%= render EmptyStateComponent.new(
-            title: "No plan chosen yet",
+        icon: :money,
+        title: "No plan chosen yet",
             body: "Pick a plan to see what it includes and how much you have used.") do |state| %>
         <% state.with_action do %>
           <%= link_to "Choose a plan", workspace_onboarding_plan_path(workspace_slug: current_workspace.slug),

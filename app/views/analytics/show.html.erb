@@ -27,6 +27,7 @@
 
 <% unless o.anything_happened? %>
   <%= render EmptyStateComponent.new(
+        icon: :chart,
         title: "Nothing to report yet",
         body: "Once you schedule a post, what happened to it will be shown here.") do |state| %>
     <% state.with_action do %>
@@ -57,7 +58,7 @@
   </div>
 </section>
 
-<section class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+<section class="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
   <% [["Went out", o.counts[:published], :success, "Reached at least one platform"],
       ["You were reminded", o.counts[:reminded], :info, "Prachar could not post these for you"],
       ["Did not go out", o.counts[:failed], :danger, "Something stopped these"],

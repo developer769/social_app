@@ -76,7 +76,8 @@
 
     <% if @conversations.empty? %>
       <%= render EmptyStateComponent.new(
-            title: closed_view ? "Nothing marked done" : (@reach.live? ? "Nothing waiting" : "Nothing has arrived"),
+        icon: :inbox,
+        title: closed_view ? "Nothing marked done" : (@reach.live? ? "Nothing waiting" : "Nothing has arrived"),
             body: if closed_view
                     "Conversations you mark done will be kept here."
                   elsif @reach.live?

@@ -4,35 +4,44 @@
   provider = post.providers.first
   tint = PlatformGlyphComponent::BRANDS.dig(provider, :tint) || "#F6F0E7"
   thumbnail = post.primary_media
+  # Hidden in a month cell, where there is no width for it beside the caption.
+  show_thumbnail = !compact && thumbnail&.file&.attached? && thumbnail.image?
 %>
 
-<%= link_to edit_workspace_post_path(workspace_slug: current_workspace.slug, id: post),
+<%= link_to workspace_post_path(workspace_slug: current_workspace.slug, id: post),
       class: "block overflow-hidden rounded-control border border-border/70 transition-shadow hover:shadow-panel",
       style: "background-color: #{tint};" do %>
-  <div class="<%= compact ? "p-2" : "p-3" %>">
-    <div class="flex items-start gap-1.5">
-      <% if provider %>
-        <%= render PlatformGlyphComponent.new(provider: provider, size: :small) %>
-      <% end %>
+  <%#
+    One row, thumbnail last. It used to sit below the text with ml-auto, which
+    on a phone left it floating in the bottom-right corner detached from
+    everything it belonged to.
+  %>
+  <div class="flex items-start gap-2.5 <%= compact ? "p-2" : "p-3" %>">
+    <div class="min-w-0 flex-1">
+      <div class="flex items-start gap-1.5">
+        <% if provider %>
+          <%= render PlatformGlyphComponent.new(provider: provider, size: :small) %>
+        <% end %>
 
-      <p class="min-w-0 flex-1 text-[11px] font-semibold leading-snug text-heading">
-        <%= post.caption.presence&.truncate(compact ? 34 : 60) || "Untitled post" %>
+        <p class="min-w-0 flex-1 text-[11px] font-semibold leading-snug text-heading">
+          <%= post.caption.presence&.truncate(compact ? 34 : 60) || "Untitled post" %>
+        </p>
+      </div>
+
+      <p class="mt-1 text-[10px] text-muted">
+        <%= post_kind_label(post) %> &middot; <%= local&.strftime("%-l:%M %p") %>
       </p>
+
+      <% if post.providers.size > 1 %>
+        <p class="mt-1 text-[10px] text-muted">
+          and <%= post.providers.size - 1 %> more
+        </p>
+      <% end %>
     </div>
 
-    <p class="mt-1 text-[10px] text-muted">
-      <%= post_kind_label(post) %> &middot; <%= local&.strftime("%-l:%M %p") %>
-    </p>
-
-    <% if thumbnail&.file&.attached? && thumbnail.image? %>
-      <%= image_tag thumbnail.file.variant(resize_to_fill: [160, 120]), alt: "",
-            class: "mt-1.5 ml-auto block h-12 w-16 rounded-[0.3rem] object-cover" %>
-    <% end %>
-
-    <% if post.providers.size > 1 %>
-      <p class="mt-1 text-[10px] text-muted">
-        and <%= post.providers.size - 1 %> more
-      </p>
+    <% if show_thumbnail %>
+      <%= image_tag thumbnail.file.variant(resize_to_fill: [160, 160]), alt: "",
+            class: "h-11 w-11 shrink-0 rounded-[0.3rem] object-cover" %>
     <% end %>
   </div>
 <% end %>

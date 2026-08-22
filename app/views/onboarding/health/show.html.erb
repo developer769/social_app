@@ -94,7 +94,8 @@
     <% recommendations = health_recommendations(@score, current_workspace) %>
     <% if recommendations.empty? %>
       <%= render EmptyStateComponent.new(
-            title: "No recommendations yet",
+        icon: :chart,
+        title: "No recommendations yet",
             body: "Once there is enough measured data, Prachar will suggest what to do next.") %>
     <% else %>
       <ul class="mt-4 space-y-2.5">

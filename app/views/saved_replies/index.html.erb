@@ -20,6 +20,7 @@
 
 <% if @saved_replies.empty? %>
   <%= render EmptyStateComponent.new(
+        icon: :inbox,
         title: "Nothing written yet",
         body: "Start with the questions you answer every week: where you deliver, when you open, what things cost.") do |state| %>
     <% state.with_action do %>

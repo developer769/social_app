@@ -64,6 +64,7 @@
 
 <% if @search.templates.empty? %>
   <%= render EmptyStateComponent.new(
+        icon: :search,
         title: gallery_empty_title(@search),
         body: gallery_empty_body(@search)) do |state| %>
     <% if @search.query || @search.category %>

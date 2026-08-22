@@ -1,0 +1,8 @@
+<% if attached? %>
+  <%= image_tag image.variant(resize_to_fill: [ 240, 240 ]), alt: "",
+        class: "#{size_classes} shrink-0 rounded-control object-cover" %>
+<% else %>
+  <span aria-hidden="true"
+        class="<%= size_classes %> flex shrink-0 items-center justify-center rounded-control font-display font-medium"
+        style="background-color: <%= tint[:bg] %>; color: <%= tint[:fg] %>;"><%= initial %></span>
+<% end %>

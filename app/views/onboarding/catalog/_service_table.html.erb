@@ -5,7 +5,8 @@
 
   <% if services.empty? %>
     <%= render EmptyStateComponent.new(
-          title: "No services yet",
+        icon: :catalog,
+        title: "No services yet",
           body: "Add your first service above. Prachar uses these to highlight what you offer in content and ads.") %>
   <% else %>
     <div class="mt-4 overflow-x-auto">
@@ -26,12 +27,7 @@
             <tr class="border-b border-border last:border-0">
               <th scope="row" class="py-3 pr-4 text-left font-medium text-heading">
                 <span class="flex items-center gap-3">
-                  <% if service.cover_image.attached? %>
-                    <%= image_tag service.cover_image.variant(resize_to_fill: [80, 80]), alt: "",
-                          class: "h-10 w-10 rounded-control object-cover" %>
-                  <% else %>
-                    <span aria-hidden="true" class="h-10 w-10 rounded-control bg-surface-sunk"></span>
-                  <% end %>
+                  <%= render CatalogThumbComponent.new(item: service, size: :small) %>
                   <%= service.name %>
                 </span>
               </th>

@@ -24,9 +24,9 @@
         <p class="mt-1.5 max-w-prose text-sm text-body">
           You are on step <%= OnboardingFlow.index_of(current_workspace.onboarding_step).to_i + 1 %>
           of <%= OnboardingFlow.keys.size %>:
-          <span class="font-medium text-heading">
-            <%= OnboardingFlow.step(current_workspace.onboarding_step)&.dig(:label) %>
-          </span>.
+          <%# On one line: whitespace inside an inline element renders as a real
+              space, which put a gap before the full stop. %>
+          <span class="font-medium text-heading"><%= OnboardingFlow.step(current_workspace.onboarding_step)&.dig(:label) %></span>.
           Prachar writes better content once it knows your brand and what you sell.
         </p>
       </div>
@@ -44,7 +44,7 @@
     Nothing is estimated in the meantime.
   </p>
 
-  <dl class="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+  <dl class="mt-6 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
     <div class="rounded-control border border-border bg-background px-4 py-3">
       <dt class="text-xs text-muted">Workspace</dt>
       <dd class="mt-0.5 text-sm font-medium text-heading"><%= current_workspace.name %></dd>

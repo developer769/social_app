@@ -17,6 +17,7 @@
 
 <% if @products.empty? && @services.empty? %>
   <%= render EmptyStateComponent.new(
+        icon: :catalog,
         title: "Nothing in your catalog yet",
         body: "Add a product or service first, so there is something to make a picture of.") do |state| %>
     <% state.with_action do %>
@@ -45,13 +46,7 @@
                         id: "subject_#{type}_#{item.id}",
                         class: "peer sr-only" %>
 
-                  <% image = type == "Product" ? item.image : item.cover_image %>
-                  <% if image.attached? %>
-                    <%= image_tag image.variant(resize_to_fill: [120, 120]), alt: "",
-                          class: "h-16 w-16 shrink-0 rounded-control object-cover" %>
-                  <% else %>
-                    <span aria-hidden="true" class="h-16 w-16 shrink-0 rounded-control bg-surface-sunk"></span>
-                  <% end %>
+                  <%= render CatalogThumbComponent.new(item: item, size: :medium) %>
 
                   <span class="min-w-0 flex-1">
                     <span class="block text-sm font-medium text-heading"><%= item.name %></span>

@@ -56,6 +56,7 @@
 
 <% if @templates.empty? %>
   <%= render EmptyStateComponent.new(
+        icon: :search,
         title: empty_state_title(@format, @scope),
         body: empty_state_body(@format, @scope)) do |state| %>
     <% if @scope == "published" %>

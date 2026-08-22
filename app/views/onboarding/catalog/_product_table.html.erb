@@ -5,7 +5,8 @@
 
   <% if products.empty? %>
     <%= render EmptyStateComponent.new(
-          title: "No products yet",
+        icon: :catalog,
+        title: "No products yet",
           body: "Add your first product above. Prachar uses these to write captions, build templates and suggest ads.") %>
   <% else %>
     <div class="mt-4 overflow-x-auto">
@@ -26,12 +27,7 @@
             <tr class="border-b border-border last:border-0">
               <th scope="row" class="py-3 pr-4 text-left font-medium text-heading">
                 <span class="flex items-center gap-3">
-                  <% if product.image.attached? %>
-                    <%= image_tag product.image.variant(resize_to_fill: [80, 80]), alt: "",
-                          class: "h-10 w-10 rounded-control object-cover" %>
-                  <% else %>
-                    <span aria-hidden="true" class="h-10 w-10 rounded-control bg-surface-sunk"></span>
-                  <% end %>
+                  <%= render CatalogThumbComponent.new(item: product, size: :small) %>
                   <%= product.name %>
                 </span>
               </th>
