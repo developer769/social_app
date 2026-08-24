@@ -1,56 +1,72 @@
 @import "tailwindcss";
 
 /*
-  Prachar design tokens.
+  Prachar design tokens — ATTITUDE palette (trial).
 
-  Sourced from the supplied design screens and the specification's palette.
-  Three of the specified semantic colours failed WCAG AA for text on the ivory
-  background and have been darkened to the nearest passing value; the original
-  values are kept as *-soft for fills, where they are perfectly legible.
+  The six supplied colours:
 
-    success  #238A55 -> 4.10:1  now #1A7048 -> 5.74:1
-    warning  #C88718 -> 2.86:1  now #96650F -> 4.77:1
-    danger   #D73B4C -> 4.30:1  now #C22A3C -> 5.38:1
+    1  #FFE5F1  pale pink     2  #87F5F5  aqua       3  #F042FF  magenta
+    4  #7226FF  violet        5  #160078  indigo     6  #010030  navy
 
-  --color-border is 1.28:1 against the background: correct for a decorative
-  hairline, but WCAG 2.2 (1.4.11) wants 3:1 for a control boundary that carries
-  state, so --color-border-strong exists for inputs and focus rings.
+  Measured before use. This palette is built for a DARK ground: on #010030
+  five of the six pass WCAG AA as text. On the pale-pink ground used here only
+  three do, so aqua and magenta are fills ONLY and never carry text:
+
+    on #FFE5F1   violet 5.16:1 PASS   indigo 13.58:1 PASS   navy 16.98:1 PASS
+                 magenta 2.56:1 FAIL  aqua    1.08:1 FAIL
+
+  Everything below was checked at its final pairing:
+
+    heading  #160078 on #FFE5F1  13.58:1      body   #43357F  8.63:1
+    muted    #6B5CA5              4.79:1      danger #C4123F  5.06:1
+    success  #116B5C              5.40:1      warning #7E5100 5.79:1
+    primary-contrast #FFE5F1 on #7226FF        5.16:1
+    border-strong #8578B6         3.31:1  (WCAG 2.2 1.4.11 wants 3:1)
+
+  NOTE ON NAMES: gold-* and blue-* now hold magenta and aqua. The names are
+  deliberately unchanged so this branch is a pure token swap that can be
+  reverted in one file. If the palette is adopted, renaming them is the
+  follow-up.
 */
 @theme {
   /* ── Surfaces ─────────────────────────────────────────────────────────── */
-  --color-background: #FCF8F3;
-  --color-surface: #FFFDF9;
-  --color-surface-sunk: #F6F0E7;
+  --color-background: #FFE5F1;
+  --color-surface: #FFF4F9;
+  --color-surface-sunk: #FBD8EA;
 
   /* ── Brand ────────────────────────────────────────────────────────────── */
-  --color-primary: #341044;
-  --color-primary-hover: #48175C;
-  --color-primary-contrast: #FFFDF9;
+  --color-primary: #7226FF;
+  --color-primary-hover: #5A18D6;
+  --color-primary-contrast: #FFE5F1;
 
   /* ── Text ─────────────────────────────────────────────────────────────── */
-  --color-heading: #22113A;
-  --color-body: #485064;
-  --color-muted: #6E7385;
+  --color-heading: #160078;
+  --color-body: #43357F;
+  --color-muted: #6B5CA5;
 
   /* ── Lines ────────────────────────────────────────────────────────────── */
-  --color-border: #E9DCCB;
-  --color-border-strong: #9C846A;
+  --color-border: #F4CFE3;
+  --color-border-strong: #8578B6;
 
   /* ── Accents (panel fills; always pair with heading/body text) ────────── */
-  --color-gold-soft: #F8DCA8;
-  --color-gold-tint: #FDF1DC;
-  --color-blue-soft: #E8F0F7;
-  --color-lavender-soft: #EEEAF7;
+  --color-gold-soft: #F9B8FF;
+  --color-gold-tint: #FDDCFF;
+  --color-blue-soft: #DFFBFB;
+  --color-lavender-soft: #EBE2FF;
 
   /* ── Semantic (text-safe) ─────────────────────────────────────────────── */
-  --color-success: #1A7048;
-  --color-warning: #96650F;
-  --color-danger: #C22A3C;
+  --color-success: #116B5C;
+  --color-warning: #7E5100;
+  --color-danger: #C4123F;
+
+  /* Decorative only. Magenta is 2.56:1 on the pink ground and must never
+     carry text; it is used for the brand mark, which is aria-hidden. */
+  --color-accent: #F042FF;
 
   /* ── Semantic fills ───────────────────────────────────────────────────── */
-  --color-success-soft: #E6F0EA;
-  --color-warning-soft: #F7EEDC;
-  --color-danger-soft: #F8E7E9;
+  --color-success-soft: #D9F2EC;
+  --color-warning-soft: #FBEBD2;
+  --color-danger-soft: #FCDCE4;
 
   /* ── Typography ───────────────────────────────────────────────────────── */
   /* Editorial serif: branding, page titles, major figures. Never for dense

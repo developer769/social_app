@@ -3,7 +3,7 @@
 
 <header class="mb-7">
   <h1 class="font-display text-3xl font-normal sm:text-4xl">
-    Create<span aria-hidden="true" class="ml-1 align-super text-base text-warning">&#10022;</span>
+    Create<span aria-hidden="true" class="ml-1 align-super text-base text-accent">&#10022;</span>
   </h1>
   <p class="mt-1.5 text-sm text-muted">Start a post. You can change your mind at any point.</p>
 </header>
@@ -59,7 +59,7 @@
               <%= image_tag post.primary_media.file.variant(resize_to_fill: [80, 80]), alt: "",
                     class: "h-10 w-10 shrink-0 rounded-control object-cover" %>
             <% else %>
-              <span aria-hidden="true" class="flex h-10 w-10 shrink-0 items-center justify-center rounded-control bg-gold-tint font-display text-sm text-warning">&#10022;</span>
+              <span aria-hidden="true" class="flex h-10 w-10 shrink-0 items-center justify-center rounded-control bg-gold-tint font-display text-sm text-accent">&#10022;</span>
             <% end %>
             <span class="min-w-0 flex-1">
               <span class="block truncate text-sm font-medium text-heading">
