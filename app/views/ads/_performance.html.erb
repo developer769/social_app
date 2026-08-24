@@ -39,6 +39,8 @@
     These count paid results only. They are kept apart from Analytics on purpose:
     paid and organic reach measure different audiences that overlap by an unknown
     amount, so adding them together would give a number that means nothing.
+    <%= link_to "What you posted without paying is on Analytics", workspace_analytics_path(**slug),
+          class: "underline underline-offset-4" %>.
   </p>
 
   <dl class="mt-5 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-5">

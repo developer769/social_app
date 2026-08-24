@@ -1,10 +1,17 @@
 module Dashboard
   # What a shop owner needs to see on opening Prachar.
   #
-  # Deliberately not a second copy of Analytics. Analytics is the full record,
-  # read when somebody goes looking; this answers two questions asked at a
-  # glance -- is anything wrong, and what happens next. Anything that is neither
-  # belongs on the Analytics page and not here.
+  # THE DIVISION OF LABOUR, because three screens could otherwise drift into
+  # three copies of each other:
+  #
+  #   Home       one line per area, plus anything that needs doing. Every card
+  #              links to the screen that holds the detail. Nothing is explained
+  #              here that is explained better there.
+  #   Analytics  the full organic record: what went out, where, what stopped it.
+  #   Ads        the full paid record: spend, return, campaigns, readiness.
+  #
+  # Home therefore carries no chart. A chart is something you read; this screen
+  # is something you scan.
   #
   # Every figure is counted from this application's own records. No platform
   # metric appears, because none can be read yet, and an estimate on the first
@@ -38,6 +45,7 @@ module Dashboard
       items.concat(reply_attention)
       items.concat(catalog_attention)
       items.concat(schedule_attention)
+      items.concat(ads_attention)
       items.sort_by { |item| item.critical? ? 0 : 1 }
     end
 
@@ -90,6 +98,21 @@ module Dashboard
       events = @workspace.audit_events.includes(:actor_user, :auditable).recent_first.limit(12)
       ActivityPresenter.visible_for(events, viewer: @user).first(5)
     end
+
+    # ---- Ads ----------------------------------------------------------------
+    # A single line about money, and a link. The detail lives on Ads.
+
+    def ads = @ads ||= Ads::PerformanceQuery.new(workspace: @workspace, days: WINDOW)
+
+    def ads_readiness = @ads_readiness ||= Ads::ReadinessQuery.new(workspace: @workspace)
+
+    def inbox_reach = @inbox_reach ||= Inbox::ReachQuery.new(workspace: @workspace)
+
+    def ad_spend = ads.total_spend
+
+    def ad_return = ads.return_on_spend(:recorded) || ads.return_on_spend(:measured)
+
+    def live_campaign_count = ads.live_campaigns.size
 
     # ---- Accounts -----------------------------------------------------------
 
@@ -160,6 +183,22 @@ module Dashboard
         title: "Your catalog is empty",
         detail: "Prachar writes about what you sell, so it needs to know what that is.",
         action: "Add products", path: :catalog
+      ) ]
+    end
+
+    # Money that is being spent with nothing recorded against it. Only ever
+    # raised when a campaign is actually running: a workspace with no ads has
+    # nothing to be told.
+    def ads_attention
+      return [] if live_campaign_count.zero?
+      return [] if ads.total_spend.nil?
+      return [] if ads.recorded_revenue.present? || ads.measured_revenue.present?
+
+      [ Attention.new(
+        key: :ads_unmeasured, severity: :warning,
+        title: "Money is going out with nothing recorded against it",
+        detail: "#{MoneyPresenter.new(ads.total_spend).full} spent and no orders logged, "                 "so there is no way to tell whether it worked.",
+        action: "Record what came in", path: :ads
       ) ]
     end
 

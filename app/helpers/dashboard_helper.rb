@@ -11,6 +11,8 @@ module DashboardHelper
     when :create then workspace_create_path(**slug)
     when :connections then workspace_settings_connections_path(**slug)
     when :catalog then workspace_settings_catalog_path(**slug)
+    when :ads then workspace_ads_path(**slug)
+    when :gallery then workspace_gallery_path(**slug)
     else workspace_root_path(**slug)
     end
   end
