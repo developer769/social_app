@@ -5,11 +5,17 @@ class ProgressRingComponent < ApplicationComponent
   RADIUS = 52
   STROKE = 8
 
-  def initialize(percentage:, caption: nil, size: 132)
+  # The spoken label names what is being counted. It was fixed as "checks",
+  # which is right on the brand-check screen and wrong everywhere else the ring
+  # was later reused.
+  def initialize(percentage:, caption: nil, size: 132, counting: "checks")
     @percentage = percentage.to_i.clamp(0, 100)
     @caption = caption
     @size = size
+    @counting = counting
   end
+
+  def aria_label = "#{percentage} percent of #{@counting} finished"
 
   attr_reader :percentage, :caption, :size
 

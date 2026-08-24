@@ -3,13 +3,18 @@
   Everything here is read from real rows: "2 of 3 ready" is a count of finished
   records, never an animation (spec 24).
 %>
-<div id="creative-request" class="space-y-5">
+<%#
+  Announced politely when it changes. This panel is replaced by a Turbo
+  broadcast as each picture finishes, and a screen reader is otherwise given
+  no indication that anything happened at all.
+%>
+<div id="creative-request" class="space-y-5" aria-live="polite" aria-atomic="false">
   <% if request.generating? || request.queued? %>
     <section class="rounded-card border border-border bg-surface p-8 text-center">
       <%= render ProgressRingComponent.new(
             percentage: request.progress_percentage,
             caption: "#{request.finished_count} of #{request.creative_outputs.size}",
-            size: 132) %>
+            counting: "pictures", size: 132) %>
 
       <h2 class="mt-5 font-display text-2xl font-normal">Making your pictures</h2>
       <p class="mx-auto mt-2 max-w-md text-sm text-body">
