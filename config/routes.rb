@@ -59,6 +59,7 @@ Rails.application.routes.draw do
     end
 
     get "create", to: "create#show", as: :create
+    resource :bulk_post, only: %i[new edit create], path: "bulk"
     get "analytics", to: "analytics#show", as: :analytics
 
     get "ads", to: "ads#show", as: :ads
