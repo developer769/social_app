@@ -51,6 +51,12 @@
       went out, and what stopped it.
     </p>
     <p class="mt-1.5">
+      This counts what you posted, not what you paid for.
+      <%= link_to "Money spent on ads has its own dashboard", workspace_ads_path(**slug),
+            class: "underline underline-offset-4" %>, kept apart on purpose: paid and organic
+      reach measure different audiences.
+    </p>
+    <p class="mt-1.5">
       Likes, reach and follower numbers live inside
       <%= o.platforms_awaiting_analytics.presence&.to_sentence || "the platforms" %>
       and Prachar cannot read them yet, so they are not shown at all rather than shown as zero.

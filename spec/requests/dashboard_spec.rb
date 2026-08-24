@@ -196,6 +196,87 @@ RSpec.describe "Home" do
     expect(body_text).to include("updated the brand kit")
   end
 
+
+  # Three screens could easily drift into three copies of each other. Home is
+  # one line per area and a link; the detail lives where it belongs.
+  describe "how it differs from Analytics and Ads" do
+    it "summarises each area and points at the screen that holds the detail" do
+      visit_home
+
+      expect(body_text).to include("Across your workspace")
+      expect(body_text).to include("Full analytics").and include("Ads dashboard")
+        .and include("Open the inbox")
+    end
+
+    # A chart is something you read; this screen is something you scan.
+    it "draws no chart" do
+      post_with("published").update_columns(published_at: 3.days.ago)
+
+      visit_home
+
+      expect(body_text).to include("Full analytics")
+      expect(body_text).not_to include("This week")
+    end
+
+    it "counts what has never been posted about without listing it" do
+      featured = create(:product, workspace: workspace, name: "Chocolate Truffle Cake")
+      create(:product, workspace: workspace, name: "Cardamom Shortbread")
+      post_with("published", subject: featured).update_columns(published_at: 2.days.ago)
+
+      visit_home
+
+      expect(body_text).to include("has never been posted about")
+      expect(body_text).not_to include("Cardamom Shortbread")
+    end
+
+    it "says where the ads stand" do
+      visit_home
+
+      expect(body_text).to match(/of 4 things ready before you can advertise|ready for when advertising connects/)
+    end
+
+    it "reports live campaigns and their spend" do
+      account = create(:social_account, workspace: workspace, provider: "instagram")
+      campaign = create(:ad_campaign, workspace: workspace, social_account: account,
+                                      provider: "instagram",
+                                      post: create(:post, workspace: workspace), status: "running")
+      create(:ad_metric, ad_campaign: campaign, spend_minor: 225_000)
+
+      visit_home
+
+      expect(body_text).to include("1 campaign running")
+      expect(body_text).to include("₹2,250 spent in the last 30 days")
+    end
+
+    # Money going out with nothing recorded against it is the one ads problem
+    # worth raising on the first screen.
+    it "raises spend that has nothing recorded against it" do
+      account = create(:social_account, workspace: workspace, provider: "instagram")
+      campaign = create(:ad_campaign, workspace: workspace, social_account: account,
+                                      provider: "instagram",
+                                      post: create(:post, workspace: workspace), status: "running")
+      create(:ad_metric, ad_campaign: campaign, spend_minor: 225_000)
+
+      visit_home
+
+      expect(body_text).to include("Money is going out with nothing recorded against it")
+    end
+
+    it "stops raising it once something has been recorded" do
+      account = create(:social_account, workspace: workspace, provider: "instagram")
+      campaign = create(:ad_campaign, workspace: workspace, social_account: account,
+                                      provider: "instagram",
+                                      post: create(:post, workspace: workspace), status: "running")
+      create(:ad_metric, ad_campaign: campaign, spend_minor: 225_000)
+      create(:ad_outcome, ad_campaign: campaign, orders: 8, revenue_minor: 400_000)
+
+      visit_home
+
+      expect(body_text).not_to include("Money is going out with nothing recorded")
+      expect(body_text).to include("returning")
+    end
+  end
+
   # Spec 7.
   describe "tenant isolation" do
     it "counts nothing from another workspace" do
