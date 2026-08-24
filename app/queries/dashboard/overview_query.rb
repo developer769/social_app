@@ -45,6 +45,7 @@ module Dashboard
       items.concat(reply_attention)
       items.concat(catalog_attention)
       items.concat(schedule_attention)
+      items.concat(sold_out_attention)
       items.concat(ads_attention)
       items.sort_by { |item| item.critical? ? 0 : 1 }
     end
@@ -183,6 +184,38 @@ module Dashboard
         title: "Your catalog is empty",
         detail: "Prachar writes about what you sell, so it needs to know what that is.",
         action: "Add products", path: :catalog
+      ) ]
+    end
+
+    # A post already scheduled around something that has since sold out. Marking
+    # it sold out keeps it out of NEW posts, but the ones already in the diary
+    # are the ones that will embarrass somebody.
+    def sold_out_scheduled
+      @sold_out_scheduled ||= @workspace.posts
+                                        .where(status: "scheduled")
+                                        .where(scheduled_at: Time.current..)
+                                        .includes(:subject).select { |post| unavailable?(post.subject) }
+    end
+
+    def unavailable?(subject)
+      case subject
+      when Product then subject.stock_out_of_stock?
+      when Service then subject.availability_unavailable?
+      else false
+      end
+    end
+
+    def sold_out_attention
+      count = sold_out_scheduled.size
+      return [] if count.zero?
+
+      names = sold_out_scheduled.filter_map { |post| post.subject&.name }.uniq
+
+      [ Attention.new(
+        key: :sold_out_scheduled, severity: :warning,
+        title: "#{count} scheduled #{'post'.pluralize(count)} #{count == 1 ? 'features' : 'feature'} "                "something you have marked unavailable",
+        detail: "#{names.to_sentence} #{names.one? ? 'is' : 'are'} not available, "                 "but #{count == 1 ? 'a post about it is' : 'posts about them are'} still in the diary.",
+        action: "Open the calendar", path: :calendar
       ) ]
     end
 

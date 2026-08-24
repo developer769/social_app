@@ -11,8 +11,8 @@ module Posts
     end
 
     def new
-      @products = current_workspace.products.active.in_display_order
-      @services = current_workspace.services.active.in_display_order
+      @products = current_workspace.products.promotable.in_display_order
+      @services = current_workspace.services.promotable.in_display_order
     end
 
     def create

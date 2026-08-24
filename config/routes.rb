@@ -21,8 +21,14 @@ Rails.application.routes.draw do
   scope "/w/:workspace_slug", as: :workspace do
     root to: "dashboard#show", as: :root
 
-    resources :products, only: %i[create update destroy], module: :catalog
-    resources :services, only: %i[create update destroy], module: :catalog
+    resources :products, only: %i[edit create update destroy], module: :catalog do
+      # Its own route and its own action. Changing what is in stock happens
+      # several times a day and must never mean opening a form.
+      member { patch :stock }
+    end
+    resources :services, only: %i[edit create update destroy], module: :catalog do
+      member { patch :availability }
+    end
 
     resources :social_accounts, only: %i[create destroy], module: :connections
 

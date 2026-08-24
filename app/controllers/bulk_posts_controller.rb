@@ -17,8 +17,8 @@ class BulkPostsController < ApplicationController
     return redirect_to new_workspace_bulk_post_path(**slug), alert: "Choose at least one style." if @templates.empty?
 
     @ordered = chosen_ids.filter_map { |id| @templates[id] }
-    @products = current_workspace.products.active.in_display_order
-    @services = current_workspace.services.active.in_display_order
+    @products = current_workspace.products.promotable.in_display_order
+    @services = current_workspace.services.promotable.in_display_order
     @plan = Scheduling::MonthPlanner.new(workspace: current_workspace, count: @ordered.size,
                                          starting: params[:starting]).call
     @starting = params[:starting].presence || Date.current.to_s

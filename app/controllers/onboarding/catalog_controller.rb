@@ -9,8 +9,12 @@ module Onboarding
       # through the association appends the blank record to it, and the next
       # workspace.update! then fails autosave validation with "Products is
       # invalid". These objects only supply form defaults.
-      @product = Product.new(currency: current_workspace.currency)
-      @service = Service.new(currency: current_workspace.currency)
+      # A form already filled in when arriving from Edit, a blank one otherwise.
+      # Looked up through the workspace, so another tenant's id is simply absent.
+      @product = current_workspace.products.find_by(id: params[:edit_product]) ||
+                 Product.new(currency: current_workspace.currency)
+      @service = current_workspace.services.find_by(id: params[:edit_service]) ||
+                 Service.new(currency: current_workspace.currency)
       record_progress(current_step_key)
     end
 

@@ -12,6 +12,11 @@ class Product < ApplicationRecord
   enum :availability_status, AVAILABILITY_STATUSES.index_by(&:itself), prefix: :availability, validate: true
   enum :stock_status, STOCK_STATUSES.index_by(&:itself), prefix: :stock, validate: true
 
+  # Worth posting about right now. Sold out is not deleted and not deactivated
+  # -- it comes back tomorrow -- but Prachar should not be building next week's
+  # content around something nobody can buy.
+  scope :promotable, -> { active.where.not(stock_status: "out_of_stock") }
+
   scope :featured, -> { where(featured: true) }
   scope :active, -> { where(active: true) }
 

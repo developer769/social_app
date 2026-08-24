@@ -10,6 +10,9 @@ class Service < ApplicationRecord
 
   enum :availability_status, AVAILABILITY_STATUSES.index_by(&:itself), prefix: :availability, validate: true
 
+  # As Product#promotable: still listed, not offered for new content.
+  scope :promotable, -> { active.where.not(availability_status: "unavailable") }
+
   scope :featured, -> { where(featured: true) }
   scope :active, -> { where(active: true) }
 
