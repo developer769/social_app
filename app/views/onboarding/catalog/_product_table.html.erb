@@ -18,7 +18,7 @@
             <th scope="col" class="py-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-muted">Category</th>
             <th scope="col" class="py-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-muted">Description</th>
             <th scope="col" class="py-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-muted">Price</th>
-            <th scope="col" class="py-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-muted">Featured</th>
+            <th scope="col" class="py-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-muted">Stock</th>
             <th scope="col" class="py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-muted">Actions</th>
           </tr>
         </thead>
@@ -45,17 +45,45 @@
                 <% end %>
               </td>
               <td class="py-3 pr-4">
-                <%= render StatusBadgeComponent.new(
-                      label: product.featured? ? "Yes" : "No",
-                      tone: product.featured? ? :highlight : :neutral) %>
+                <%#
+                  Three buttons rather than a single toggle. "Low" is a real
+                  state for a kitchen, and cycling through three by tapping one
+                  control means guessing where you will land.
+                %>
+                <div class="flex gap-1" role="group"
+                     aria-label="Stock for <%= product.name %>">
+                  <% {
+                       "in_stock" => [ "In", :success ],
+                       "low_stock" => [ "Low", :warning ],
+                       "out_of_stock" => [ "Out", :danger ]
+                     }.each do |status, (label, tone)| %>
+                    <% current = product.stock_status == status %>
+                    <%= button_to stock_workspace_product_path(
+                          workspace_slug: current_workspace.slug, id: product),
+                          method: :patch, params: { stock_status: status },
+                          disabled: current,
+                          class: class_names(
+                            "cursor-pointer rounded-control border px-2 py-1 text-xs font-medium",
+                            "border-#{tone} bg-#{tone}-soft text-#{tone}" => current,
+                            "border-border text-muted hover:bg-surface-sunk" => !current) do %>
+                      <%= label %><span class="sr-only"> stock for <%= product.name %></span>
+                    <% end %>
+                  <% end %>
+                </div>
               </td>
-              <td class="py-3 text-right">
+              <td class="py-3">
+                <div class="flex items-center justify-end gap-1">
+                <%= link_to "Edit", edit_workspace_product_path(
+                      workspace_slug: current_workspace.slug, id: product),
+                      class: "rounded-control px-2 py-1 text-xs font-medium text-primary hover:bg-surface-sunk" %>
+
                 <%= button_to workspace_product_path(workspace_slug: current_workspace.slug, id: product),
                       method: :delete,
                       form: { data: { turbo_confirm: "Delete #{product.name}? This cannot be undone." } },
                       class: "cursor-pointer rounded-control px-2 py-1 text-xs font-medium text-danger hover:bg-danger-soft" do %>
                   Delete<span class="sr-only"> <%= product.name %></span>
                 <% end %>
+                </div>
               </td>
             </tr>
           <% end %>

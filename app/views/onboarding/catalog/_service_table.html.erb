@@ -18,7 +18,7 @@
             <th scope="col" class="py-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-muted">Category</th>
             <th scope="col" class="py-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-muted">Duration</th>
             <th scope="col" class="py-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-muted">Starting price</th>
-            <th scope="col" class="py-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-muted">Featured</th>
+            <th scope="col" class="py-2.5 pr-4 text-xs font-semibold uppercase tracking-wide text-muted">Taking bookings</th>
             <th scope="col" class="py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-muted">Actions</th>
           </tr>
         </thead>
@@ -45,17 +45,42 @@
                 <% end %>
               </td>
               <td class="py-3 pr-4">
-                <%= render StatusBadgeComponent.new(
-                      label: service.featured? ? "Yes" : "No",
-                      tone: service.featured? ? :highlight : :neutral) %>
+                <%# The same one-tap control as products, over the state a
+                    service actually changes: whether it is being taken on. %>
+                <div class="flex gap-1" role="group"
+                     aria-label="Availability for <%= service.name %>">
+                  <% {
+                       "available" => [ "On", :success ],
+                       "coming_soon" => [ "Soon", :warning ],
+                       "unavailable" => [ "Off", :danger ]
+                     }.each do |status, (label, tone)| %>
+                    <% current = service.availability_status == status %>
+                    <%= button_to availability_workspace_service_path(
+                          workspace_slug: current_workspace.slug, id: service),
+                          method: :patch, params: { availability_status: status },
+                          disabled: current,
+                          class: class_names(
+                            "cursor-pointer rounded-control border px-2 py-1 text-xs font-medium",
+                            "border-#{tone} bg-#{tone}-soft text-#{tone}" => current,
+                            "border-border text-muted hover:bg-surface-sunk" => !current) do %>
+                      <%= label %><span class="sr-only"> availability for <%= service.name %></span>
+                    <% end %>
+                  <% end %>
+                </div>
               </td>
-              <td class="py-3 text-right">
+              <td class="py-3">
+                <div class="flex items-center justify-end gap-1">
+                <%= link_to "Edit", edit_workspace_service_path(
+                      workspace_slug: current_workspace.slug, id: service),
+                      class: "rounded-control px-2 py-1 text-xs font-medium text-primary hover:bg-surface-sunk" %>
+
                 <%= button_to workspace_service_path(workspace_slug: current_workspace.slug, id: service),
                       method: :delete,
                       form: { data: { turbo_confirm: "Delete #{service.name}? This cannot be undone." } },
                       class: "cursor-pointer rounded-control px-2 py-1 text-xs font-medium text-danger hover:bg-danger-soft" do %>
                   Delete<span class="sr-only"> <%= service.name %></span>
                 <% end %>
+                </div>
               </td>
             </tr>
           <% end %>

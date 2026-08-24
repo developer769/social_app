@@ -1,9 +1,13 @@
 <section class="rounded-card border border-border bg-surface p-6 sm:p-7">
-  <h2 class="font-display text-xl font-normal">Add service</h2>
+  <h2 class="font-display text-xl font-normal">
+    <%= service.persisted? ? "Edit #{service.name}" : "Add service" %>
+  </h2>
 
   <%= form_with model: service,
-                url: workspace_services_path(workspace_slug: current_workspace.slug),
-                method: :post, scope: :service,
+                url: (service.persisted? ?
+                      workspace_service_path(workspace_slug: current_workspace.slug, id: service) :
+                      workspace_services_path(workspace_slug: current_workspace.slug)),
+                method: (service.persisted? ? :patch : :post), scope: :service,
                 html: { multipart: true, novalidate: true } do |form| %>
     <div class="mt-5 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
       <%= render FormFieldComponent.new(form: form, attribute: :name, label: "Service name",
