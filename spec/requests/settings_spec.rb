@@ -24,6 +24,23 @@ RSpec.describe "Settings" do
 
     # A card that goes nowhere is worse than one that explains itself; the
     # sidebar already made that mistake.
+    # The hub offered both "Posting preferences" and "Publishing defaults",
+    # pointing at the same URL. Somebody clicking the second one landed on the
+    # first and reasonably assumed it was broken.
+    it "never offers two cards that go to the same place" do
+      destinations = SettingsMenu.entries.filter_map(&:route)
+
+      expect(destinations).to eq(destinations.uniq)
+    end
+
+    it "keeps publishing defaults findable by name on the one card that has them" do
+      get workspace_settings_root_path(**slug)
+
+      body = response.body.gsub(/\s+/, " ")
+      expect(body).to include("first comment, links and hashtags")
+      expect(body).not_to include("Publishing defaults")
+    end
+
     it "says what an unavailable section is waiting on" do
       get workspace_settings_root_path(**slug)
 

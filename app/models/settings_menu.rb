@@ -33,8 +33,13 @@ module SettingsMenu
       summary: "Your plan, what it includes and how much you have used.",
       route: :workspace_settings_billing_path, tone: :blue),
 
+    # Covers publishing defaults too. Splitting "how it sounds" from "how it
+    # goes out" would mean editing two screens to change one thing -- but that
+    # was never a reason to give one page two cards, which is what this hub did
+    # until somebody clicked the second one and landed on the first.
+    # The summary names both halves so either can be found by scanning.
     Entry.new(key: :posting, title: "Posting preferences",
-      summary: "How your captions should sound and how often you want to post.",
+      summary: "How your captions sound, how often you post, and the first comment, "                "links and hashtags new posts start with.",
       route: :workspace_settings_posting_preferences_path, tone: :lavender),
 
     Entry.new(key: :brand_kit, title: "Brand kit",
@@ -52,15 +57,7 @@ module SettingsMenu
     Entry.new(key: :integrations, title: "Integrations",
       summary: "Connect other tools to Prachar.",
       route: nil, tone: :lavender,
-      waiting_on: "Social accounts are the only integration today, and they have their own page above."),
-
-    # Publishing defaults live with posting preferences rather than on their own
-    # page, because splitting "how it sounds" from "how it goes out" would mean
-    # editing two screens to change one thing. Approvals are absent because they
-    # need team roles, which are deliberately undefined (spec 2).
-    Entry.new(key: :publishing, title: "Publishing defaults",
-      summary: "First comment, links and hashtag placement for new posts.",
-      route: :workspace_settings_posting_preferences_path, tone: :blue)
+      waiting_on: "Social accounts are the only integration today, and they have their own page above.")
   ].freeze
 
   module_function
