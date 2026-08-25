@@ -65,7 +65,11 @@ services:
 
   web:
     <<: *app
-    command: bin/rails server -b 0.0.0.0 -p 3000
+    # The pid file is cleared before booting. tmp/ is a named volume, so when
+    # Docker Desktop is stopped without shutting the container down the pid
+    # file survives -- and Puma then refuses to start with "a server is already
+    # running", pointing at a process that died with the engine.
+    command: sh -c "rm -f tmp/pids/server.pid && bin/rails server -b 0.0.0.0 -p 3000"
     ports:
       - "3000:3000"
 
