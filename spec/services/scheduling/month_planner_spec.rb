@@ -1,7 +1,15 @@
 require "rails_helper"
 
 RSpec.describe Scheduling::MonthPlanner do
+  include ActiveSupport::Testing::TimeHelpers
+
   let(:workspace) { create(:workspace, timezone: "Asia/Kolkata") }
+
+  # Everything here counts weekdays forward from "now", so without a fixed
+  # reference the answers change with the day the suite runs -- this file
+  # passed on a Saturday and failed on the following Monday. Monday morning,
+  # before the usual posting time, so the same day's slot is still available.
+  around { |example| travel_to(Time.find_zone("Asia/Kolkata").local(2026, 9, 7, 8, 0)) { example.run } }
 
   def plan(count, starting: nil)
     described_class.new(workspace: workspace, count: count, starting: starting).call
@@ -50,8 +58,10 @@ RSpec.describe Scheduling::MonthPlanner do
     expect(result.count).to eq(6)
     weeks = result.slots.group_by { |s| local(s).strftime("%G-%V") }
     expect(weeks.values.map(&:size)).to all(be <= 2)
-    # Six posts at two a week has to run past a fortnight.
-    expect(result.spans_days).to be > 14
+    # Six posts at two a week needs three weeks. Counting weeks rather than
+    # days says what the rule actually means, and does not change with which
+    # weekday the batch starts on.
+    expect(weeks.size).to be >= 3
   end
 
   # Two posts at the same minute is a worse outcome than one arriving a day

@@ -40,7 +40,7 @@ RSpec.describe "Ads" do
     it "counts an unconnected, empty workspace as not ready" do
       get workspace_ads_path(**slug)
 
-      expect(body_text).to include("0 of 4 done")
+      expect(body_text).to include("4 things to do before you can advertise")
       expect(body_text).to include("None of the platforms that allow advertising are connected yet")
     end
 
@@ -87,6 +87,26 @@ RSpec.describe "Ads" do
       expect(body_text).to include("1 post has gone out")
     end
 
+    # A finished checklist earns one line, not a card per completed item.
+    it "stays collapsed when there is nothing outstanding" do
+      create(:social_account, workspace: workspace, provider: "instagram")
+      create(:brand_profile, workspace: workspace, category: "Bakery", about: "We bake cakes.")
+      create(:product, workspace: workspace)
+      create(:post, workspace: workspace).update_columns(status: "published")
+
+      get workspace_ads_path(**slug)
+
+      expect(response.body).to match(/<details(?![^>]*open)[^>]*>\s*<summary[^>]*>\s*<span[^>]*>\s*<span[^>]*bg-success/m)
+    end
+
+    # ...but opens itself when something needs doing, so the work is not hidden
+    # behind a click.
+    it "opens itself when something is outstanding" do
+      get workspace_ads_path(**slug)
+
+      expect(response.body).to include("<details open")
+    end
+
     it "says when everything on the owner's side is done" do
       create(:social_account, workspace: workspace, provider: "instagram")
       create(:brand_profile, workspace: workspace, category: "Bakery", about: "We bake cakes.")
@@ -95,8 +115,8 @@ RSpec.describe "Ads" do
 
       get workspace_ads_path(**slug)
 
-      expect(body_text).to include("4 of 4 done")
-      expect(body_text).to include("What is left is ours to build")
+      expect(body_text).to include("Everything on your side is in place")
+      expect(body_text).to include("4/4")
     end
   end
 
@@ -206,6 +226,6 @@ RSpec.describe "Ads" do
 
     get workspace_ads_path(**slug)
 
-    expect(body_text).to include("0 of 4 done")
+    expect(body_text).to include("4 things to do before you can advertise")
   end
 end

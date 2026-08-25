@@ -55,81 +55,113 @@
 <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
   <div class="min-w-0 space-y-6">
     <%#
-      Real, and useful today: everything on this list is something the platforms
-      will ask for, and every answer is read from this workspace's own records.
+      A checklist exists to say what is MISSING. When nothing is, it earns one
+      line, not a card per finished item -- and the outstanding ones are what
+      stay in view.
     %>
-    <section class="rounded-card border border-border bg-surface p-6">
-      <div class="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h2 class="font-display text-xl font-normal">Getting ready</h2>
-          <p class="mt-1 text-sm text-muted">
-            What the ad platforms will ask for. You can do all of this now.
-          </p>
-        </div>
-        <span class="shrink-0 text-sm tabular-nums text-muted">
-          <%= r.ready_count %> of <%= r.total_checks %> done
-        </span>
-      </div>
+    <% outstanding = r.checks.reject(&:done?) %>
 
-      <ol class="mt-5 space-y-3">
-        <% r.checks.each do |check| %>
-          <li class="flex items-start gap-3.5 rounded-control border border-border bg-background p-4">
-            <span aria-hidden="true"
-                  class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-xs
-                         <%= check.done? ? "border-success bg-success text-white" : "border-border-strong text-muted" %>">
-              <%= check.done? ? "✓" : "" %>
-            </span>
-
-            <span class="min-w-0 flex-1">
-              <span class="block text-sm font-medium text-heading"><%= check.label %></span>
-              <span class="mt-0.5 block text-sm text-muted"><%= check.detail %></span>
-            </span>
-
-            <% unless check.done? %>
-              <%= link_to check.fix_label, fix_paths.fetch(check.fix_path),
-                    class: "shrink-0 text-sm font-medium text-primary underline underline-offset-4" %>
+    <section class="rounded-card border border-border bg-surface px-5 py-4">
+      <details <%= "open" if outstanding.any? %> class="group">
+        <summary class="flex cursor-pointer list-none items-center justify-between gap-3">
+          <span class="flex items-center gap-2.5">
+            <% if outstanding.empty? %>
+              <span aria-hidden="true"
+                    class="flex h-5 w-5 items-center justify-center rounded-full bg-success text-xs text-white">&#10003;</span>
+              <span class="text-sm font-medium text-heading">
+                Everything on your side is in place
+              </span>
+            <% else %>
+              <span aria-hidden="true"
+                    class="flex h-5 w-5 items-center justify-center rounded-full border border-border-strong text-xs text-muted">
+                <%= outstanding.size %>
+              </span>
+              <span class="text-sm font-medium text-heading">
+                <%= pluralize(outstanding.size, "thing") %> to do before you can advertise
+              </span>
             <% end %>
-          </li>
-        <% end %>
-      </ol>
+          </span>
 
-      <% if r.all_ready? %>
-        <p class="mt-5 text-sm text-success">
-          &#10003; Everything on your side is in place. What is left is ours to build.
-        </p>
-      <% end %>
+          <span class="shrink-0 text-xs tabular-nums text-muted">
+            <%= r.ready_count %>/<%= r.total_checks %>
+            <span aria-hidden="true" class="ml-1 inline-block transition-transform group-open:rotate-90">&rsaquo;</span>
+          </span>
+        </summary>
+
+        <ol class="mt-4 space-y-2 border-t border-border pt-4">
+          <% r.checks.each do |check| %>
+            <li class="flex items-start gap-2.5">
+              <span aria-hidden="true"
+                    class="mt-1 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border text-[10px]
+                           <%= check.done? ? "border-success bg-success text-white" : "border-border-strong text-muted" %>">
+                <%= check.done? ? "✓" : "" %>
+              </span>
+
+              <span class="min-w-0 flex-1 text-sm">
+                <span class="<%= check.done? ? "text-muted" : "font-medium text-heading" %>"><%= check.label %></span>
+                <span class="text-muted"> &middot; <%= check.detail %></span>
+              </span>
+
+              <% unless check.done? %>
+                <%= link_to check.fix_label, fix_paths.fetch(check.fix_path),
+                      class: "shrink-0 text-sm font-medium text-primary underline underline-offset-4" %>
+              <% end %>
+            </li>
+          <% end %>
+        </ol>
+      </details>
     </section>
 
-    <section class="rounded-card border border-border bg-surface p-6">
-      <h2 class="font-display text-xl font-normal">Where ads are possible</h2>
-      <p class="mt-1 text-sm text-muted">
-        Not every platform sells advertising through an API. These are the ones that do.
-      </p>
-
-      <ul class="mt-4 space-y-3">
-        <% r.rows.each do |row| %>
-          <li class="flex items-start gap-3 rounded-control border border-border bg-background p-4">
-            <%= render PlatformGlyphComponent.new(provider: row.provider, size: :small) %>
-            <span class="min-w-0 flex-1">
-              <span class="flex flex-wrap items-center gap-2">
-                <span class="text-sm font-medium text-heading"><%= row.name %></span>
-                <% if row.connected %>
-                  <%= render StatusBadgeComponent.new(label: "Connected", tone: :success) %>
-                <% else %>
-                  <%= render StatusBadgeComponent.new(label: "Not connected", tone: :neutral) %>
-                <% end %>
-              </span>
-              <span class="mt-1 block text-xs text-muted"><%= row.notes %></span>
+    <%#
+      Reference, not a decision. It never changes, so it sits closed until
+      somebody wants it.
+    %>
+    <section class="rounded-card border border-border bg-surface px-5 py-4">
+      <details class="group">
+        <summary class="flex cursor-pointer list-none items-center justify-between gap-3">
+          <span class="flex flex-wrap items-center gap-2">
+            <span class="text-sm font-medium text-heading">Where ads are possible</span>
+            <span class="flex items-center gap-1">
+              <% r.rows.each do |row| %>
+                <%= render PlatformGlyphComponent.new(provider: row.provider, size: :small) %>
+              <% end %>
             </span>
-          </li>
-        <% end %>
-      </ul>
+          </span>
+          <span class="shrink-0 text-xs text-muted">
+            <%= r.connected_advertising_platforms.size %> of <%= r.rows.size %> connected
+            <span aria-hidden="true" class="ml-1 inline-block transition-transform group-open:rotate-90">&rsaquo;</span>
+          </span>
+        </summary>
 
-      <%# Named, so their absence is not mistaken for an oversight. %>
-      <p class="mt-4 text-xs text-muted">
-        YouTube, TikTok and Google Business Profile are not listed because Prachar does
-        not use an advertising API for them.
-      </p>
+        <p class="mt-4 border-t border-border pt-4 text-sm text-muted">
+          Not every platform sells advertising through an API. These are the ones that do.
+        </p>
+
+        <ul class="mt-3 space-y-2.5">
+          <% r.rows.each do |row| %>
+            <li class="flex items-start gap-2.5">
+              <%= render PlatformGlyphComponent.new(provider: row.provider, size: :small) %>
+              <span class="min-w-0 flex-1">
+                <span class="flex flex-wrap items-center gap-2">
+                  <span class="text-sm font-medium text-heading"><%= row.name %></span>
+                  <% if row.connected %>
+                    <%= render StatusBadgeComponent.new(label: "Connected", tone: :success) %>
+                  <% else %>
+                    <%= render StatusBadgeComponent.new(label: "Not connected", tone: :neutral) %>
+                  <% end %>
+                </span>
+                <span class="mt-0.5 block text-xs text-muted"><%= row.notes %></span>
+              </span>
+            </li>
+          <% end %>
+        </ul>
+
+        <%# Named, so their absence is not mistaken for an oversight. %>
+        <p class="mt-3 text-xs text-muted">
+          YouTube, TikTok and Google Business Profile are not listed because Prachar does
+          not use an advertising API for them.
+        </p>
+      </details>
     </section>
   </div>
 
