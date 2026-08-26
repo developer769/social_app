@@ -171,6 +171,44 @@ RSpec.describe "Settings" do
       expect(Current.session&.revoked_at).to be_nil
     end
 
+    # One action rather than one click per row. Somebody who has lost a phone
+    # should not have to work out which of nine identical-looking rows it is.
+    it "signs out everywhere else in one action, keeping this device" do
+      other = Session.start!(user: owner)
+      mine = Current.session
+
+      delete workspace_settings_security_sessions_path(**slug)
+
+      expect(other.reload.revoked_at).to be_present
+      expect(Session.find(mine.id).revoked_at).to be_nil if mine
+      expect(flash[:notice]).to include("still signed in here")
+    end
+
+    # Signing in leaves exactly one session, so this is already the state.
+    # Deleting "all but the current one" here would delete the current one too:
+    # Current.session is nil outside a request.
+    it "says so plainly when there is nowhere else to sign out of" do
+      delete workspace_settings_security_sessions_path(**slug)
+
+      expect(flash[:notice]).to include("not signed in anywhere else")
+    end
+
+    it "records the sweep, so a mass sign-out can be explained later" do
+      Session.start!(user: owner)
+
+      expect { delete workspace_settings_security_sessions_path(**slug) }
+        .to change { AuditEvent.where(action: "user.other_sessions_revoked").count }.by(1)
+    end
+
+    it "does not sign out another person's devices" do
+      stranger = create(:user)
+      theirs = Session.start!(user: stranger)
+
+      delete workspace_settings_security_sessions_path(**slug)
+
+      expect(theirs.reload.revoked_at).to be_nil
+    end
+
     it "cannot revoke someone else's session" do
       stranger_session = Session.start!(user: create(:user))
 

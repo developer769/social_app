@@ -46,6 +46,9 @@ Rails.application.routes.draw do
       get       "connections", to: "connections#show", as: :connections
       resource  :security,     only: %i[show update], controller: "security"
       delete    "security/sessions/:id", to: "security#revoke_session", as: :security_session
+    # One action rather than one click per device. Somebody who has lost a
+    # phone should not have to work out which row it is.
+    delete    "security/sessions", to: "security#revoke_other_sessions", as: :security_sessions
       resource  :billing,      only: %i[show],        controller: "billing"
       resource  :posting_preferences, only: %i[show update], controller: "posting_preferences"
       resource  :brand_kit,    only: %i[show update], controller: "brand_kit"

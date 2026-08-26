@@ -21,3 +21,9 @@ ad_metrics_sync:
   class: "Ads::SyncAllJob"
   queue: default
   description: "Pull daily ad figures back from the platforms"
+
+session_sweep:
+  cron: "40 3 * * *"
+  class: "Sessions::SweepJob"
+  queue: default
+  description: "Delete sessions that can no longer be used"
