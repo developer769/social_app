@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_22_010000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_26_090000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
@@ -358,6 +358,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_010000) do
     t.index ["user_id"], name: "index_notification_preferences_on_user_id"
     t.index ["workspace_id", "user_id"], name: "index_notification_preferences_on_workspace_id_and_user_id", unique: true
     t.index ["workspace_id"], name: "index_notification_preferences_on_workspace_id"
+  end
+
+  create_table "password_resets", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "expires_at", null: false
+    t.string "requested_ip"
+    t.string "token_digest", null: false
+    t.datetime "updated_at", null: false
+    t.datetime "used_at"
+    t.string "used_ip"
+    t.bigint "user_id", null: false
+    t.index ["token_digest"], name: "index_password_resets_on_token_digest", unique: true
+    t.index ["user_id", "created_at"], name: "index_password_resets_on_user_id_and_created_at"
+    t.index ["user_id"], name: "index_password_resets_on_user_id"
   end
 
   create_table "plan_entitlements", force: :cascade do |t|
@@ -854,6 +868,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_010000) do
   add_foreign_key "messages", "users", column: "sent_by_id"
   add_foreign_key "notification_preferences", "users"
   add_foreign_key "notification_preferences", "workspaces"
+  add_foreign_key "password_resets", "users"
   add_foreign_key "plan_entitlements", "plans"
   add_foreign_key "post_media", "media_assets"
   add_foreign_key "post_media", "posts"

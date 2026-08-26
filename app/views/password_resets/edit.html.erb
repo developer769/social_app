@@ -1,0 +1,44 @@
+<% content_for :title, "Set a new password" %>
+
+<div class="mx-auto w-full max-w-md">
+  <h1 class="font-display text-3xl font-normal text-heading">Set a new password</h1>
+  <p class="mt-2 text-sm text-body">
+    Choose something you have not used elsewhere.
+  </p>
+
+  <%= render "shared/flash" %>
+
+  <% if @user_errors&.any? %>
+    <div class="mt-4 rounded-card border border-danger/30 bg-danger-soft px-4 py-3">
+      <ul class="space-y-1 text-sm text-body">
+        <% @user_errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <%= form_with url: password_reset_path, method: :patch, class: "mt-6 space-y-4" do %>
+    <%= hidden_field_tag :token, @token %>
+
+    <div>
+      <%= label_tag "user_password", "New password", class: "mb-1.5 block text-sm font-medium text-heading" %>
+      <%= password_field_tag "user[password]", nil, id: "user_password", autofocus: true,
+            autocomplete: "new-password", minlength: 12,
+            class: "h-11 w-full rounded-control border border-border bg-background px-3.5 text-sm text-heading focus:border-border-strong focus:outline-none" %>
+      <p class="mt-1.5 text-xs text-muted">At least 12 characters.</p>
+    </div>
+
+    <%#
+      Said before they commit to it, not discovered afterwards on a phone that
+      has quietly stopped working.
+    %>
+    <p class="rounded-control bg-gold-tint px-3.5 py-2.5 text-xs text-body">
+      Changing this signs you out everywhere else. Any device still signed in as you
+      will need the new password.
+    </p>
+
+    <%= submit_tag "Set my new password",
+          class: "h-11 w-full cursor-pointer rounded-control bg-primary text-sm font-medium text-primary-contrast hover:bg-primary-hover" %>
+  <% end %>
+</div>

@@ -4,6 +4,13 @@ Rails.application.routes.draw do
   post   "login",  to: "sessions#create"
   delete "logout", to: "sessions#destroy", as: :logout
 
+  # Getting back in. Without these a forgotten password locked somebody out of
+  # their own business for good.
+  get   "password/new",  to: "password_resets#new",    as: :new_password_reset
+  post  "password",      to: "password_resets#create", as: :password_resets
+  get   "password/edit", to: "password_resets#edit",   as: :edit_password_reset
+  patch "password",      to: "password_resets#update", as: :password_reset
+
   # ---- Invitations ---------------------------------------------------------
   get    "invitations/:token",         to: "invitations#show",    as: :invitation
   post   "invitations/:token/accept",  to: "invitations#accept",  as: :accept_invitation
@@ -130,6 +137,13 @@ Rails.application.routes.draw do
     get    "login",  to: "sessions#new",     as: :login
     post   "login",  to: "sessions#create"
     delete "logout", to: "sessions#destroy", as: :logout
+
+  # Getting back in. Without these a forgotten password locked somebody out of
+  # their own business for good.
+  get   "password/new",  to: "password_resets#new",    as: :new_password_reset
+  post  "password",      to: "password_resets#create", as: :password_resets
+  get   "password/edit", to: "password_resets#edit",   as: :edit_password_reset
+  patch "password",      to: "password_resets#update", as: :password_reset
 
     resources :templates, except: %i[destroy] do
       member do

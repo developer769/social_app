@@ -1,0 +1,25 @@
+<% content_for :title, "Forgotten your password" %>
+
+<div class="mx-auto w-full max-w-md">
+  <h1 class="font-display text-3xl font-normal text-heading">Forgotten your password?</h1>
+  <p class="mt-2 text-sm text-body">
+    Give us the address you sign in with and we will send a link to set a new one.
+  </p>
+
+  <%= render "shared/flash" %>
+
+  <%= form_with url: password_resets_path, method: :post, class: "mt-6 space-y-4" do %>
+    <div>
+      <%= label_tag :email, "Email address", class: "mb-1.5 block text-sm font-medium text-heading" %>
+      <%= email_field_tag :email, params[:email], autofocus: true, autocomplete: "email",
+            class: "h-11 w-full rounded-control border border-border bg-background px-3.5 text-sm text-heading placeholder:text-muted focus:border-border-strong focus:outline-none" %>
+    </div>
+
+    <%= submit_tag "Send me a link",
+          class: "h-11 w-full cursor-pointer rounded-control bg-primary text-sm font-medium text-primary-contrast hover:bg-primary-hover" %>
+  <% end %>
+
+  <p class="mt-6 text-sm text-muted">
+    <%= link_to "Back to sign in", login_path, class: "text-primary underline underline-offset-4" %>
+  </p>
+</div>
