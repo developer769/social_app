@@ -48,7 +48,8 @@ module Posts
       scope = workspace.posts
                        .where.not(status: "cancelled")
                        .scheduled_between(range_start, range_end)
-                       .includes(:post_targets, :template, post_media: { media_asset: { file_attachment: :blob } })
+                       .includes(:template, :subject, { post_targets: :social_account },
+                                 post_media: { media_asset: { file_attachment: :blob } })
                        .chronological
 
       scope = scope.for_provider(provider) if provider

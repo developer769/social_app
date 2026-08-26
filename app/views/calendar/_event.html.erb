@@ -4,44 +4,131 @@
   provider = post.providers.first
   tint = PlatformGlyphComponent::BRANDS.dig(provider, :tint) || "#F6F0E7"
   thumbnail = post.primary_media
-  # Hidden in a month cell, where there is no width for it beside the caption.
   show_thumbnail = !compact && thumbnail&.file&.attached? && thumbnail.image?
+  panel_id = "post-preview-#{post.id}"
+  zone = current_workspace.timezone
 %>
 
-<%= link_to workspace_post_path(workspace_slug: current_workspace.slug, id: post),
-      class: "block overflow-hidden rounded-control border border-border/70 transition-shadow hover:shadow-panel",
-      style: "background-color: #{tint};" do %>
-  <%#
-    One row, thumbnail last. It used to sit below the text with ml-auto, which
-    on a phone left it floating in the bottom-right corner detached from
-    everything it belonged to.
-  %>
-  <div class="flex items-start gap-2.5 <%= compact ? "p-2" : "p-3" %>">
-    <div class="min-w-0 flex-1">
-      <div class="flex items-start gap-1.5">
-        <% if provider %>
-          <%= render PlatformGlyphComponent.new(provider: provider, size: :small) %>
-        <% end %>
+<%#
+  The entry and the card that describes it.
 
-        <p class="min-w-0 flex-1 text-[11px] font-semibold leading-snug text-heading">
-          <%= post.caption.presence&.truncate(compact ? 34 : 60) || "Untitled post" %>
+  Opens on hover AND on focus: a calendar whose detail is hover-only cannot be
+  read with a keyboard. Escape closes it, and the card itself is hoverable, so
+  moving the pointer onto it does not dismiss it (WCAG 2.2, 1.4.13).
+%>
+<div class="relative"
+     data-controller="post-preview"
+     data-action="mouseenter->post-preview#show mouseleave->post-preview#scheduleHide
+                  focusin->post-preview#show focusout->post-preview#scheduleHide">
+
+  <%= link_to workspace_post_path(workspace_slug: current_workspace.slug, id: post),
+        aria: { describedby: panel_id },
+        class: "block overflow-hidden rounded-control border border-border/70 transition-shadow hover:shadow-panel focus-visible:shadow-panel",
+        style: "background-color: #{tint};" do %>
+    <div class="flex items-start gap-2.5 <%= compact ? "p-2" : "p-3" %>">
+      <div class="min-w-0 flex-1">
+        <div class="flex items-start gap-1.5">
+          <% if provider %>
+            <%= render PlatformGlyphComponent.new(provider: provider, size: :small) %>
+          <% end %>
+
+          <p class="min-w-0 flex-1 text-[11px] font-semibold leading-snug text-heading">
+            <%= post.caption.presence&.truncate(compact ? 34 : 60) || "Untitled post" %>
+          </p>
+        </div>
+
+        <p class="mt-1 text-[10px] text-muted">
+          <%= post_kind_label(post) %> &middot; <%= local&.strftime("%-l:%M %p") %>
         </p>
+
+        <% if post.providers.size > 1 %>
+          <p class="mt-1 text-[10px] text-muted">
+            and <%= post.providers.size - 1 %> more
+          </p>
+        <% end %>
       </div>
 
-      <p class="mt-1 text-[10px] text-muted">
-        <%= post_kind_label(post) %> &middot; <%= local&.strftime("%-l:%M %p") %>
-      </p>
-
-      <% if post.providers.size > 1 %>
-        <p class="mt-1 text-[10px] text-muted">
-          and <%= post.providers.size - 1 %> more
-        </p>
+      <% if show_thumbnail %>
+        <%= image_tag thumbnail.file.variant(resize_to_fill: [ 160, 160 ]), alt: "",
+              class: "h-11 w-11 shrink-0 rounded-[0.3rem] object-cover" %>
       <% end %>
     </div>
+  <% end %>
 
-    <% if show_thumbnail %>
-      <%= image_tag thumbnail.file.variant(resize_to_fill: [160, 160]), alt: "",
-            class: "h-11 w-11 shrink-0 rounded-[0.3rem] object-cover" %>
+  <%#
+    Fixed, not absolute: a month cell clips its overflow, so a card anchored
+    inside one would be sliced off at the cell edge. Position comes from the
+    controller.
+  %>
+  <div id="<%= panel_id %>" role="tooltip" hidden
+       data-post-preview-target="panel"
+       data-action="mouseenter->post-preview#show mouseleave->post-preview#scheduleHide"
+       class="fixed z-50 w-80 rounded-card border border-border-strong bg-surface p-4 shadow-card">
+
+    <div class="flex items-start justify-between gap-3">
+      <%= render StatusBadgeComponent.new(label: post.status_label, tone: post.status_tone) %>
+      <span class="shrink-0 text-xs text-muted">
+        <% if local %>
+          <%= local.strftime("%-d %b, %-l:%M %p") %>
+          <%= zone == "Asia/Kolkata" ? "IST" : zone %>
+        <% else %>
+          No date yet
+        <% end %>
+      </span>
+    </div>
+
+    <% if thumbnail&.file&.attached? && thumbnail.image? %>
+      <%= image_tag thumbnail.file.variant(resize_to_limit: [ 560, 560 ]), alt: "", loading: "lazy",
+            class: "mt-3 max-h-44 w-full rounded-control object-cover" %>
     <% end %>
+
+    <% if post.caption.present? %>
+      <p class="mt-3 whitespace-pre-wrap text-sm text-body"><%= post.caption.truncate(280) %></p>
+    <% else %>
+      <p class="mt-3 text-sm text-muted">No caption written yet.</p>
+    <% end %>
+
+    <% if post.hashtags.any? %>
+      <p class="mt-2 text-xs text-primary"><%= post.hashtags.map { |t| "##{t}" }.join(" ") %></p>
+    <% end %>
+
+    <% if post.subject %>
+      <p class="mt-2 text-xs text-muted">Featuring <%= post.subject.name %></p>
+    <% end %>
+
+    <%#
+      Per platform, with what each one actually did. On a post that half went
+      out this is the only place the difference is visible at a glance.
+    %>
+    <% if post.post_targets.any? %>
+      <ul class="mt-3 space-y-1.5 border-t border-border pt-3">
+        <% post.post_targets.each do |target| %>
+          <li class="flex items-center justify-between gap-2 text-xs">
+            <span class="flex min-w-0 items-center gap-1.5">
+              <%= render PlatformGlyphComponent.new(provider: target.provider, size: :small) %>
+              <span class="truncate text-body"><%= target.provider_name %></span>
+            </span>
+            <span class="shrink-0 <%= target.failed? ? "text-danger" : "text-muted" %>">
+              <%= target_badge(target)[:label] %>
+            </span>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+
+    <% if post.publish_reminder? && !post.published? %>
+      <p class="mt-3 rounded-control bg-gold-tint px-3 py-2 text-xs text-body">
+        Prachar cannot post here yet. You will get a reminder at this time with the
+        caption and picture ready.
+      </p>
+    <% end %>
+
+    <% if post.first_comment.present? %>
+      <p class="mt-2 text-xs text-muted">
+        First comment: <%= post.first_comment.truncate(80) %>
+      </p>
+    <% end %>
+
+    <p class="mt-3 text-xs text-muted">Click to open this post.</p>
   </div>
-<% end %>
+</div>
