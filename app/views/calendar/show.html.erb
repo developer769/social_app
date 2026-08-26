@@ -14,6 +14,13 @@
 
 <%= render "shared/flash" %>
 
+<p class="mb-4 text-sm text-muted">
+  The calendar shows posts with a date.
+  <%= link_to "See all posts, including drafts with no date",
+        workspace_posts_path(workspace_slug: current_workspace.slug),
+        class: "text-primary underline underline-offset-4" %>.
+</p>
+
 <%# The rail sits alongside the calendar from 1024px. It previously waited for
     1280px, so an ordinary laptop showed a full-width calendar with the rail
     stranded underneath it. %>

@@ -1,0 +1,143 @@
+<% content_for :title, "All posts" %>
+<% slug = { workspace_slug: current_workspace.slug } %>
+<% zone = current_workspace.timezone %>
+
+<header class="mb-6 flex flex-wrap items-end justify-between gap-4">
+  <div>
+    <h1 class="font-display text-3xl font-normal sm:text-4xl">
+      All posts<span aria-hidden="true" class="ml-1 align-super text-base text-warning">&#10022;</span>
+    </h1>
+    <p class="mt-1.5 text-sm text-muted">
+      Everything you have written, including drafts with no date &mdash; those never
+      appear on the calendar.
+    </p>
+  </div>
+
+  <%= link_to "Create a post", workspace_create_path(**slug),
+        class: "flex h-11 items-center rounded-control bg-primary px-5 text-sm font-medium text-primary-contrast hover:bg-primary-hover" %>
+</header>
+
+<%= render "shared/flash" %>
+
+<%#
+  "Needs you" first and selected by default. It is not a status filter but the
+  answer to the question this page exists for: what have I left half done?
+%>
+<nav class="mb-4 flex flex-wrap items-center gap-2">
+  <% {
+       "needs_you" => "Needs you",
+       "in_flight" => "Coming up",
+       "settled" => "Went out",
+       "all" => "Everything"
+     }.each do |key, label| %>
+    <% active = @group == key %>
+    <%= link_to workspace_posts_path(**slug, group: key, q: @query.presence, provider: @provider),
+          class: class_names(
+            "flex h-9 items-center gap-2 rounded-pill border px-3.5 text-sm font-medium",
+            "border-primary bg-primary text-primary-contrast" => active,
+            "border-border bg-surface text-body hover:bg-surface-sunk" => !active) do %>
+      <%= label %>
+      <span class="<%= active ? "text-primary-contrast/70" : "text-muted" %> tabular-nums">
+        <%= @counts[key] %>
+      </span>
+    <% end %>
+  <% end %>
+</nav>
+
+<%= form_with url: workspace_posts_path(**slug), method: :get, class: "mb-5 flex flex-wrap gap-2" do %>
+  <%= hidden_field_tag :group, @group %>
+  <label for="q" class="sr-only">Search your posts</label>
+  <%= search_field_tag :q, @query, id: "q", placeholder: "Search captions and hashtags",
+        class: "h-10 min-w-0 flex-1 rounded-control border border-border bg-surface px-3.5 text-sm text-heading placeholder:text-muted focus:border-border-strong focus:outline-none" %>
+  <%= submit_tag "Search",
+        class: "h-10 cursor-pointer rounded-control border border-border bg-surface px-4 text-sm font-medium text-body hover:bg-surface-sunk" %>
+  <% if @query.present? || @provider %>
+    <%= link_to "Clear", workspace_posts_path(**slug, group: @group),
+          class: "flex h-10 items-center px-3 text-sm text-muted underline underline-offset-4 hover:text-heading" %>
+  <% end %>
+<% end %>
+
+<% if @posts.empty? %>
+  <%= render EmptyStateComponent.new(
+        icon: :calendar,
+        title: @query.present? ? "Nothing matched \"#{@query}\"" : empty_title_for(@group),
+        body: @query.present? ? "Try a different word, or clear the search." : empty_body_for(@group)) do |state| %>
+    <% if @query.blank? && @group.in?(%w[needs_you all]) %>
+      <% state.with_action do %>
+        <%= link_to "Create a post", workspace_create_path(**slug),
+              class: "inline-flex h-11 items-center rounded-control bg-primary px-5 text-sm font-medium text-primary-contrast hover:bg-primary-hover" %>
+      <% end %>
+    <% end %>
+  <% end %>
+<% else %>
+  <ul class="divide-y divide-border rounded-card border border-border bg-surface">
+    <% @posts.each do |post| %>
+      <li class="flex items-start gap-3.5 px-5 py-4">
+        <% if post.primary_media&.file&.attached? && post.primary_media.image? %>
+          <%= image_tag post.primary_media.file.variant(resize_to_fill: [ 96, 96 ]), alt: "",
+                class: "h-11 w-11 shrink-0 rounded-control object-cover" %>
+        <% else %>
+          <span aria-hidden="true"
+                class="flex h-11 w-11 shrink-0 items-center justify-center rounded-control bg-surface-sunk text-muted">
+            <%= post.template&.media_format == "video" ? "▶" : "✎" %>
+          </span>
+        <% end %>
+
+        <div class="min-w-0 flex-1">
+          <%= link_to workspace_post_path(**slug, id: post), class: "block" do %>
+            <span class="block truncate text-sm font-medium text-heading">
+              <%= post.caption.presence&.truncate(70) || post.template&.name || "Untitled post" %>
+            </span>
+          <% end %>
+
+          <div class="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted">
+            <%= render StatusBadgeComponent.new(label: post.status_label, tone: post.status_tone) %>
+
+            <% post.providers.first(3).each do |provider| %>
+              <%= render PlatformGlyphComponent.new(provider: provider, size: :small) %>
+            <% end %>
+
+            <span>
+              <% if post.scheduled_at_local %>
+                <%= post.published_at ? "went out" : "due" %>
+                <%= post.scheduled_at_local.strftime("%-d %b, %-l:%M %p") %>
+              <% else %>
+                <%# The whole reason this page exists. %>
+                No date yet
+              <% end %>
+            </span>
+
+            <% if post.subject %>
+              <span>&middot; <%= post.subject.name %></span>
+            <% end %>
+          </div>
+        </div>
+
+        <%#
+          Repeating a post is the commonest thing a shop does with one, and it
+          used to mean retyping it.
+        %>
+        <%= button_to "Copy", duplicate_workspace_post_path(**slug, id: post), method: :post,
+              class: "shrink-0 cursor-pointer rounded-control border border-border px-3 py-1.5 text-xs font-medium text-body hover:bg-surface-sunk" %>
+      </li>
+    <% end %>
+  </ul>
+
+  <nav class="mt-5 flex items-center justify-between gap-4">
+    <% if @page > 1 %>
+      <%= link_to "← Newer", workspace_posts_path(**slug, group: @group, q: @query.presence,
+                                                  provider: @provider, page: @page - 1),
+            class: "flex h-10 items-center rounded-control border border-border px-4 text-sm font-medium text-body hover:bg-surface-sunk" %>
+    <% else %>
+      <span></span>
+    <% end %>
+
+    <% if @more %>
+      <%= link_to "Older →", workspace_posts_path(**slug, group: @group, q: @query.presence,
+                                                  provider: @provider, page: @page + 1),
+            class: "flex h-10 items-center rounded-control border border-border px-4 text-sm font-medium text-body hover:bg-surface-sunk" %>
+    <% else %>
+      <span class="text-xs text-muted">End of the list</span>
+    <% end %>
+  </nav>
+<% end %>

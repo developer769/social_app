@@ -1,4 +1,16 @@
 module PostsHelper
+  # What an empty list means depends on which group you are looking at, and
+  # "no posts" would be wrong in three of the four cases.
+  EMPTY_TITLES = {
+    "needs_you" => [ "Nothing needs you", "Every post is either scheduled or done." ],
+    "in_flight" => [ "Nothing is coming up", "Schedule a post and it will appear here." ],
+    "settled" => [ "Nothing has gone out yet", "Posts that have been published or reminded about will be kept here." ],
+    "all" => [ "No posts yet", "Start one from a style, or upload your own picture." ]
+  }.freeze
+
+  def empty_title_for(group) = EMPTY_TITLES.fetch(group, EMPTY_TITLES["all"]).first
+  def empty_body_for(group) = EMPTY_TITLES.fetch(group, EMPTY_TITLES["all"]).last
+
   # How one platform's copy of a post reads on the status screen.
   #
   # "Skipped" deliberately does not use the danger tone: nothing went wrong when

@@ -1,7 +1,53 @@
 class PostsController < ApplicationController
   include WorkspaceScoping
 
-  before_action :set_post, only: %i[show edit update schedule unschedule cancel destroy]
+  before_action :set_post, only: %i[show edit update schedule unschedule cancel destroy duplicate]
+
+  GROUPS = %w[needs_you in_flight settled all].freeze
+  PER_PAGE = 25
+
+  # Everything the workspace has, which until now had nowhere to live: the
+  # calendar shows only posts with a date, so a draft created and left alone
+  # was unreachable except through the three most recent on Create.
+  def index
+    @group = params[:group].presence_in(GROUPS) || "needs_you"
+    @query = params[:q].to_s.strip
+    @provider = params[:provider].presence_in(SocialProvider::Catalog.keys)
+
+    scope = current_workspace.posts.includes(:template, :subject, post_targets: :social_account)
+    scope = scope.public_send(@group) unless @group == "all"
+    scope = scope.matching(@query)
+    scope = scope.for_provider(@provider) if @provider
+
+    # Same paging idiom as the activity log rather than a second one: Pagy is
+    # in the Gemfile but wired nowhere, and adding its frontend would mean
+    # restyling its markup to match a pattern the app already has.
+    @page = [ params[:page].to_i, 1 ].max
+    rows = scope.newest_first.offset((@page - 1) * PER_PAGE).limit(PER_PAGE + 1).to_a
+    @more = rows.size > PER_PAGE
+    @posts = rows.first(PER_PAGE)
+    @counts = {
+      "needs_you" => current_workspace.posts.needs_you.count,
+      "in_flight" => current_workspace.posts.in_flight.count,
+      "settled" => current_workspace.posts.settled.count,
+      "all" => current_workspace.posts.count
+    }
+  end
+
+  # A copy to work from, not a scheduled twin. Nothing that ties the original
+  # to a platform comes across -- no date, no status, no remote id -- because
+  # those describe something that already happened.
+  def duplicate
+    copy = Posts::Duplicate.call(post: @post, actor: current_user)
+
+    if copy.success?
+      redirect_to edit_workspace_post_path(workspace_slug: current_workspace.slug, id: copy.value),
+                  notice: "Copied. This is a new draft, with no date yet."
+    else
+      redirect_to workspace_post_path(workspace_slug: current_workspace.slug, id: @post),
+                  alert: "That could not be copied."
+    end
+  end
 
   def new
     @post = current_workspace.posts.new(status: "draft")

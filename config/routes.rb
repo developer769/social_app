@@ -86,7 +86,10 @@ Rails.application.routes.draw do
 
     get "calendar", to: "calendar#show", as: :calendar
 
-    resources :posts, except: %i[index] do
+    resources :posts do
+      # Repeating a post is the commonest thing a shop does with one, and it
+      # was only possible by retyping it.
+      member { post :duplicate }
       # Generating a picture for this post, and choosing between the results.
       resource :creative, only: %i[show new create], controller: "posts/creatives"
 

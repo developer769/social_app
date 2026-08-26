@@ -44,6 +44,28 @@ class Post < ApplicationRecord
   # late, and going out late is the owner's call to make (see Dispatch).
   scope :due_for_publishing, ->(now = Time.current) { where(status: "scheduled").where(scheduled_at: ..now) }
   scope :chronological, -> { order(:scheduled_at, :id) }
+  scope :newest_first, -> { order(Arel.sql("COALESCE(scheduled_at, updated_at) DESC"), id: :desc) }
+
+  # The three groups a post can be in from the owner's point of view. Kept here
+  # rather than in a controller because "needs you" is a real idea about a post,
+  # not a filter tab: a draft with no date is invisible on a calendar, and a
+  # post that half went out needs somebody to decide what happens next.
+  NEEDS_YOU = %w[draft failed partially_published].freeze
+  IN_FLIGHT = %w[awaiting_approval approved scheduled publishing].freeze
+  SETTLED = %w[published reminded cancelled].freeze
+
+  scope :needs_you, -> { where(status: NEEDS_YOU) }
+  scope :in_flight, -> { where(status: IN_FLIGHT) }
+  scope :settled, -> { where(status: SETTLED) }
+
+  # Caption search. ILIKE rather than a full-text index: a workspace has
+  # hundreds of posts, not millions, and an index would be a promise about
+  # scale nothing here needs yet.
+  scope :matching, lambda { |term|
+    next all if term.blank?
+
+    where("posts.caption ILIKE :q OR posts.hashtags::text ILIKE :q", q: "%#{sanitize_sql_like(term.to_s.strip)}%")
+  }
   scope :for_provider, ->(provider) { joins(:post_targets).where(post_targets: { provider: provider }).distinct }
 
   validates :caption, length: { maximum: 5_000 }, allow_blank: true
