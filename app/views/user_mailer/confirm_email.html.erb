@@ -1,0 +1,29 @@
+<div style="font-family: -apple-system, Segoe UI, sans-serif; color: #485064; line-height: 1.6;">
+  <p style="font-size: 20px; color: #22113A; margin: 0 0 16px;">
+    <%= @changing ? "Confirm your new address" : "Confirm your address" %>
+  </p>
+
+  <% if @changing %>
+    <p>Open this to move your Prachar account to <strong><%= @email %></strong>. Nothing changes until you do.</p>
+  <% else %>
+    <p>Open this to confirm that you can read <strong><%= @email %></strong>.</p>
+  <% end %>
+
+  <p style="margin: 28px 0;">
+    <a href="<%= @url %>"
+       style="background:#341044; color:#FFFDF9; padding:12px 24px; border-radius:8px; text-decoration:none; font-weight:500;">
+      Confirm this address
+    </a>
+  </p>
+
+  <%#
+    Says why it matters rather than only asking. This address is where a
+    password reset goes, and an account with a mistyped one has no way back in.
+  %>
+  <p style="font-size: 14px; color: #6E7385;">
+    This matters because it is where we send a link if you ever forget your password.
+    An address nobody can read means no way back into your account.
+  </p>
+
+  <p style="font-size: 14px; color: #6E7385;">This link works once, and for three days.</p>
+</div>

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_26_090000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_26_110000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "citext"
   enable_extension "pg_catalog.plpgsql"
@@ -298,6 +298,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_26_090000) do
     t.check_constraint "media_format::text = ANY (ARRAY['image'::character varying::text, 'video'::character varying::text])", name: "creative_requests_media_format_is_known"
     t.check_constraint "status::text = ANY (ARRAY['queued'::character varying::text, 'generating'::character varying::text, 'ready'::character varying::text, 'partially_ready'::character varying::text, 'failed'::character varying::text, 'cancelled'::character varying::text])", name: "creative_requests_status_is_known"
     t.check_constraint "variant_count >= 1 AND variant_count <= 3", name: "creative_requests_variant_count_in_range"
+  end
+
+  create_table "email_verifications", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "email", null: false
+    t.datetime "expires_at", null: false
+    t.string "purpose", null: false
+    t.string "requested_ip"
+    t.string "token_digest", null: false
+    t.datetime "updated_at", null: false
+    t.datetime "used_at"
+    t.bigint "user_id", null: false
+    t.index ["token_digest"], name: "index_email_verifications_on_token_digest", unique: true
+    t.index ["user_id", "purpose", "created_at"], name: "idx_on_user_id_purpose_created_at_9379f99d57"
+    t.index ["user_id"], name: "index_email_verifications_on_user_id"
+    t.check_constraint "purpose::text = ANY (ARRAY['signup'::character varying, 'change'::character varying]::text[])", name: "email_verifications_purpose_is_known"
   end
 
   create_table "media_assets", force: :cascade do |t|
@@ -862,6 +878,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_26_090000) do
   add_foreign_key "creative_requests", "templates"
   add_foreign_key "creative_requests", "users", column: "requested_by_id"
   add_foreign_key "creative_requests", "workspaces"
+  add_foreign_key "email_verifications", "users"
   add_foreign_key "media_assets", "users", column: "uploaded_by_id"
   add_foreign_key "media_assets", "workspaces"
   add_foreign_key "messages", "conversations"

@@ -1,0 +1,14 @@
+<div style="font-family: -apple-system, Segoe UI, sans-serif; color: #485064; line-height: 1.6;">
+  <p style="font-size: 20px; color: #22113A; margin: 0 0 16px;">Your address was changed</p>
+
+  <p>
+    This Prachar account no longer uses <strong><%= @previous_email %></strong>.
+    Sign in with the new address from now on.
+  </p>
+
+  <p style="background:#F8E7E9; border:1px solid #E7B9BF; border-radius:8px; padding:14px 16px;">
+    <strong style="color:#22113A;">If this was not you</strong>, tell us at
+    <%= ENV.fetch("MAIL_REPLY_TO", "support@prachar.test") %> straight away. You will not
+    be able to reset the password yourself, because that link now goes elsewhere.
+  </p>
+</div>

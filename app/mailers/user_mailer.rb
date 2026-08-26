@@ -18,6 +18,35 @@ class UserMailer < ApplicationMailer
     mail(to: @user.email, subject: "Set a new Prachar password")
   end
 
+  # Takes the token as an argument for the same reason password_reset does:
+  # deliver_later reloads the record from the database, where only the digest
+  # is kept.
+  def confirm_email(user, email, raw_token, purpose:)
+    @user = user
+    @url = email_verification_url(token: raw_token)
+    @changing = purpose.to_s == "change"
+    @email = email
+
+    mail(to: email, subject: @changing ? "Confirm your new Prachar address" : "Confirm your Prachar address")
+  end
+
+  # To the address they can still read, while the change can still be stopped.
+  def email_change_requested(user, new_email)
+    @user = user
+    @new_email = new_email
+
+    mail(to: user.email, subject: "Someone asked to change your Prachar address")
+  end
+
+  # After the fact, to the address that no longer works. If this was not them,
+  # it is the only warning that reaches somewhere they can see.
+  def email_changed(user, previous_email)
+    @user = user
+    @previous_email = previous_email
+
+    mail(to: previous_email, subject: "Your Prachar address was changed")
+  end
+
   # Sent after the fact, to whoever owns the address. If they did not do this,
   # it is the only warning they will get.
   def password_changed(user)

@@ -1,0 +1,15 @@
+<%= @changing ? "CONFIRM YOUR NEW ADDRESS" : "CONFIRM YOUR ADDRESS" %>
+
+<% if @changing -%>
+Open this to move your Prachar account to <%= @email %>. Nothing changes
+until you do.
+<% else -%>
+Open this to confirm that you can read <%= @email %>.
+<% end -%>
+
+<%= @url %>
+
+This matters because it is where we send a link if you ever forget your
+password. An address nobody can read means no way back into your account.
+
+This link works once, and for three days.

@@ -38,7 +38,18 @@ module Onboarding
           ip_address: @ip_address
         )
 
-        Result.success(Registration.new(user: user, workspace: workspace, membership: membership))
+      # Proving the address matters more than it looks: it is where a password
+      # reset goes, so an account created with a typo has no way back in. This
+      # does not block anything -- it prompts, and the security page says
+      # whether it was ever done.
+      verification = EmailVerification.issue!(user: user, email: user.email, purpose: "signup",
+                                              ip: @ip_address)
+      if verification
+        UserMailer.confirm_email(user, user.email, verification.raw_token,
+                                 purpose: "signup").deliver_later
+      end
+
+      Result.success(Registration.new(user: user, workspace: workspace, membership: membership))
       end
     rescue ActiveRecord::RecordInvalid => e
       # Returns the invalid record so the form can re-render its errors.

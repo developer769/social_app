@@ -11,6 +11,10 @@ Rails.application.routes.draw do
   get   "password/edit", to: "password_resets#edit",   as: :edit_password_reset
   patch "password",      to: "password_resets#update", as: :password_reset
 
+  # Proving an address. Reachable signed out, because somebody opening the link
+  # on their phone should not have to sign in on that phone first.
+  get "email/confirm", to: "email_verifications#show", as: :email_verification
+
   # ---- Invitations ---------------------------------------------------------
   get    "invitations/:token",         to: "invitations#show",    as: :invitation
   post   "invitations/:token/accept",  to: "invitations#accept",  as: :accept_invitation
@@ -52,10 +56,12 @@ Rails.application.routes.draw do
       get       "catalog",     to: "catalog#show",    as: :catalog
       get       "connections", to: "connections#show", as: :connections
       resource  :security,     only: %i[show update], controller: "security"
+    post   "security/email",        to: "email_address#create", as: :security_email
+    post   "security/email/resend", to: "email_address#resend", as: :security_email_resend
       delete    "security/sessions/:id", to: "security#revoke_session", as: :security_session
     # One action rather than one click per device. Somebody who has lost a
     # phone should not have to work out which row it is.
-    delete    "security/sessions", to: "security#revoke_other_sessions", as: :security_sessions
+    delete "security/sessions", to: "security#revoke_other_sessions", as: :security_sessions
       resource  :billing,      only: %i[show],        controller: "billing"
       resource  :posting_preferences, only: %i[show update], controller: "posting_preferences"
       resource  :brand_kit,    only: %i[show update], controller: "brand_kit"
@@ -144,6 +150,10 @@ Rails.application.routes.draw do
   post  "password",      to: "password_resets#create", as: :password_resets
   get   "password/edit", to: "password_resets#edit",   as: :edit_password_reset
   patch "password",      to: "password_resets#update", as: :password_reset
+
+  # Proving an address. Reachable signed out, because somebody opening the link
+  # on their phone should not have to sign in on that phone first.
+  get "email/confirm", to: "email_verifications#show", as: :email_verification
 
     resources :templates, except: %i[destroy] do
       member do
