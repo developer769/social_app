@@ -1,0 +1,92 @@
+# Production stack for a single host.
+#
+# Everything the app needs on one box: the app, the worker that runs the
+# schedules, Postgres and Redis. nginx terminates TLS in front of it (see
+# deploy/nginx.conf) and is the only thing exposed.
+#
+#   docker compose -f docker-compose.prod.yml --env-file .env.production up -d
+name: prachar
+
+x-app: &app
+  image: prachar:prod
+  build: .
+  restart: unless-stopped
+  environment:
+    RAILS_ENV: production
+    # Every secret arrives from the environment. Nothing is baked into the
+    # image, which is why the same image is safe to rebuild and re-push.
+    SECRET_KEY_BASE: ${SECRET_KEY_BASE:?set SECRET_KEY_BASE}
+    RAILS_MASTER_KEY: ${RAILS_MASTER_KEY:?set RAILS_MASTER_KEY}
+    AR_ENCRYPTION_PRIMARY_KEY: ${AR_ENCRYPTION_PRIMARY_KEY:?set AR_ENCRYPTION_PRIMARY_KEY}
+    AR_ENCRYPTION_DETERMINISTIC_KEY: ${AR_ENCRYPTION_DETERMINISTIC_KEY:?set AR_ENCRYPTION_DETERMINISTIC_KEY}
+    AR_ENCRYPTION_KEY_DERIVATION_SALT: ${AR_ENCRYPTION_KEY_DERIVATION_SALT:?set AR_ENCRYPTION_KEY_DERIVATION_SALT}
+    DATABASE_URL: postgres://prachar:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@db:5432/prachar_production
+    REDIS_URL: redis://redis:6379/0
+    APP_HOST: ${APP_HOST:?set APP_HOST}
+    APP_HOSTS: ${APP_HOSTS:?set APP_HOSTS}
+    MAIL_FROM: ${MAIL_FROM}
+    MAIL_REPLY_TO: ${MAIL_REPLY_TO}
+    SMTP_ADDRESS: ${SMTP_ADDRESS}
+    SMTP_PORT: ${SMTP_PORT:-587}
+    SMTP_USERNAME: ${SMTP_USERNAME}
+    SMTP_PASSWORD: ${SMTP_PASSWORD}
+  depends_on:
+    db: { condition: service_healthy }
+    redis: { condition: service_healthy }
+  volumes:
+    # Uploaded and generated pictures. Active Storage writes to local disk, so
+    # without this every picture disappears on the next deploy.
+    - storage:/rails/storage
+
+services:
+  web:
+    <<: *app
+    # Bound to localhost only. nginx is the only thing the internet talks to.
+    ports: [ "127.0.0.1:3000:80" ]
+    healthcheck:
+      test: [ "CMD", "curl", "-fsS", "http://localhost/up" ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  worker:
+    <<: *app
+    ports: []
+    command: bundle exec sidekiq
+    healthcheck:
+      disable: true
+
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: prachar
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_DB: prachar_production
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U prachar" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    # Sidekiq's queue lives here, so it is persisted: losing it loses every
+    # scheduled job that has not run yet.
+    command: redis-server --appendonly yes
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:
+  redisdata:
+  storage:

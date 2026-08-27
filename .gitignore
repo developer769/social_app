@@ -39,3 +39,4 @@
 
 # Screenshots taken by bin/screenshot during development.
 /screenshots/
+.env.production
