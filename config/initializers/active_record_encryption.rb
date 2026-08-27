@@ -26,7 +26,21 @@ Rails.application.configure do
     Rails.application.credentials.dig(:active_record_encryption, :key_derivation_salt) ||
     (Rails.env.local? ? DEVELOPMENT_ENCRYPTION_KEYS[:key_derivation_salt] : nil)
 
-  if config.active_record.encryption.primary_key.blank?
+  # Compiling assets is not booting the application.
+  #
+  # The production image builds without credentials on purpose -- that is what
+  # SECRET_KEY_BASE_DUMMY signals, and Rails' own Dockerfile sets it for exactly
+  # this step. Raising here made the image impossible to build at all, while
+  # protecting nothing: no token is read or written during precompilation.
+  #
+  # The guarantee that matters is unchanged. A container that starts without
+  # real keys still refuses, because this initializer runs again when it boots
+  # and SECRET_KEY_BASE_DUMMY is not set then. Anyone setting it in production
+  # to get past this would also be running with a throwaway secret_key_base,
+  # which breaks every session on the first request.
+  building_assets = ENV["SECRET_KEY_BASE_DUMMY"].present?
+
+  if config.active_record.encryption.primary_key.blank? && !building_assets
     raise "Active Record Encryption keys are missing. Set AR_ENCRYPTION_PRIMARY_KEY, " \
           "AR_ENCRYPTION_DETERMINISTIC_KEY and AR_ENCRYPTION_KEY_DERIVATION_SALT, " \
           "or add them to credentials under active_record_encryption."

@@ -25,16 +25,29 @@ Rails.application.configure do
   config.active_storage.service = :local
 
   # Assume all access to the app is happening through a SSL-terminating reverse proxy.
-  # config.assume_ssl = true
+  # Terminated at the proxy in front of the app, so Rails is told the original
+  # request was HTTPS -- without this every generated URL comes out as http.
+  config.assume_ssl = true
 
   # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
-  # config.force_ssl = true
+  # Redirects http to https and sets HSTS. A session cookie travelling in the
+  # clear once is enough to lose an account.
+  config.force_ssl = true
 
   # Skip http-to-https redirect for the default health check endpoint.
   # config.ssl_options = { redirect: { exclude: ->(request) { request.path == "/up" } } }
 
   # Log to STDOUT with the current request id as a default log tag.
   config.log_tags = [ :request_id ]
+
+  # Only the hostnames this app is actually served on. Rails refuses anything
+  # else, which stops a Host header being used to poison a generated link --
+  # including the password reset and email confirmation links, which are
+  # credentials.
+  config.hosts = ENV.fetch("APP_HOSTS", "").split(",").map(&:strip).reject(&:empty?)
+  config.hosts << /.*\.internal\z/ if config.hosts.any?
+  # The load balancer's health check arrives without a matching Host header.
+  config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
   config.logger   = ActiveSupport::TaggedLogging.logger(STDOUT)
 
   # Change to "debug" to log everything (including potentially personally-identifiable information!).
@@ -47,7 +60,14 @@ Rails.application.configure do
   config.active_support.report_deprecations = false
 
   # Replace the default in-process memory cache store with a durable alternative.
-  # config.cache_store = :mem_cache_store
+  # Redis, which is already required for Sidekiq. The default file store does
+  # not survive a redeploy and is not shared between containers.
+  config.cache_store = :redis_cache_store, {
+    url: ENV.fetch("REDIS_URL", "redis://redis:6379/1"),
+    error_handler: ->(method:, returning:, exception:) {
+      Rails.logger.warn(message: "cache unavailable", method: method, error: exception.class.name)
+    }
+  }
 
   # Replace the default in-process and non-durable queuing backend for Active Job.
   # config.active_job.queue_adapter = :resque
