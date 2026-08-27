@@ -9,6 +9,33 @@ set -euo pipefail
 APP_DIR="/opt/prachar"
 DOMAIN="${APP_HOST:-prachar.dcrayons.app}"
 
+# Checked before anything is installed. Discovering a missing secret after
+# several minutes of apt is a waste of the one thing a deploy is short of.
+echo "==> checking secrets"
+if [ ! -f "$APP_DIR/.env.production" ]; then
+  echo "MISSING $APP_DIR/.env.production -- copy .env.production.example and fill it in." >&2
+  exit 1
+fi
+
+missing=""
+for key in SECRET_KEY_BASE RAILS_MASTER_KEY AR_ENCRYPTION_PRIMARY_KEY            AR_ENCRYPTION_DETERMINISTIC_KEY AR_ENCRYPTION_KEY_DERIVATION_SALT            POSTGRES_PASSWORD APP_HOST APP_HOSTS; do
+  value=$(grep -E "^${key}=" "$APP_DIR/.env.production" | cut -d= -f2- | tr -d '"'"'"'" ' || true)
+  [ -z "$value" ] && missing="$missing $key"
+done
+
+if [ -n "$missing" ]; then
+  echo "These are empty in .env.production:$missing" >&2
+  echo "Generate the secrets with: openssl rand -hex 64  (and -hex 16 for each AR_ENCRYPTION_*)" >&2
+  exit 1
+fi
+
+# Mail is not fatal, but a deploy without it has a password reset that
+# generates a link and never delivers it.
+if ! grep -qE "^SMTP_ADDRESS=.+" "$APP_DIR/.env.production"; then
+  echo "    WARNING: SMTP_ADDRESS is empty. Password resets and email confirmations"
+  echo "             will be generated but never delivered."
+fi
+
 echo "==> Docker"
 if ! command -v docker >/dev/null 2>&1; then
   curl -fsSL https://get.docker.com | sh
@@ -17,12 +44,6 @@ fi
 echo "==> nginx and certbot"
 apt-get update -qq
 apt-get install -y -qq nginx certbot python3-certbot-nginx >/dev/null
-
-echo "==> checking secrets"
-if [ ! -f "$APP_DIR/.env.production" ]; then
-  echo "MISSING $APP_DIR/.env.production -- copy .env.production.example and fill it in." >&2
-  exit 1
-fi
 
 echo "==> building and starting the stack"
 cd "$APP_DIR"
