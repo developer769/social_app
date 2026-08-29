@@ -5,6 +5,15 @@ require "rails_helper"
 # card is rendered, carries the right detail, and is reachable by something
 # other than a mouse.
 RSpec.describe "The calendar preview" do
+  include ActiveSupport::Testing::TimeHelpers
+
+  # The month and week views only show what falls inside them, so a post
+  # scheduled "three days from now" disappears from both whenever the suite
+  # runs near the end of a month -- which is exactly how this first failed.
+  # Frozen to a Wednesday in mid-September, with posts a day later: same week,
+  # same month, whatever day the suite actually runs.
+  around { |example| travel_to(Time.find_zone("Asia/Kolkata").local(2026, 9, 16, 9, 0)) { example.run } }
+
   let(:owner) { create(:user) }
   let(:workspace) { create(:workspace, owner_user: owner, timezone: "Asia/Kolkata") }
   let(:account) { create(:social_account, workspace: workspace, provider: "instagram") }
@@ -20,7 +29,7 @@ RSpec.describe "The calendar preview" do
 
   def scheduled_post(**attrs)
     record = create(:post, workspace: workspace, subject: product,
-                           scheduled_at: 3.days.from_now, scheduled_timezone: "Asia/Kolkata",
+                           scheduled_at: 1.day.from_now, scheduled_timezone: "Asia/Kolkata",
                            **attrs)
     create(:post_target, post: record, social_account: account)
     record.update_columns(status: "scheduled")
@@ -139,7 +148,7 @@ RSpec.describe "The calendar preview" do
   it "shows nothing from another workspace" do
     other = create(:workspace)
     theirs = create(:post, workspace: other, caption: "Somebody else's post",
-                           scheduled_at: 3.days.from_now, scheduled_timezone: "Asia/Kolkata")
+                           scheduled_at: 1.day.from_now, scheduled_timezone: "Asia/Kolkata")
     theirs.update_columns(status: "scheduled")
 
     get workspace_calendar_path(**slug)

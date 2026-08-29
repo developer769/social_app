@@ -1,0 +1,21 @@
+# The details a privacy policy and terms of service must name.
+#
+# These are legal facts about the company, not preferences, and every one of
+# them appears verbatim in documents that Meta's reviewers and India's DPDP
+# Act both require to be accurate. Fill them in before publishing.
+#
+# Anything left as CHANGE_ME renders as a visible warning on the page rather
+# than silently shipping a placeholder into a legal document.
+shared:
+  entity_name: "CHANGE_ME Private Limited"
+  trading_name: "Prachar"
+  registered_address: "CHANGE_ME"
+  country: "India"
+  support_email: "support@dcrayons.app"
+  privacy_email: "privacy@dcrayons.app"
+  # DPDP Act 2023 requires a named person to receive complaints.
+  grievance_officer_name: "CHANGE_ME"
+  grievance_officer_email: "grievance@dcrayons.app"
+  grievance_response_days: 30
+  governing_law_city: "CHANGE_ME"
+  effective_date: "2026-08-29"

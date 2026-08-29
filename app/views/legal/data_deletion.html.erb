@@ -1,0 +1,79 @@
+<% content_for :title, "Delete my data" %>
+
+<article class="legal">
+  <h1 class="font-display text-3xl font-normal text-heading sm:text-4xl">Delete my data</h1>
+  <p class="mt-2 text-sm text-muted">
+    How to remove what Prachar holds about you, and what happens when you do.
+  </p>
+
+  <h2>If you have a Prachar account</h2>
+  <p>
+    Sign in, then go to <strong>Settings &rarr; Security</strong> and choose to delete your
+    account. You will be asked for your password, because this cannot be undone.
+  </p>
+  <p>
+    If you cannot sign in, write to
+    <%= mail_to LegalDetails.fetch(:privacy_email) %> from the address on the account and
+    we will do it for you. We will confirm before deleting anything.
+  </p>
+
+  <h3>What is removed</h3>
+  <ul>
+    <li>Your name, email address, phone number and password</li>
+    <li>Your signed-in devices</li>
+    <li>Workspaces you own, including their business details, catalog, posts, pictures and connected accounts</li>
+    <li>Access tokens for connected platforms, which stop working immediately</li>
+    <li>Comments and messages collected from your connected accounts</li>
+  </ul>
+
+  <h3>What is kept, and why</h3>
+  <ul>
+    <li>
+      <strong>Records we are legally required to keep</strong>, such as invoices, for as
+      long as the law requires and no longer.
+    </li>
+    <li>
+      <strong>Workspaces you belong to but do not own</strong> are not deleted &mdash; they
+      belong to somebody else. You are removed from them and your name no longer appears.
+    </li>
+  </ul>
+  <p>
+    Deletion completes within <strong>30 days</strong>. Backups are overwritten on their own
+    schedule within that window.
+  </p>
+
+  <h2>If you connected Instagram or Facebook</h2>
+  <p>
+    Deleting your Prachar account removes our copy and revokes our access. To be certain,
+    also remove Prachar from the platform's own settings:
+  </p>
+  <ul>
+    <li><strong>Facebook</strong>: Settings &amp; Privacy &rarr; Settings &rarr; Business integrations</li>
+    <li><strong>Instagram</strong>: Settings &rarr; Website permissions &rarr; Apps and websites</li>
+  </ul>
+  <p>
+    That stops any further access even if something on our side were to fail.
+  </p>
+
+  <h2>If you messaged a business and have no Prachar account</h2>
+  <p>
+    A business using Prachar may hold your comment or message, including your name and
+    handle, because you sent it to them on a social platform. <strong>They decide what
+    happens to it, not us</strong> &mdash; we hold it on their behalf.
+  </p>
+  <p>
+    Ask the business first. If you cannot reach them, or they do not act, write to
+    <%= mail_to LegalDetails.fetch(:privacy_email) %> with enough detail to identify the
+    message. We will pass the request to them, tell you that we have, and delete our copy
+    where we are able to.
+  </p>
+
+  <h2>Complaints</h2>
+  <p>
+    If you are not satisfied, our Grievance Officer is
+    <strong><%= LegalDetails.fetch(:grievance_officer_name) %></strong> at
+    <%= mail_to LegalDetails.fetch(:grievance_officer_email) %>. We respond within
+    <%= LegalDetails.fetch(:grievance_response_days) %> days. You may then complain to the
+    Data Protection Board of India.
+  </p>
+</article>

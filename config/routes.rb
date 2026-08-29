@@ -4,6 +4,13 @@ Rails.application.routes.draw do
   post   "login",  to: "sessions#create"
   delete "logout", to: "sessions#destroy", as: :logout
 
+  # Public and unauthenticated on purpose. Platform reviewers click these
+  # before granting API access, and a customer whose message was collected has
+  # no account here at all.
+  get "privacy",       to: "legal#privacy",       as: :privacy
+  get "terms",         to: "legal#terms",         as: :terms
+  get "data-deletion", to: "legal#data_deletion", as: :data_deletion
+
   # Getting back in. Without these a forgotten password locked somebody out of
   # their own business for good.
   get   "password/new",  to: "password_resets#new",    as: :new_password_reset
@@ -143,6 +150,13 @@ Rails.application.routes.draw do
     get    "login",  to: "sessions#new",     as: :login
     post   "login",  to: "sessions#create"
     delete "logout", to: "sessions#destroy", as: :logout
+
+  # Public and unauthenticated on purpose. Platform reviewers click these
+  # before granting API access, and a customer whose message was collected has
+  # no account here at all.
+  get "privacy",       to: "legal#privacy",       as: :privacy
+  get "terms",         to: "legal#terms",         as: :terms
+  get "data-deletion", to: "legal#data_deletion", as: :data_deletion
 
   # Getting back in. Without these a forgotten password locked somebody out of
   # their own business for good.

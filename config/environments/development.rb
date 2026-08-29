@@ -16,6 +16,10 @@ Rails.application.configure do
   # any container-to-container call need it allowed.
   config.hosts << "web"
   config.hosts << /.*\.local\z/
+  # A public tunnel, so the running app can be shown to somebody who is not on
+  # this machine. Development only -- production reads its hosts from
+  # APP_HOSTS and allows nothing else.
+  config.hosts << /.*\.trycloudflare\.com\z/
   # Settings specified here will take precedence over those in config/application.rb.
 
   # Make code changes take effect immediately without server restart.

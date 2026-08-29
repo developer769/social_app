@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="<%= I18n.locale %>">
+  <head>
+    <title><%= content_for(:title) || "Prachar" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <%= render "shared/fonts" %>
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+
+  <body class="bg-background text-body antialiased">
+    <%#
+      Deliberately plain. These pages are read by people deciding whether to
+      trust the product and by reviewers checking a claim, so the priority is
+      that they are legible and printable, not that they are decorated.
+    %>
+    <header class="border-b border-border bg-surface">
+      <div class="mx-auto flex max-w-3xl items-center justify-between px-6 py-5">
+        <%= link_to root_path, class: "font-display text-xl text-heading" do %>
+          Prachar<span aria-hidden="true" class="ml-1 text-warning">&#10022;</span>
+        <% end %>
+        <nav class="flex gap-5 text-sm">
+          <%= link_to "Privacy", privacy_path, class: "text-body hover:text-heading" %>
+          <%= link_to "Terms", terms_path, class: "text-body hover:text-heading" %>
+          <%= link_to "Delete my data", data_deletion_path, class: "text-body hover:text-heading" %>
+        </nav>
+      </div>
+    </header>
+
+    <main class="mx-auto max-w-3xl px-6 py-10">
+      <%#
+        A placeholder must never reach a document somebody relies on, so an
+        unfilled legal fact is shown rather than rendered as "CHANGE_ME" in the
+        middle of a sentence.
+      %>
+      <% if LegalDetails.missing? %>
+        <div class="mb-8 rounded-card border border-danger/40 bg-danger-soft px-5 py-4">
+          <p class="text-sm font-medium text-danger">This document is not ready to publish</p>
+          <p class="mt-1.5 text-sm text-body">
+            These facts are still unset in <code>config/legal.yml</code>:
+            <span class="font-medium text-heading"><%= LegalDetails.missing_keys.join(", ") %></span>.
+            A platform reviewer will reject a policy containing placeholders, and so should you.
+          </p>
+        </div>
+      <% end %>
+
+      <%= yield %>
+    </main>
+
+    <footer class="border-t border-border bg-surface">
+      <div class="mx-auto max-w-3xl px-6 py-6 text-sm text-muted">
+        <p>
+          <%= LegalDetails.fetch(:entity_name) %>, <%= LegalDetails.fetch(:country) %>.
+          Questions: <%= mail_to LegalDetails.fetch(:privacy_email), class: "text-primary underline underline-offset-4" %>
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

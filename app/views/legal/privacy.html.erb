@@ -1,0 +1,181 @@
+<% content_for :title, "Privacy Policy" %>
+<%
+  entity = LegalDetails.fetch(:entity_name)
+  privacy_email = LegalDetails.fetch(:privacy_email)
+%>
+
+<article class="legal">
+  <h1 class="font-display text-3xl font-normal text-heading sm:text-4xl">Privacy Policy</h1>
+  <p class="mt-2 text-sm text-muted">
+    In effect from <%= l(LegalDetails.effective_on, format: :long) %>.
+    Prachar is operated by <%= entity %>.
+  </p>
+
+  <p class="mt-6">
+    This describes what Prachar collects, why, and what you can ask us to do about it.
+    It is written to be read, not to be survived. If anything here is unclear, write to
+    <%= mail_to privacy_email %> and we will explain it in plain words.
+  </p>
+
+  <h2>1. Who this covers</h2>
+  <p>
+    Two different groups, and the difference matters.
+  </p>
+  <ul>
+    <li>
+      <strong>People who use Prachar</strong> &mdash; business owners and the colleagues
+      they invite. You gave us your details directly.
+    </li>
+    <li>
+      <strong>People who contacted a business through a social platform</strong> &mdash;
+      if a Prachar customer connects their Instagram or Facebook account, we may store
+      comments and messages sent to that business, including the sender's name and handle.
+      <strong>You did not give us anything.</strong> The business you wrote to decides
+      what happens to it; we hold it on their behalf. Section 8 explains your rights.
+    </li>
+  </ul>
+
+  <h2>2. What we collect</h2>
+
+  <h3>From you, because you typed it</h3>
+  <ul>
+    <li>Your name, email address and, if you give one, your phone number</li>
+    <li>Your password, stored only as a one-way hash &mdash; we cannot read it, and nor can anyone who takes a copy of our database</li>
+    <li>Your timezone and language, so times and dates read correctly</li>
+    <li>Your business details: name, category, city, contact email and phone, website, description and logo</li>
+    <li>What you sell: product and service names, prices, descriptions and pictures</li>
+    <li>Posts you write, pictures you upload, and figures you record about your own advertising</li>
+  </ul>
+
+  <h3>Automatically, when you use the service</h3>
+  <ul>
+    <li>Your IP address and browser description, kept against each signed-in device so you can see and end sessions you do not recognise</li>
+    <li>A record of significant actions in your workspace &mdash; who connected an account, who deleted a post &mdash; with the IP address it came from</li>
+    <li>When you were last active</li>
+  </ul>
+
+  <h3>From a social platform, only if you connect one</h3>
+  <ul>
+    <li>The connected account's username, display name, profile picture and platform identifier</li>
+    <li>An access token, so we can act on your behalf. <strong>Tokens are encrypted at rest in a separate table</strong> and are never shown in the interface or written to our logs</li>
+    <li>Which permissions you granted, so the interface never offers something the platform would refuse</li>
+    <li>Comments, messages and reviews sent to your account, including the sender's name, handle and the text they wrote</li>
+  </ul>
+
+  <p>
+    <strong>We do not collect payment card details.</strong> If and when Prachar charges for
+    anything, that is handled by a payment provider and card numbers never reach our servers.
+  </p>
+
+  <h2>3. Why we collect it</h2>
+  <table>
+    <thead><tr><th>What</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>Name, email, password</td><td>To give you an account and let you sign back into it</td></tr>
+      <tr><td>Email address</td><td>To send you a link if you forget your password, to confirm the address is yours, and to tell you when a post went out or failed</td></tr>
+      <tr><td>Business details and catalog</td><td>To build content about the things you actually sell</td></tr>
+      <tr><td>IP address and browser</td><td>So you can recognise your own devices, and so we can slow down somebody guessing passwords</td></tr>
+      <tr><td>Social account tokens</td><td>To publish what you scheduled and read what people sent you</td></tr>
+      <tr><td>Comments and messages</td><td>To show you what people said to your business, in one place</td></tr>
+      <tr><td>Action records</td><td>So a change to your workspace can be explained afterwards</td></tr>
+    </tbody>
+  </table>
+
+  <h2>4. What we never do</h2>
+  <ul>
+    <li>We do not sell your data, or the data of people who message you, to anybody</li>
+    <li>We do not use your content or your customers' messages to train models</li>
+    <li>We do not post anything you did not schedule</li>
+    <li>We do not read your messages except to display them back to you</li>
+  </ul>
+
+  <h2>5. Who else sees it</h2>
+  <p>
+    Only where the service cannot work otherwise, and only what is needed:
+  </p>
+  <ul>
+    <li><strong>The social platforms you connect</strong> &mdash; we send them what you asked us to publish. Their own policies then apply to it</li>
+    <li><strong>Our hosting provider</strong> &mdash; the servers your data sits on</li>
+    <li><strong>Our email provider</strong> &mdash; receives your address and the content of mail we send you</li>
+    <li><strong>Anyone you invite into your workspace</strong> &mdash; they see everything in it. That is what an invitation means, so invite carefully</li>
+    <li><strong>A lawful authority</strong> &mdash; if we are legally required to, and we will tell you unless we are forbidden from doing so</li>
+  </ul>
+
+  <h2>6. Where it is kept, and for how long</h2>
+  <p>
+    Data is stored on servers in India. We keep it while your account exists, with these
+    exceptions:
+  </p>
+  <ul>
+    <li><strong>Sessions</strong> are deleted 30 days after they expire or are signed out</li>
+    <li><strong>Password reset links</strong> expire after two hours and can be used once</li>
+    <li><strong>Address confirmation links</strong> expire after three days</li>
+    <li><strong>Action records</strong> are kept for as long as the workspace exists, because their purpose is to explain what happened</li>
+  </ul>
+  <p>
+    When you delete your account we remove your data within 30 days, other than anything we
+    are legally required to keep. See <%= link_to "Delete my data", data_deletion_path %>.
+  </p>
+
+  <h2>7. How it is protected</h2>
+  <ul>
+    <li>Everything travels over HTTPS. We refuse plain connections</li>
+    <li>Passwords are hashed with bcrypt and cannot be reversed</li>
+    <li>Social platform tokens are encrypted at rest</li>
+    <li>Each workspace is isolated: a request for another workspace's data does not resolve, whatever address is typed</li>
+    <li>Sign-in attempts are rate limited</li>
+    <li>You can see every signed-in device and end any of them, including all at once</li>
+  </ul>
+  <p>
+    No system is perfectly secure. If we discover a breach affecting your data we will tell
+    you and the Data Protection Board of India as the law requires.
+  </p>
+
+  <h2>8. Your rights</h2>
+  <p>
+    Under India's Digital Personal Data Protection Act, 2023, you may ask us to:
+  </p>
+  <ul>
+    <li><strong>Show you</strong> what we hold about you and who we have shared it with</li>
+    <li><strong>Correct</strong> anything wrong, incomplete or out of date</li>
+    <li><strong>Erase</strong> it, where we are not required to keep it</li>
+    <li><strong>Nominate</strong> somebody to exercise these rights if you die or become incapacitated</li>
+    <li><strong>Complain</strong> to us, and then to the Data Protection Board if our answer does not satisfy you</li>
+  </ul>
+  <p>
+    Most of this you can do yourself inside the app, without asking. For anything else,
+    write to <%= mail_to privacy_email %>.
+  </p>
+
+  <h3>If you messaged a business and did not sign up for Prachar</h3>
+  <p>
+    Your message is held on behalf of the business you wrote to, and they decide what
+    happens to it. Ask them first. If you cannot reach them, write to
+    <%= mail_to privacy_email %> and we will pass your request on and tell you we have.
+  </p>
+
+  <h2>9. Children</h2>
+  <p>
+    Prachar is for businesses and is not intended for anyone under 18. We do not knowingly
+    collect data from children. If you believe a child has given us data, tell us and we
+    will delete it.
+  </p>
+
+  <h2>10. Complaints</h2>
+  <p>
+    Our Grievance Officer is <strong><%= LegalDetails.fetch(:grievance_officer_name) %></strong>,
+    reachable at <%= mail_to LegalDetails.fetch(:grievance_officer_email) %>.
+    We will respond within <%= LegalDetails.fetch(:grievance_response_days) %> days.
+  </p>
+  <p>
+    If our answer does not satisfy you, you may complain to the Data Protection Board of
+    India.
+  </p>
+
+  <h2>11. Changes</h2>
+  <p>
+    If we change something that matters, we will email you before it takes effect rather
+    than quietly updating this page. The date at the top always tells you which version
+    you are reading.
+  </p>
+</article>
