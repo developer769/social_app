@@ -42,8 +42,8 @@ if ! command -v docker >/dev/null 2>&1; then
 fi
 
 echo "==> nginx and certbot"
-apt-get update -qq
-apt-get install -y -qq nginx certbot python3-certbot-nginx >/dev/null
+apt-get -o DPkg::Lock::Timeout=300 update -qq
+apt-get -o DPkg::Lock::Timeout=300 install -y -qq nginx certbot python3-certbot-nginx >/dev/null
 
 echo "==> building and starting the stack"
 cd "$APP_DIR"
@@ -51,7 +51,7 @@ docker compose -f docker-compose.prod.yml --env-file .env.production up -d --bui
 
 echo "==> waiting for the app"
 for i in $(seq 1 40); do
-  if curl -fsS -o /dev/null http://127.0.0.1:3000/up; then echo "    up"; break; fi
+  if curl -fsS -o /dev/null http://127.0.0.1:3001/up; then echo "    up"; break; fi
   sleep 3
 done
 
@@ -68,7 +68,7 @@ mkdir -p /var/www/certbot
 # plain http first, get the certificate, then enable the full config.
 if [ ! -d "/etc/letsencrypt/live/$DOMAIN" ]; then
   echo "==> certificate for $DOMAIN"
-  printf 'server {\n listen 80;\n server_name %s;\n location /.well-known/acme-challenge/ { root /var/www/certbot; }\n location / { proxy_pass http://127.0.0.1:3000; proxy_set_header Host $host; }\n}\n' "$DOMAIN" \
+  printf 'server {\n listen 80;\n server_name %s;\n location /.well-known/acme-challenge/ { root /var/www/certbot; }\n location / { proxy_pass http://127.0.0.1:3001; proxy_set_header Host $host; }\n}\n' "$DOMAIN" \
     > /etc/nginx/sites-available/prachar
   nginx -t && systemctl reload nginx
   certbot certonly --webroot -w /var/www/certbot -d "$DOMAIN" --agree-tos --register-unsafely-without-email --non-interactive

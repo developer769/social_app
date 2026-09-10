@@ -72,21 +72,41 @@ Rails.application.configure do
   # Replace the default in-process and non-durable queuing backend for Active Job.
   # config.active_job.queue_adapter = :resque
 
-  # Ignore bad email addresses and do not raise email delivery errors.
-  # Set this to true and configure the email server for immediate delivery to raise delivery errors.
-  # config.action_mailer.raise_delivery_errors = false
+  # Mail. Password reset and email confirmation links are credentials, so both
+  # halves of sending one come from the environment: the host the link points
+  # at, and the server that delivers it. A link built with the wrong host is a
+  # reset nobody can complete, and one that is never delivered is worse than
+  # not offering the feature at all.
+  #
+  # APP_HOST falls back instead of raising because this file is also loaded by
+  # `assets:precompile` during the image build, where no host is set and none
+  # is needed. deploy/install.sh refuses to deploy while APP_HOST is empty.
+  config.action_mailer.default_url_options = {
+    host: ENV.fetch("APP_HOST", "localhost"), protocol: "https"
+  }
 
-  # Set host to be used by links generated in mailer templates.
-  config.action_mailer.default_url_options = { host: "example.com" }
-
-  # Specify outgoing SMTP server. Remember to add smtp/* credentials via bin/rails credentials:edit.
-  # config.action_mailer.smtp_settings = {
-  #   user_name: Rails.application.credentials.dig(:smtp, :user_name),
-  #   password: Rails.application.credentials.dig(:smtp, :password),
-  #   address: "smtp.example.com",
-  #   port: 587,
-  #   authentication: :plain
-  # }
+  if ENV["SMTP_ADDRESS"].present?
+    config.action_mailer.delivery_method = :smtp
+    config.action_mailer.perform_deliveries = true
+    # Every mailer is called with deliver_later, so a delivery failure raises
+    # inside the Sidekiq worker, where it is retried and logged -- not in the
+    # request, where it would turn a failed send into a failed page.
+    config.action_mailer.raise_delivery_errors = true
+    config.action_mailer.smtp_settings = {
+      address:              ENV.fetch("SMTP_ADDRESS"),
+      port:                 ENV.fetch("SMTP_PORT", 587).to_i,
+      user_name:            ENV["SMTP_USERNAME"].presence,
+      password:             ENV["SMTP_PASSWORD"].presence,
+      authentication:       :plain,
+      enable_starttls_auto: true
+    }
+  else
+    # No SMTP server configured. The Rails default would attempt localhost:25
+    # and raise on every send; going nowhere quietly is no worse and keeps the
+    # worker's retry queue from filling with mail that can never leave.
+    config.action_mailer.delivery_method = :test
+    config.action_mailer.perform_deliveries = false
+  end
 
   # Enable locale fallbacks for I18n (makes lookups for any locale fall back to
   # the I18n.default_locale when a translation cannot be found).
