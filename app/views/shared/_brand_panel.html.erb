@@ -1,21 +1,46 @@
-<aside class="relative hidden flex-col justify-between overflow-hidden bg-surface px-12 py-14 lg:flex">
-  <%= render "shared/wordmark", classes: "text-2xl" %>
+<%#
+  The brand half of the sign-in and sign-up screens.
 
-  <div class="max-w-md">
-    <h2 class="font-display text-5xl leading-[1.08] font-normal text-heading">
+  Dark on purpose. Navy is in the palette but had no surface of its own, and
+  the magenta and aqua only reach full strength against it -- on the near-white
+  ground they have to be dropped to tints. It also gives the form half of the
+  screen something to sit against.
+
+  The canvas behind this is decoration and nothing depends on it: it is
+  aria-hidden, it carries no content, and when it fails to load the gradient
+  underneath is already the finished panel.
+%>
+<aside data-controller="brand-scene"
+       class="brand-sky relative hidden flex-col justify-between overflow-hidden px-12 py-14 lg:flex">
+
+  <canvas data-brand-scene-target="canvas"
+          aria-hidden="true"
+          class="pointer-events-none absolute inset-0 block h-full w-full"></canvas>
+
+  <%# Darkens the left edge where the words are, without flattening the scene. %>
+  <div aria-hidden="true" class="brand-sky-veil pointer-events-none absolute inset-0"></div>
+
+  <div class="relative">
+    <%= render "shared/wordmark", classes: "text-2xl", tone: :light %>
+  </div>
+
+  <div class="auth-enter-2 relative max-w-md">
+    <h2 class="font-display text-5xl leading-[1.08] font-normal text-white">
       Every post.<br />
       Every story.<br />
-      <em class="text-primary">Stronger brand.</em>
+      <%# Pink Lavender, the sign-in palette's one accent -- 7.3:1 on the
+          Space Cadet ground. Decorative-adjacent but it passes as text. %>
+      <em class="text-[#CEB5D4]">Stronger brand.</em>
     </h2>
-    <p class="mt-6 text-base text-body">
+    <p class="mt-6 text-base text-white/75">
       Manage your content, plan with ease, and grow your brand &mdash; beautifully.
     </p>
   </div>
 
-  <div class="max-w-xs rounded-card border border-border bg-gold-tint p-6">
+  <div class="auth-enter-3 relative max-w-xs rounded-card border border-white/15 bg-white/[0.07] p-6 backdrop-blur-sm">
     <span aria-hidden="true" class="text-lg text-accent">&#10022;</span>
-    <p class="mt-2 font-display text-lg text-heading">All your brand, beautifully managed.</p>
-    <p class="mt-2 text-sm text-body">
+    <p class="mt-2 font-display text-lg text-white">All your brand, beautifully managed.</p>
+    <p class="mt-2 text-sm text-white/70">
       Plan content, engage your audience, and track growth &mdash; all in one place.
     </p>
   </div>

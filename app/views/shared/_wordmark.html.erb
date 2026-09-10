@@ -1,3 +1,10 @@
-<span class="inline-flex items-baseline gap-0.5 font-display font-normal text-heading <%= local_assigns[:classes] %>">
+<%#
+  tone: :light draws the wordmark for the dark sign-in panel. Passing a colour
+  through `classes` would not work -- both it and text-heading are utilities,
+  so which one wins is decided by their order in the stylesheet rather than by
+  the order they appear in the attribute.
+%>
+<% tone = local_assigns[:tone] == :light ? "text-white" : "text-heading" %>
+<span class="inline-flex items-baseline gap-0.5 font-display font-normal <%= tone %> <%= local_assigns[:classes] %>">
   Prachar<span aria-hidden="true" class="text-accent">&#10022;</span>
 </span>

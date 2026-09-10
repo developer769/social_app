@@ -10,7 +10,9 @@
     <%= javascript_importmap_tags %>
   </head>
 
-  <body class="min-h-dvh bg-background text-body antialiased">
+  <%# auth-ocean swaps the design tokens for the sign-in palette; nothing
+      outside this layout sees it. %>
+  <body class="auth-ocean min-h-dvh bg-background text-body antialiased">
     <%= yield %>
     <footer class="pb-8 text-center text-xs text-muted">
       <%= link_to "Privacy", privacy_path, class: "underline underline-offset-4 hover:text-heading" %>

@@ -173,3 +173,175 @@
   vertical-align: top;
 }
 .legal th { color: var(--color-muted); font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+
+/* ── Sign-in theme: "ocean" ──────────────────────────────────────────────
+   The auth screens carry their own five-colour palette, supplied as a swatch
+   card (2026-09-10):
+
+     Space Cadet  #102B53   ground of the dark panel; buttons and headings
+     UCLA Blue    #50698D   links, muted text, the network's links
+     Pink Lavender#CEB5D4   THE accent: core glow, brand star, emphasis
+     Cyan Azure   #4E7AB1   returning signals, interactive accents
+     Air Sup Blue #7D9FC0   nodes, strong borders
+
+   Scoped by redefining the theme's custom properties on the authentication
+   layout's body. Tailwind v4 utilities compile to var(--color-*) references,
+   so everything inside restyles itself and no other screen changes.
+
+   Measured on white:  #102B53 13.8:1   #41567A 7.3:1   #50698D 5.7:1
+   On Space Cadet:     #FFFFFF 13.8:1   #CEB5D4 7.3:1
+   Pink Lavender never carries text on light ground (2.0:1) -- decorative
+   only, the same rule the app palette applies to magenta. */
+.auth-ocean {
+  --color-background: #F6F8FB;
+  --color-surface: #FFFFFF;
+  --color-surface-sunk: #EAEFF6;
+  --color-primary: #102B53;
+  --color-primary-hover: #0B1F3D;
+  --color-primary-contrast: #FFFFFF;
+  --color-heading: #102B53;
+  --color-body: #41567A;
+  --color-muted: #50698D;
+  --color-border: #D9E1EC;
+  --color-border-strong: #7D9FC0;
+  --color-blue-soft: #E7EEF7;
+  --color-accent: #CEB5D4;
+}
+
+/* The dark half's ground. This gradient is the floor, not decoration: the
+   WebGL canvas above it is transparent and additive, so if it never loads --
+   no WebGL, a slow network, a blocked script -- the panel is still a finished
+   design rather than a black hole. */
+.brand-sky {
+  background:
+    radial-gradient(120% 85% at 32% 38%, #1E4070 0%, #14315C 45%, #0B2040 100%),
+    #102B53;
+}
+
+/* Keeps the headline legible over whatever the animation happens to be doing
+   behind it, without dimming the scene itself with a flat overlay. */
+.brand-sky-veil {
+  background: linear-gradient(100deg, rgba(16, 43, 83, 0.85) 0%, rgba(16, 43, 83, 0.48) 45%, rgba(16, 43, 83, 0) 78%);
+}
+
+/* Entrance for the auth screens: the form card rises first, then the panel's
+   words, then its quote card. CSS rather than GSAP because these elements are
+   plain HTML that must appear even if every script is blocked. */
+@keyframes auth-rise {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.auth-enter,
+.auth-enter-2,
+.auth-enter-3 { animation: auth-rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.auth-enter-2 { animation-delay: 0.14s; }
+.auth-enter-3 { animation-delay: 0.28s; }
+@media (prefers-reduced-motion: reduce) {
+  .auth-enter, .auth-enter-2, .auth-enter-3 { animation: none; }
+}
+
+/* ── Sign-in laptop ──────────────────────────────────────────────────────
+   The stage is a dark room; the laptop is drawn into the canvas and the login
+   card is transformed onto its screen by CSS3DRenderer.
+
+   Layering matters: .laptop-screen must be readable and centred with NO
+   JavaScript at all. `.is-mounted` is added by the controller only after the
+   3D scene exists, and everything 3D-specific hangs off it. Anything that
+   made the plain state unusable would turn a failed script into a locked
+   account. */
+/* The page behind the stage is dark too: any viewport-unit rounding that
+   leaves a sliver below the stage shows midnight, not a white strip. */
+body:has(.laptop-stage) {
+  background: #060F1F;
+}
+
+.laptop-stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh; /* fallback for anything that stumbles on dvh */
+  min-height: 100dvh;
+  padding: 2rem 1.5rem 4rem;
+  overflow: hidden;
+  /* Not black -- a lit room in the sign-in palette, so the laptop has
+     somewhere to be rather than floating in a void. */
+  background:
+    radial-gradient(58% 46% at 50% 44%, #21456F 0%, rgba(16, 43, 83, 0) 72%),
+    linear-gradient(168deg, #14315C 0%, #0C2143 46%, #060F1F 100%);
+}
+
+.laptop-stage-canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* Plain state: an ordinary card, floating on the dark stage. */
+.laptop-screen {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 26rem;
+  border-radius: var(--radius-card);
+  background: var(--color-background);
+  box-shadow: 0 24px 60px -20px rgba(3, 10, 24, 0.75);
+}
+.laptop-screen-inner { padding: 2.25rem 2rem; }
+
+/* Mounted state: the element is now the laptop's screen surface. CSS3D sets
+   its pixel size, so the max-width that centred it must go, and the content
+   is centred inside the screen instead. */
+.is-mounted .laptop-screen {
+  max-width: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Matches the lid's corner radius at this scale; sharp corners against the
+     rounded bezel were part of the sticker look. */
+  border-radius: 10px;
+  /* A quiet backlit panel; the earlier hard white radial read as a torch. */
+  background:
+    radial-gradient(85% 75% at 50% 40%, #FDFEFF 0%, #F2F6FB 62%, #E9EFF7 100%);
+  box-shadow: none;
+}
+.is-mounted .laptop-screen-inner {
+  /* Wide, because the screen's virtual resolution is deliberately low
+     (760px across 4.35 world units): fewer virtual pixels means every rem
+     renders larger, which is how the form stays readable from a camera
+     six units away. */
+  width: 26rem;
+  padding: 0;
+}
+
+/* After the hand-off the laptop is scenery: pushed back, softened, dimmed.
+   The blur is on the canvas, not in WebGL -- one CSS filter instead of a
+   depth-of-field render pass. */
+.is-docked .laptop-stage-canvas {
+  filter: blur(3px) brightness(0.72) saturate(0.9);
+  transition: filter 1.2s ease;
+}
+
+/* The card re-entering normal flow after its ride on the laptop. */
+.is-docked .laptop-screen {
+  animation: auth-rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .is-docked .laptop-screen { animation: none; }
+}
+
+/* The layout's footer is a sibling of the stage; over a dark room it needs
+   light text and to sit inside the frame rather than below the fold. */
+.laptop-stage + footer {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 3;
+  color: rgba(255, 255, 255, 0.55);
+}
+.laptop-stage + footer a { color: rgba(255, 255, 255, 0.7); }
+.laptop-stage + footer a:hover { color: #FFFFFF; }
