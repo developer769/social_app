@@ -27,3 +27,12 @@ session_sweep:
   class: "Sessions::SweepJob"
   queue: default
   description: "Delete sessions that can no longer be used"
+
+# Ahead of expiry, not on failure: the first thing to notice a dead token
+# would otherwise be a customer's scheduled post, and a missed slot cannot be
+# un-missed.
+token_refresh:
+  cron: "15 4 * * *"
+  class: "Connections::RefreshExpiringTokensJob"
+  queue: default
+  description: "Refresh social tokens that are close to expiring"

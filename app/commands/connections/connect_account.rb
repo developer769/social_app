@@ -5,19 +5,30 @@ module Connections
   # updates the existing row rather than creating a duplicate, which matters
   # because reconnection after token expiry is a routine event, not an error.
   class ConnectAccount < ApplicationCommand
-    def initialize(workspace:, provider:, actor:, authorization_code: nil)
+    # profile/credentials arrive already fetched when a real OAuth round trip
+    # produced them (CompleteAuthorization holds the PKCE verifier, so the
+    # exchange has to happen there). Without them this falls back to asking the
+    # adapter directly, which is the mock path.
+    def initialize(workspace:, provider:, actor:, authorization_code: nil, profile: nil, credentials: nil)
       @workspace = workspace
       @provider = provider.to_s
       @actor = actor
       @authorization_code = authorization_code
+      @profile = profile
+      @credentials = credentials
     end
 
     def call
       return Result.failure(:unknown_provider) unless SocialProvider::Catalog.keys.include?(@provider)
 
-      adapter = SocialProvider::Registry.for(@provider, workspace: @workspace)
-      profile = adapter.connect(authorization_code: @authorization_code)
-      credentials = adapter.refresh_authorization
+      if @profile && @credentials
+        profile = @profile
+        credentials = @credentials
+      else
+        adapter = SocialProvider::Registry.for(@provider, workspace: @workspace)
+        profile = adapter.connect(authorization_code: @authorization_code)
+        credentials = adapter.refresh_authorization
+      end
 
       account = nil
 

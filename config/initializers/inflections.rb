@@ -14,3 +14,12 @@
 # ActiveSupport::Inflector.inflections(:en) do |inflect|
 #   inflect.acronym "RESTful"
 # end
+
+# Zeitwerk derives a constant name from each filename, and without this it
+# expects oauth_adapter.rb to define SocialProvider::OauthAdapter. The protocol
+# is spelled OAuth everywhere it appears in its own specification, and a
+# codebase that writes it Oauth in class names and OAuth in comments is worse
+# than one that just tells the inflector.
+ActiveSupport::Inflector.inflections(:en) do |inflect|
+  inflect.acronym "OAuth"
+end

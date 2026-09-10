@@ -1,4 +1,9 @@
-<% connected = account&.connection_connected? %>
+<%
+  connected = account&.connection_connected?
+  # Real OAuth the moment this platform's credentials are present; the
+  # simulated path only while they are not. Nothing switches over by hand.
+  live = SocialProvider::OAuthConfig.configured?(provider.key)
+%>
 <article class="flex h-full flex-col rounded-card border border-border bg-surface p-5">
   <div class="flex items-start gap-3">
     <%= render PlatformBadgeComponent.new(provider: provider.key, size: :large) %>
@@ -47,10 +52,18 @@
             method: :delete,
             form: { data: { turbo_confirm: "Disconnect #{provider.name}? Scheduled posts to this account will stop." } },
             class: "h-10 w-full cursor-pointer rounded-control border border-border text-sm font-medium text-body hover:border-border-strong hover:bg-surface-sunk" %>
-    <% else %>
-      <%= button_to (account ? "Reconnect" : "Connect"),
-            workspace_social_accounts_path(workspace_slug: current_workspace.slug, provider: provider.key),
+    <% elsif live %>
+      <%# Leaves for the platform's own consent screen. %>
+      <%= button_to (account ? "Reconnect" : "Connect #{provider.name}"),
+            workspace_connection_authorize_path(workspace_slug: current_workspace.slug, provider: provider.key),
             class: "h-10 w-full cursor-pointer rounded-control bg-primary text-sm font-medium text-primary-contrast hover:bg-primary-hover" %>
+    <% else %>
+      <%= button_to (account ? "Reconnect (simulated)" : "Connect (simulated)"),
+            workspace_social_accounts_path(workspace_slug: current_workspace.slug, provider: provider.key),
+            class: "h-10 w-full cursor-pointer rounded-control border border-border text-sm font-medium text-body hover:border-border-strong hover:bg-surface-sunk" %>
+      <p class="mt-2 text-center text-xs text-muted">
+        Awaiting <%= provider.name %> API access
+      </p>
     <% end %>
   </div>
 </article>

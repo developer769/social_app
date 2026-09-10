@@ -50,6 +50,11 @@ Rails.application.routes.draw do
 
     resources :social_accounts, only: %i[create destroy], module: :connections
 
+    # Starting a real OAuth connection. POST, not GET: it mints CSRF state into
+    # the session, so it must not be reachable by following a link.
+    post "connections/:provider/authorize",
+      to: "connections/authorizations#create", as: :connection_authorize
+
     # Resumable onboarding (spec 22). /onboarding redirects to wherever the
     # owner stopped; each step has its own addressable URL.
     get "gallery",               to: "gallery/templates#index", as: :gallery
@@ -181,6 +186,11 @@ Rails.application.routes.draw do
   end
 
   get "up", to: "rails/health#show", as: :rails_health_check
+
+  # OAuth return. Deliberately outside the workspace scope: every platform
+  # requires the redirect URI to be a single fixed string registered in
+  # advance, so the workspace travels in the session instead of this path.
+  get "auth/:provider/callback", to: "connections/callbacks#show", as: :oauth_callback
 
   root to: "sessions#new"
 end

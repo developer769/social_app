@@ -9,12 +9,15 @@ module SocialProvider
 
     module_function
 
-    def for(provider_key, workspace: nil, account: nil)
+    # `credentials` is only meaningful to a real adapter, and only during the
+    # window between exchanging an authorization code and having an account row
+    # to hang it on. The mock ignores it.
+    def for(provider_key, workspace: nil, account: nil, credentials: nil)
       key = provider_key.to_s
       raise ArgumentError, "unknown provider: #{key}" unless Catalog.keys.include?(key)
 
       adapter_class = REAL_ADAPTERS[key]
-      return adapter_class.new(account: account) if adapter_class
+      return adapter_class.new(account: account, credentials: credentials) if adapter_class
 
       MockAdapter.new(key: key, workspace: workspace || account&.workspace, account: account)
     end
