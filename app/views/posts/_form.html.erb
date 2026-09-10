@@ -35,16 +35,48 @@
           </div>
         <% end %>
 
-        <label for="post_media_file"
-               class="mt-4 flex cursor-pointer flex-col items-center justify-center rounded-control border border-dashed border-border-strong bg-background px-4 py-8 text-center hover:bg-surface-sunk">
-          <span class="text-sm text-body">
-            <%= post.primary_media ? "Replace the file" : "Drag and drop, or click to choose a file" %>
-          </span>
-          <span class="mt-1 text-xs text-muted">JPG, PNG or WebP up to 15MB &middot; MP4, MOV or WebM up to 200MB</span>
-          <%= form.file_field :media_file, id: "post_media_file",
-                accept: (MediaAsset::IMAGE_CONTENT_TYPES + MediaAsset::VIDEO_CONTENT_TYPES).join(","),
-                class: "sr-only" %>
-        </label>
+        <%#
+          Progressive enhancement: without JavaScript the label still opens the
+          picker and the form still posts. The controller adds dropping, and --
+          the part that actually matters -- shows what was chosen. A hidden
+          input that reports nothing back reads as an upload box that does not
+          work, which is what it was mistaken for.
+        %>
+        <div data-controller="media-upload"
+             data-media-upload-active-class="border-primary bg-blue-soft"
+             data-media-upload-image-max-value="<%= MediaAsset::IMAGE_MAX_BYTES %>"
+             data-media-upload-video-max-value="<%= MediaAsset::VIDEO_MAX_BYTES %>"
+             data-media-upload-image-types-value="<%= MediaAsset::IMAGE_CONTENT_TYPES.to_json %>"
+             data-media-upload-video-types-value="<%= MediaAsset::VIDEO_CONTENT_TYPES.to_json %>"
+             data-action="dragenter->media-upload#dragEnter dragover->media-upload#dragOver
+                          dragleave->media-upload#dragLeave drop->media-upload#drop"
+             class="mt-4 rounded-control border border-dashed border-border-strong bg-background transition-colors">
+
+          <label for="post_media_file"
+                 class="flex cursor-pointer flex-col items-center justify-center px-4 py-8 text-center">
+            <img data-media-upload-target="preview" hidden alt=""
+                 class="mb-3 max-h-40 rounded-control border border-border object-contain" />
+
+            <span class="text-sm text-body"
+                  data-media-upload-target="prompt"
+                  data-default="<%= post.primary_media ? "Replace the file" : "Drag and drop, or click to choose a file" %>"><%=
+                  post.primary_media ? "Replace the file" : "Drag and drop, or click to choose a file" %></span>
+
+            <span class="mt-1 text-xs text-muted"
+                  data-media-upload-target="detail"
+                  data-default="JPG, PNG or WebP up to 15MB &middot; MP4, MOV or WebM up to 200MB">JPG, PNG or WebP up to 15MB &middot; MP4, MOV or WebM up to 200MB</span>
+
+            <%= form.file_field :media_file, id: "post_media_file",
+                  accept: (MediaAsset::IMAGE_CONTENT_TYPES + MediaAsset::VIDEO_CONTENT_TYPES).join(","),
+                  class: "sr-only",
+                  data: { media_upload_target: "input", action: "media-upload#selected" } %>
+          </label>
+
+          <%# Caught before the upload starts: a 200MB video rejected by the
+              server wastes the whole upload before saying so. %>
+          <p data-media-upload-target="error" hidden role="alert"
+             class="border-t border-danger/30 bg-danger-soft px-4 py-3 text-sm text-danger"></p>
+        </div>
       </section>
 
       <section class="rounded-card border border-border bg-surface p-6">
