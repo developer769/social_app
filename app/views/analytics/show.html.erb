@@ -12,7 +12,7 @@
     </p>
   </div>
 
-  <div class="flex flex-col items-start gap-2 sm:items-end">
+  <div>
     <%#
       A GET form, so the chosen range lives in the URL and can be bookmarked,
       shared or reloaded. max is the workspace's own today rather than the
@@ -34,18 +34,6 @@
       <%= f.submit "Apply",
             class: "h-10 cursor-pointer rounded-control bg-primary px-4 text-sm font-medium text-primary-contrast hover:bg-primary-hover" %>
     <% end %>
-
-    <%# The old presets, kept as shortcuts. They fill the range rather than
-        replacing it, and only light up when they describe what is shown. %>
-    <nav class="flex gap-1 text-xs">
-      <% Analytics::OverviewQuery::PERIODS.each do |days, label| %>
-        <%= link_to label.sub("Last ", ""), workspace_analytics_path(**slug, days: days),
-              class: class_names(
-                "rounded-pill px-2.5 py-1 font-medium",
-                "bg-primary text-primary-contrast" => o.preset == days,
-                "text-muted hover:bg-surface-sunk hover:text-body" => o.preset != days) %>
-      <% end %>
-    </nav>
   </div>
 </header>
 

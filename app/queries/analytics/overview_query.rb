@@ -13,7 +13,9 @@ module Analytics
   # much worse claim than "we cannot see this yet" (the measured-vs-unavailable
   # rule).
   class OverviewQuery
-    # Kept as quick shortcuts beside the date range, not as the only way to ask.
+    # No longer offered in the interface, but still honoured: a ?days=90 link
+    # shared or bookmarked while the shortcuts existed should still open the
+    # window it promised rather than quietly showing a different one.
     PERIODS = { 30 => "Last 30 days", 90 => "Last 90 days", 365 => "Last year" }.freeze
 
     # Long enough for any honest question, short enough that a typed URL cannot
@@ -56,10 +58,6 @@ module Analytics
 
     # Inclusive of both ends: 1st to 1st is one day, not zero.
     def days = (@to - @from).to_i + 1
-
-    # True only when the range is exactly one of the shortcuts ending today, so
-    # the shortcut buttons light up when they actually describe what is shown.
-    def preset = PERIODS.key?(days) && @to == @today ? days : nil
 
     def period_label
       return "today" if @from == @to && @to == @today
