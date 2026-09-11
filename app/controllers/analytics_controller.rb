@@ -2,10 +2,9 @@ class AnalyticsController < ApplicationController
   include WorkspaceScoping
 
   def show
-    @overview = Analytics::OverviewQuery.new(workspace: current_workspace, days: period)
+    @overview = Analytics::OverviewQuery.new(
+      workspace: current_workspace,
+      from: params[:from], to: params[:to], days: params[:days]
+    )
   end
-
-  private
-
-  def period = params[:days].to_i
 end

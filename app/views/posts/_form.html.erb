@@ -128,7 +128,7 @@
           <div>
             <%= form.label :scheduled_date, "Date", class: "mb-1.5 block text-sm font-medium text-heading" %>
             <%= form.date_field :scheduled_date, value: local&.to_date,
-                  min: Date.current,
+                  min: current_workspace.today,
                   class: "h-11 w-full rounded-control border border-border bg-background px-3.5 text-sm text-heading focus:border-border-strong focus:outline-none" %>
           </div>
 

@@ -3,7 +3,7 @@
 
   <div class="relative">
     <%= form.select attribute, choices,
-          { include_blank: include_blank },
+          { include_blank: include_blank, selected: selected },
           required: required,
           aria: { describedby: described_by, invalid: (invalid? ? "true" : nil) },
           class: select_classes %>

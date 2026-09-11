@@ -63,6 +63,13 @@ class Workspace < ApplicationRecord
   def name_placeholder = account_influencer? ? "@anayabakes" : "Anaya Bakes"
   def setup_title = account_influencer? ? "Creator Setup" : "Business Setup"
 
+  # The workspace's own clock, which is not the application's. config.time_zone
+  # is Asia/Kolkata, so Date.current answers for Delhi no matter where the
+  # workspace actually is -- and a date field bounded by it is a day out for
+  # anybody else. Every min/max on a date input reads from here instead.
+  def time_zone = ActiveSupport::TimeZone[timezone] || Time.zone
+  def today = time_zone.today
+
   private
 
   def assign_slug

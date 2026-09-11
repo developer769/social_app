@@ -110,7 +110,7 @@
 
         <div class="mt-4">
           <label for="starting" class="text-sm font-medium text-heading">Start from</label>
-          <%= date_field_tag :starting, @starting, min: Date.current,
+          <%= date_field_tag :starting, @starting, min: current_workspace.today,
                 data: { action: "bulk-assign#restart" },
                 class: "mt-1.5 h-10 w-full rounded-control border border-border bg-background px-3 text-sm text-heading focus:border-border-strong focus:outline-none" %>
         </div>

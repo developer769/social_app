@@ -29,7 +29,7 @@
   <div class="rounded-card border border-border bg-surface p-6">
     <div>
       <%= form.label :occurred_on, "Which day", class: "text-sm font-medium text-heading" %>
-      <%= form.date_field :occurred_on, max: Date.current,
+      <%= form.date_field :occurred_on, max: current_workspace.today,
             class: "mt-2 w-full rounded-control border border-border bg-background px-3.5 py-2.5 text-sm text-heading focus:border-border-strong focus:outline-none" %>
     </div>
 

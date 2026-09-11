@@ -49,6 +49,12 @@
         <%= render SelectFieldComponent.new(
               form: form, attribute: :timezone, label: "Time zone",
               choices: ActiveSupport::TimeZone.all.map { |zone| [zone.to_s, zone.tzinfo.identifier] },
+              # Without this the select has nothing to preselect: the form is
+              # bound to the brand profile and timezone lives on the workspace.
+              # TimeZone.all is ordered by offset, so the browser then takes the
+              # first option -- GMT-12, Baker Island -- and every date on that
+              # workspace's screens goes a day out.
+              selected: current_workspace.timezone,
               include_blank: nil) %>
       </div>
 

@@ -1,5 +1,5 @@
 class SelectFieldComponent < ApplicationComponent
-  def initialize(form:, attribute:, label:, choices:, hint: nil, required: false, include_blank: nil)
+  def initialize(form:, attribute:, label:, choices:, hint: nil, required: false, include_blank: nil, selected: nil)
     @form = form
     @attribute = attribute
     @label = label
@@ -7,9 +7,10 @@ class SelectFieldComponent < ApplicationComponent
     @hint = hint
     @required = required
     @include_blank = include_blank
+    @selected = selected
   end
 
-  attr_reader :form, :attribute, :label, :choices, :hint, :required, :include_blank
+  attr_reader :form, :attribute, :label, :choices, :hint, :required, :include_blank, :selected
 
   def errors
     form.object.respond_to?(:errors) ? Array(form.object.errors[attribute]) : []

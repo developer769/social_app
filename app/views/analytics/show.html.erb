@@ -8,19 +8,45 @@
       Analytics<span aria-hidden="true" class="ml-1 align-super text-base text-accent">&#10022;</span>
     </h1>
     <p class="mt-1.5 text-sm text-muted">
-      What Prachar has recorded for <%= current_workspace.name %>, <%= o.period_label.downcase %>.
+      What Prachar has recorded for <%= current_workspace.name %>, <%= o.period_label %>.
     </p>
   </div>
 
-  <nav class="flex gap-1 rounded-control border border-border bg-surface p-1">
-    <% Analytics::OverviewQuery::PERIODS.each do |days, label| %>
-      <%= link_to label.sub("Last ", ""), workspace_analytics_path(**slug, days: days),
-            class: class_names(
-              "rounded-control px-3 py-1.5 text-sm font-medium",
-              "bg-primary text-primary-contrast" => o.days == days,
-              "text-body hover:bg-surface-sunk" => o.days != days) %>
+  <div class="flex flex-col items-start gap-2 sm:items-end">
+    <%#
+      A GET form, so the chosen range lives in the URL and can be bookmarked,
+      shared or reloaded. max is the workspace's own today rather than the
+      application's: config.time_zone is Asia/Kolkata, and a workspace on
+      another clock would otherwise find its own today unselectable.
+    %>
+    <%= form_with url: workspace_analytics_path(**slug), method: :get,
+                  class: "flex flex-wrap items-end gap-2" do |f| %>
+      <div>
+        <%= f.label :from, "From", class: "mb-1 block text-xs font-medium text-muted" %>
+        <%= f.date_field :from, value: o.from, max: o.today,
+              class: "h-10 rounded-control border border-border bg-surface px-3 text-sm text-heading focus:border-border-strong focus:outline-none" %>
+      </div>
+      <div>
+        <%= f.label :to, "To", class: "mb-1 block text-xs font-medium text-muted" %>
+        <%= f.date_field :to, value: o.to, max: o.today,
+              class: "h-10 rounded-control border border-border bg-surface px-3 text-sm text-heading focus:border-border-strong focus:outline-none" %>
+      </div>
+      <%= f.submit "Apply",
+            class: "h-10 cursor-pointer rounded-control bg-primary px-4 text-sm font-medium text-primary-contrast hover:bg-primary-hover" %>
     <% end %>
-  </nav>
+
+    <%# The old presets, kept as shortcuts. They fill the range rather than
+        replacing it, and only light up when they describe what is shown. %>
+    <nav class="flex gap-1 text-xs">
+      <% Analytics::OverviewQuery::PERIODS.each do |days, label| %>
+        <%= link_to label.sub("Last ", ""), workspace_analytics_path(**slug, days: days),
+              class: class_names(
+                "rounded-pill px-2.5 py-1 font-medium",
+                "bg-primary text-primary-contrast" => o.preset == days,
+                "text-muted hover:bg-surface-sunk hover:text-body" => o.preset != days) %>
+      <% end %>
+    </nav>
+  </div>
 </header>
 
 <%= render "shared/flash" %>

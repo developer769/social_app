@@ -13,27 +13,68 @@ module Analytics
   # much worse claim than "we cannot see this yet" (the measured-vs-unavailable
   # rule).
   class OverviewQuery
+    # Kept as quick shortcuts beside the date range, not as the only way to ask.
     PERIODS = { 30 => "Last 30 days", 90 => "Last 90 days", 365 => "Last year" }.freeze
+
+    # Long enough for any honest question, short enough that a typed URL cannot
+    # ask the database to group five years of posts by week.
+    MAX_SPAN_DAYS = 731
 
     Point = Struct.new(:starts_on, :count, keyword_init: true)
     PlatformRow = Struct.new(:provider, :name, :published, :not_posted, :failed, keyword_init: true)
     FailureRow = Struct.new(:reason, :count, keyword_init: true)
     SubjectRow = Struct.new(:subject, :count, keyword_init: true)
 
-    def initialize(workspace:, days: 30)
+    # Accepts either a range or one of the shortcut periods. Both end up as a
+    # pair of dates, so everything below has one thing to reason about.
+    def initialize(workspace:, from: nil, to: nil, days: nil)
       @workspace = workspace
-      @days = PERIODS.key?(days) ? days : 30
+      @zone = workspace.time_zone
+
+      # Today belongs to the workspace, not to the application. config.time_zone
+      # is Asia/Kolkata, so Date.current answers for Delhi wherever the
+      # workspace actually is -- and capping a date picker with it puts the
+      # workspace's own today out of reach.
+      @today = workspace.today
+
+      if PERIODS.key?(days.to_i)
+        @to = @today
+        @from = @today - (days.to_i - 1)
+      else
+        @to = parse_date(to) || @today
+        @from = parse_date(from) || (@to - 29)
+      end
+
+      # A range typed backwards is a slip, not a request for nothing.
+      @from, @to = @to, @from if @from > @to
+      # Nothing has happened tomorrow, so offering it only invites empty charts.
+      @to = @today if @to > @today
+      @from = @to - (MAX_SPAN_DAYS - 1) if (@to - @from).to_i >= MAX_SPAN_DAYS
     end
 
-    attr_reader :days
+    attr_reader :from, :to, :today
 
-    def period_label = PERIODS.fetch(@days)
-    def since = @since ||= @days.days.ago.beginning_of_day
-    def zone = @workspace.timezone
+    # Inclusive of both ends: 1st to 1st is one day, not zero.
+    def days = (@to - @from).to_i + 1
+
+    # True only when the range is exactly one of the shortcuts ending today, so
+    # the shortcut buttons light up when they actually describe what is shown.
+    def preset = PERIODS.key?(days) && @to == @today ? days : nil
+
+    def period_label
+      return "today" if @from == @to && @to == @today
+      return I18n.l(@from, format: :long) if @from == @to
+
+      "#{I18n.l(@from, format: :long)} to #{I18n.l(@to, format: :long)}"
+    end
+
+    def since = @since ||= @zone.parse(@from.to_s).beginning_of_day
+    def until_time = @until_time ||= @zone.parse(@to.to_s).end_of_day
+    def zone = @zone
 
     # ---- What happened -------------------------------------------------------
 
-    def posts = @posts ||= @workspace.posts.where(created_at: since..).to_a
+    def posts = @posts ||= @workspace.posts.where(created_at: since..until_time).to_a
 
     def counts
       @counts ||= {
@@ -71,7 +112,7 @@ module Analytics
     def targets
       @targets ||= PostTarget.joins(:post)
                              .where(posts: { workspace_id: @workspace.id })
-                             .where(post_targets: { created_at: since.. })
+                             .where(post_targets: { created_at: since..until_time })
                              .includes(:post).to_a
     end
 
@@ -82,12 +123,22 @@ module Analytics
     def weekly_activity
       weeks = settled.group_by { |post| (post.published_at || post.reminded_at || post.updated_at).in_time_zone(zone).beginning_of_week.to_date }
 
-      first_week = since.in_time_zone(zone).beginning_of_week.to_date
-      last_week = Time.current.in_time_zone(zone).beginning_of_week.to_date
+      first_week = @from.beginning_of_week
+      last_week = @to.beginning_of_week
 
       (first_week..last_week).step(7).map do |week|
         Point.new(starts_on: week, count: weeks.fetch(week, []).size)
       end
+    end
+
+    # A bad date in a URL is not worth an exception. Falling back to the
+    # default window shows something true rather than a 500.
+    def parse_date(value)
+      return nil if value.blank?
+
+      Date.parse(value.to_s)
+    rescue Date::Error, TypeError
+      nil
     end
 
     def target_per_week = @workspace.posting_preference&.posts_per_week
