@@ -18,8 +18,9 @@ module Onboarding
         user.save!
 
         workspace = Workspace.create!(
-          name: @dto.business_name.presence || "#{@dto.name.split.first}'s business",
-          owner_user: user
+          name: @dto.business_name.presence || default_workspace_name,
+          owner_user: user,
+          account_type: @dto.account_type
         )
 
         membership = WorkspaceMembership.create!(
@@ -54,6 +55,15 @@ module Onboarding
     rescue ActiveRecord::RecordInvalid => e
       # Returns the invalid record so the form can re-render its errors.
       Result.failure(e.record.is_a?(User) ? e.record : user)
+    end
+
+    private
+
+    # A creator who leaves the name blank should not end up with a workspace
+    # called "Anaya's business".
+    def default_workspace_name
+      first = @dto.name.to_s.split.first.presence || "My"
+      @dto.influencer? ? "#{first}'s channel" : "#{first}'s business"
     end
   end
 end

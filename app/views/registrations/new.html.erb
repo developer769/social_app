@@ -16,15 +16,51 @@
       <%= render "shared/flash" %>
       <%= render "shared/error_summary", record: @user %>
 
-      <%= form_with model: @user, url: signup_path, method: :post, scope: :user, class: "space-y-6" do |form| %>
+      <%= form_with model: @user, url: signup_path, method: :post, scope: :user, class: "space-y-6",
+              data: {
+                controller: "account-type",
+                account_type_business_value: { label: "Business name", placeholder: "Anaya Bakes", hint: "This becomes your workspace. You can rename it later." }.to_json,
+                account_type_influencer_value: { label: "Creator name", placeholder: "@anayabakes", hint: "This becomes your workspace. You can rename it later." }.to_json
+              } do |form| %>
+        <%#
+          Asked here rather than later because it changes what the product calls
+          things from this screen onwards. A creator has no "business name", and
+          being asked for one is the moment somebody decides this was not built
+          for them.
+
+          A fieldset of radios, not a pair of styled divs: arrow keys move
+          between them, the choice posts with no JavaScript, and the server
+          records it either way. The controller only re-words the field below.
+        %>
+        <fieldset class="orchid-choice">
+          <legend class="sr-only">What kind of account is this?</legend>
+
+          <% [ [ "business", "Business", "A shop, brand or service" ],
+               [ "influencer", "Influencer", "A creator or personality" ] ].each do |value, title, note| %>
+            <label class="orchid-choice-option">
+              <%= form.radio_button :account_type, value,
+                    checked: (params.dig(:user, :account_type) || "business") == value,
+                    class: "sr-only",
+                    data: { action: "account-type#change" } %>
+              <span class="orchid-choice-title"><%= title %></span>
+              <span class="orchid-choice-note"><%= note %></span>
+            </label>
+          <% end %>
+        </fieldset>
+
         <div class="orchid-row">
           <%# Visually hidden rather than absent: a placeholder disappears the
               moment somebody types, leaving a filled form with no way to tell
               what each line was for. %>
-          <%= form.label :business_name, "Business name", class: "sr-only" %>
+          <%= form.label :business_name, "Business name", class: "sr-only",
+                data: { account_type_target: "label" } %>
           <%= form.text_field :business_name, value: params.dig(:user, :business_name), required: true,
-                autofocus: true, placeholder: "Business name", class: "orchid-field" %>
+                autofocus: true, placeholder: "Business name", class: "orchid-field",
+                data: { account_type_target: "field" } %>
           <%= render "shared/orchid_icons", icon: :user %>
+          <p class="orchid-hint mt-1.5 text-xs" data-account-type-target="hint">
+            This becomes your workspace. You can rename it later.
+          </p>
         </div>
 
         <div class="orchid-row">

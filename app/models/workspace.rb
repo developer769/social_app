@@ -1,6 +1,11 @@
 class Workspace < ApplicationRecord
   ONBOARDING_STEPS = %w[business_setup catalog connections analysis health plan completed].freeze
 
+  # Who the workspace belongs to. It changes what the product calls things
+  # rather than what it can do -- both types get the same features -- so the
+  # only thing that hangs off it is language.
+  ACCOUNT_TYPES = %w[business influencer].freeze
+
   belongs_to :owner_user, class_name: "User"
 
   has_one :brand_profile, dependent: :destroy
@@ -27,6 +32,7 @@ class Workspace < ApplicationRecord
   has_many :audit_events, dependent: :nullify
 
   enum :onboarding_step, ONBOARDING_STEPS.index_by(&:itself), validate: true
+  enum :account_type, ACCOUNT_TYPES.index_by(&:itself), prefix: :account, validate: true
 
   normalizes :slug, with: ->(slug) { slug.to_s.strip.downcase }
 
@@ -49,6 +55,14 @@ class Workspace < ApplicationRecord
     owner_user_id == user&.id
   end
 
+  # One place that answers "what does this workspace call itself", so a view
+  # never has to branch on the type inline and no screen can drift out of step
+  # with the others.
+  def owner_noun = account_influencer? ? "creator" : "business"
+  def name_label = account_influencer? ? "Creator name" : "Business name"
+  def name_placeholder = account_influencer? ? "@anayabakes" : "Anaya Bakes"
+  def setup_title = account_influencer? ? "Creator Setup" : "Business Setup"
+
   private
 
   def assign_slug
@@ -62,4 +76,5 @@ class Workspace < ApplicationRecord
 
     self.slug = candidate
   end
+
 end
