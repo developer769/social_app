@@ -517,8 +517,17 @@ body:has(.auth-orchid) { background: #63537F; }
   pointer-events: none;
 }
 
-.platform-chip {
+/* The outer half of each mark: it holds the position and answers the cursor.
+   Separate from the chip because both carry a transform, and one element
+   cannot run two animations without the later overwriting the earlier. */
+.platform-mark {
   position: absolute;
+  width: var(--chip-size);
+  height: var(--chip-size);
+  will-change: transform;
+}
+
+.platform-chip {
   display: grid;
   place-items: center;
   width: var(--chip-size);
@@ -528,9 +537,9 @@ body:has(.auth-orchid) { background: #63537F; }
   opacity: var(--chip-op);
   filter: blur(var(--chip-blur));
   box-shadow:
-    0 18px 30px -12px rgba(46, 18, 58, 0.55),
-    inset 0 2px 4px rgba(255, 255, 255, 0.55),
-    inset 0 -7px 12px rgba(0, 0, 0, 0.22);
+    0 26px 44px -16px rgba(46, 18, 58, 0.6),
+    inset 0 3px 6px rgba(255, 255, 255, 0.55),
+    inset 0 -10px 18px rgba(0, 0, 0, 0.24);
   transform: rotate(var(--chip-tilt));
   animation: platform-drift-float var(--chip-dur) ease-in-out var(--chip-delay) infinite;
   will-change: transform;
@@ -547,11 +556,17 @@ body:has(.auth-orchid) { background: #63537F; }
   filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.28));
 }
 
-/* Rise, drift, and return. Rotation is carried through every keyframe because
-   the resting tilt lives in the same transform. */
+/* A wandering loop rather than a bob: the mark drifts up and right, crosses
+   left at the top of its arc, then falls back. Four stops instead of two is
+   what stops ten of these rising and sinking in unison like a metronome.
+   Rotation is carried through every keyframe because the resting tilt lives in
+   the same transform, and dropping it from one stop would snap the mark flat. */
 @keyframes platform-drift-float {
-  0%, 100% { transform: translate3d(0, 0, 0) rotate(var(--chip-tilt)); }
-  50%      { transform: translate3d(0, -22px, 0) rotate(calc(var(--chip-tilt) + 4deg)); }
+  0%   { transform: translate3d(0, 0, 0) rotate(var(--chip-tilt)); }
+  25%  { transform: translate3d(18px, -30px, 0) rotate(calc(var(--chip-tilt) + 9deg)); }
+  50%  { transform: translate3d(-10px, -52px, 0) rotate(calc(var(--chip-tilt) - 7deg)); }
+  75%  { transform: translate3d(-22px, -24px, 0) rotate(calc(var(--chip-tilt) + 5deg)); }
+  100% { transform: translate3d(0, 0, 0) rotate(var(--chip-tilt)); }
 }
 
 /* Below the breakpoint the card takes most of the screen and the marks would

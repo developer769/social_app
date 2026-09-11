@@ -16,34 +16,43 @@
 %>
 <%
   marks = [
-    { key: "instagram", shape: "circle",   top: 13, left: 7,  size: 74, blur: 0,   op: 0.85, dur: 17, delay: 0,   tilt: -8,
+    { key: "instagram", depth: 1.0, shape: "circle",   top: 11, left: 4,  size: 112, blur: 0,   op: 0.88, dur: 11, delay: 0,   tilt: -8,
       brand: "linear-gradient(140deg,#8A3AB9 0%,#E1306C 48%,#FCAF45 100%)" },
-    { key: "whatsapp",  shape: "circle",   top: 69, left: 11, size: 60, blur: 0,   op: 0.8,  dur: 21, delay: -4,  tilt: 6,
+    { key: "whatsapp", depth: 0.85,  shape: "circle",   top: 67, left: 7,  size: 92,  blur: 0,   op: 0.84, dur: 13, delay: -4,  tilt: 6,
       brand: "linear-gradient(140deg,#5CE06A 0%,#25D366 55%,#1DA851 100%)" },
-    { key: "youtube",   shape: "circle",   top: 24, left: 79, size: 66, blur: 0,   op: 0.82, dur: 19, delay: -9,  tilt: 5,
+    { key: "youtube", depth: 0.9,   shape: "circle",   top: 19, left: 80, size: 100, blur: 0,   op: 0.85, dur: 12, delay: -7,  tilt: 5,
       brand: "linear-gradient(140deg,#FF5B5B 0%,#FF0000 55%,#C40000 100%)" },
-    { key: "telegram",  shape: "circle",   top: 75, left: 83, size: 56, blur: 0.6, op: 0.72, dur: 23, delay: -2,  tilt: -5,
+    { key: "telegram", depth: 0.72,  shape: "circle",   top: 73, left: 84, size: 86,  blur: 0.4, op: 0.78, dur: 14, delay: -2,  tilt: -5,
       brand: "linear-gradient(140deg,#7EC2ED 0%,#37AEE2 55%,#1E96C8 100%)" },
-    { key: "facebook",  shape: "squircle", top: 6,  left: 66, size: 46, blur: 1.4, op: 0.55, dur: 26, delay: -13, tilt: 9,
+    { key: "facebook", depth: 0.48,  shape: "squircle", top: 3,  left: 69, size: 72,  blur: 1.0, op: 0.62, dur: 16, delay: -9,  tilt: 9,
       brand: "linear-gradient(140deg,#5B8DEF 0%,#1877F2 55%,#0E5BC4 100%)" },
-    { key: "pinterest", shape: "squircle", top: 44, left: 3,  size: 50, blur: 1.2, op: 0.6,  dur: 25, delay: -6,  tilt: -11,
+    { key: "pinterest", depth: 0.62, shape: "squircle", top: 43, left: 1,  size: 78,  blur: 0.8, op: 0.68, dur: 15, delay: -6,  tilt: -11,
       brand: "linear-gradient(140deg,#F05B6A 0%,#E60023 55%,#B3001B 100%)" },
-    { key: "twitter",   shape: "squircle", top: 87, left: 37, size: 48, blur: 1.6, op: 0.5,  dur: 28, delay: -16, tilt: 7,
+    { key: "twitter", depth: 0.5,   shape: "squircle", top: 85, left: 33, size: 74,  blur: 1.2, op: 0.58, dur: 17, delay: -12, tilt: 7,
       brand: "linear-gradient(140deg,#7FC3F5 0%,#1DA1F2 55%,#1580C4 100%)" },
-    { key: "x",         shape: "squircle", top: 9,  left: 27, size: 42, blur: 1.8, op: 0.45, dur: 30, delay: -11, tilt: -6,
+    { key: "x", depth: 0.38,         shape: "squircle", top: 5,  left: 23, size: 66,  blur: 1.3, op: 0.52, dur: 18, delay: -15, tilt: -6,
       brand: "linear-gradient(140deg,#3B3B3B 0%,#111111 60%,#000000 100%)" },
-    { key: "threads",   shape: "squircle", top: 57, left: 88, size: 46, blur: 1.4, op: 0.52, dur: 27, delay: -20, tilt: 10,
+    { key: "threads", depth: 0.44,   shape: "squircle", top: 54, left: 89, size: 70,  blur: 1.1, op: 0.56, dur: 16, delay: -18, tilt: 10,
       brand: "linear-gradient(140deg,#3B3B3B 0%,#111111 60%,#000000 100%)" },
-    { key: "snapchat",  shape: "squircle", top: 33, left: 17, size: 48, blur: 1.1, op: 0.55, dur: 32, delay: -7,  tilt: -9,
+    { key: "snapchat", depth: 0.58,  shape: "squircle", top: 29, left: 13, size: 74,  blur: 0.8, op: 0.62, dur: 19, delay: -7,  tilt: -9,
       brand: "linear-gradient(140deg,#FFF67A 0%,#FFFC00 55%,#E0D500 100%)" }
   ]
 %>
 
-<div class="platform-drift" aria-hidden="true">
+<%#
+  Two nested elements per mark, not one. The outer follows the cursor and the
+  inner drifts on its own loop; sharing a single element would mean two
+  animations writing the same transform, and the last one to run would win.
+%>
+<div class="platform-drift" data-controller="platform-drift" aria-hidden="true">
   <% marks.each do |m| %>
+    <span class="platform-mark"
+          data-platform-drift-target="mark"
+          data-depth="<%= m[:depth] %>"
+          style="top:<%= m[:top] %>%; left:<%= m[:left] %>%; --chip-size:<%= m[:size] %>px;">
     <span class="platform-chip platform-chip--<%= m[:shape] %>"
-          style="top:<%= m[:top] %>%; left:<%= m[:left] %>%;
-                 --chip-size:<%= m[:size] %>px; --chip-brand:<%= m[:brand] %>;
+          data-platform-drift-target="chip"
+          style="--chip-size:<%= m[:size] %>px; --chip-brand:<%= m[:brand] %>;
                  --chip-blur:<%= m[:blur] %>px; --chip-op:<%= m[:op] %>;
                  --chip-dur:<%= m[:dur] %>s; --chip-delay:<%= m[:delay] %>s;
                  --chip-tilt:<%= m[:tilt] %>deg;">
@@ -74,6 +83,7 @@
           <path fill="currentColor" d="M12 2.4c2.9 0 4.6 2 4.7 4.6 0 .7 0 1.3-.1 1.9.2.1.5.2.8.2.3 0 .6-.1.9-.3.2-.1.3-.1.5-.1.4 0 .8.3.8.7 0 .5-.5.8-1.2 1.1-.5.2-1 .4-1 .8 0 .2.1.4.2.6.6 1.3 1.7 2.3 2.9 2.8.4.1.6.3.6.6 0 .6-1 1-2 1.1-.2 0-.3.2-.4.5 0 .2-.1.4-.2.6-.1.2-.2.3-.5.3h-.3c-.3 0-.6-.1-1-.1-.3 0-.6 0-.9.1-.8.1-1.4.7-2.1 1.2-.5.3-1.1.6-1.7.6s-1.2-.3-1.7-.6c-.7-.5-1.3-1.1-2.1-1.2-.3-.1-.6-.1-.9-.1-.4 0-.7.1-1 .1h-.3c-.3 0-.4-.1-.5-.3-.1-.2-.2-.4-.2-.6-.1-.3-.2-.5-.4-.5-1-.1-2-.5-2-1.1 0-.3.2-.5.6-.6 1.2-.5 2.3-1.5 2.9-2.8.1-.2.2-.4.2-.6 0-.4-.5-.6-1-.8-.7-.3-1.2-.6-1.2-1.1 0-.4.4-.7.8-.7.2 0 .3 0 .5.1.3.2.6.3.9.3.3 0 .6-.1.8-.2-.1-.6-.1-1.2-.1-1.9.1-2.6 1.8-4.6 4.7-4.6z"/>
         <% end %>
       </svg>
+    </span>
     </span>
   <% end %>
 </div>
