@@ -29,11 +29,24 @@
           <%= render "shared/orchid_icons", icon: :mail %>
         </div>
 
-        <div class="orchid-row">
+        <div class="orchid-row" data-controller="password-visibility">
           <%= form.label :password, "Password", class: "sr-only" %>
           <%= form.password_field :password, required: true, autocomplete: "current-password",
-                placeholder: "Password", class: "orchid-field" %>
-          <%= render "shared/orchid_icons", icon: :lock %>
+                placeholder: "Password", class: "orchid-field",
+                data: { password_visibility_target: "field" } %>
+          <%# The padlock reads as a show/hide control whether or not it is one,
+              so it is one. Rendered decorative first and swapped for the button
+              by the controller, so with no JavaScript the line looks exactly as
+              it did rather than offering a button that cannot work. %>
+          <span data-password-visibility-target="decor"><%= render "shared/orchid_icons", icon: :lock %></span>
+          <button type="button" hidden
+                  class="orchid-toggle"
+                  data-password-visibility-target="button"
+                  data-action="password-visibility#toggle"
+                  aria-label="Show password">
+            <span data-password-visibility-target="eye"><%= render "shared/orchid_icons", icon: :eye %></span>
+            <span data-password-visibility-target="eyeOff" hidden><%= render "shared/orchid_icons", icon: :eye_off %></span>
+          </button>
         </div>
 
         <%# Without this a forgotten password locked somebody out for good. %>

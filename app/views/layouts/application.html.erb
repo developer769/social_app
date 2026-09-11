@@ -10,7 +10,10 @@
     <%= javascript_importmap_tags %>
   </head>
 
-  <body class="min-h-dvh bg-background text-body antialiased">
+  <%# app-orchid redefines the design tokens for the signed-in application.
+      Every screen is built from those tokens, so this one class carries the
+      whole palette -- and removing it puts the original one back. %>
+  <body class="app-orchid min-h-dvh bg-background text-body antialiased">
     <a href="#main-content"
        class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-control focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:text-primary-contrast">
       Skip to content
