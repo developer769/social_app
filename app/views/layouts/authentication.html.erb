@@ -4,6 +4,10 @@
     <title><%= content_for(:title) || "Prachar" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <%= render "shared/fonts" %>
+    <%# Turbo 8 reads this and animates between auth screens, so the card and
+        the art panel slide to swap sides on the way to sign-up instead of
+        redrawing. Browsers without it simply navigate; nothing depends on it. %>
+    <meta name="view-transition" content="same-origin" />
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>

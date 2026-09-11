@@ -345,6 +345,44 @@ body:has(.auth-orchid) { background: #63537F; }
 }
 @media (min-width: 1024px) {
   .orchid-layout { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); }
+
+  /* Sign-up mirrors sign-in: the form takes the right, the art takes the left.
+     Explicit grid placement rather than `order`, because a view transition
+     animates the boxes the grid actually assigns. */
+  .orchid-layout--mirrored { grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); }
+  .orchid-layout--mirrored .orchid-card { grid-column: 2; grid-row: 1; }
+  .orchid-layout--mirrored .orchid-art  { grid-column: 1; grid-row: 1; }
+}
+
+/* Naming an element hands it to the browser to morph across a navigation: it
+   measures where the card was, where it lands, and tweens between the two.
+   That is the whole slide -- there is no animation code. */
+.orchid-card { view-transition-name: auth-card; }
+.orchid-art  { view-transition-name: auth-art; }
+
+::view-transition-group(auth-card),
+::view-transition-group(auth-art) {
+  animation-duration: 0.62s;
+  animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+}
+/* The cards hold different fields on each screen, so their contents cross-fade
+   while the boxes travel. Without this the old form is visible sliding into
+   place behind the new one. */
+::view-transition-old(auth-card),
+::view-transition-new(auth-card) {
+  animation-duration: 0.42s;
+  height: 100%;
+  object-fit: none;
+  object-position: top center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(auth-card),
+  ::view-transition-group(auth-art),
+  ::view-transition-old(auth-card),
+  ::view-transition-new(auth-card),
+  ::view-transition-old(root),
+  ::view-transition-new(root) { animation: none !important; }
 }
 
 /* The card. Frosted, with a lit top edge -- that highlight is what reads as a
