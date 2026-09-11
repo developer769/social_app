@@ -1,5 +1,7 @@
 module Onboarding
   class CatalogController < BaseController
+    before_action :skip_step_not_in_flow
+
     TABS = %w[products services].freeze
 
     before_action :set_collections
@@ -23,10 +25,10 @@ module Onboarding
     def complete
       current_workspace.update!(
         onboarding_step: OnboardingFlow.furthest(
-          current_workspace.onboarding_step, OnboardingFlow.next_key(current_step_key)
+          current_workspace.onboarding_step, OnboardingFlow.next_key(current_step_key, current_workspace.account_type), current_workspace.account_type
         )
       )
-      redirect_to OnboardingFlow.path_for(OnboardingFlow.next_key(current_step_key), current_workspace)
+      redirect_to OnboardingFlow.path_for(OnboardingFlow.next_key(current_step_key, current_workspace.account_type), current_workspace)
     end
 
     private

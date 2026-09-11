@@ -23,7 +23,11 @@ module Onboarding
         workspace = Workspace.create!(
           name: @dto.business_name.presence || default_workspace_name,
           owner_user: user,
-          account_type: @dto.account_type
+          account_type: @dto.account_type,
+          # The column defaults to business_setup, which a creator's journey
+          # does not contain. Starting them there would open onboarding on a
+          # form the rest of their flow never comes back to.
+          onboarding_step: OnboardingFlow.first_key(@dto.account_type)
         )
 
         membership = WorkspaceMembership.create!(

@@ -28,8 +28,8 @@
       <div class="min-w-0">
         <h2 class="font-display text-xl font-normal">Finish setting up <%= current_workspace.name %></h2>
         <p class="mt-1.5 max-w-prose text-sm text-body">
-          You are on step <%= OnboardingFlow.index_of(current_workspace.onboarding_step).to_i + 1 %>
-          of <%= OnboardingFlow.keys.size %>:
+          You are on step <%= OnboardingFlow.index_of(current_workspace.onboarding_step, current_workspace.account_type).to_i + 1 %>
+          of <%= OnboardingFlow.keys(current_workspace.account_type).size %>:
           <span class="font-medium text-heading"><%= OnboardingFlow.step(current_workspace.onboarding_step)&.dig(:label) %></span>.
           Prachar writes better content once it knows your brand and what you sell.
         </p>

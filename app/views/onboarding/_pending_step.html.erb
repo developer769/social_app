@@ -14,7 +14,7 @@
   <p class="mx-auto mt-2 max-w-md text-sm text-body"><%= summary %></p>
 
   <div class="mt-7 flex flex-wrap items-center justify-center gap-3">
-    <% if previous_key = OnboardingFlow.previous_key(current_step_key) %>
+    <% if previous_key = OnboardingFlow.previous_key(current_step_key, current_workspace.account_type) %>
       <%= link_to "Back", OnboardingFlow.path_for(previous_key, current_workspace),
             class: "h-11 rounded-control border border-border px-5 text-sm font-medium leading-[2.75rem] text-body hover:bg-surface-sunk" %>
     <% end %>

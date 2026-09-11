@@ -1,5 +1,7 @@
 module Onboarding
   class BusinessController < BaseController
+    before_action :skip_step_not_in_flow
+
     def show
       @profile = current_workspace.brand_profile || current_workspace.build_brand_profile
       @selected_goals = current_workspace.brand_goals.pluck(:goal)
@@ -15,7 +17,7 @@ module Onboarding
       )
 
       if result.success?
-        redirect_to OnboardingFlow.path_for(OnboardingFlow.next_key(current_step_key), current_workspace)
+        redirect_to OnboardingFlow.path_for(OnboardingFlow.next_key(current_step_key, current_workspace.account_type), current_workspace)
       else
         @profile = result.error.is_a?(BrandProfile) ? result.error : current_workspace.brand_profile
         @selected_goals = submitted_goals

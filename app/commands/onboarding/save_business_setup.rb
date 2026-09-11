@@ -78,8 +78,8 @@ module Onboarding
     end
 
     def advance_progress
-      next_step = OnboardingFlow.next_key(STEP)
-      @workspace.update!(onboarding_step: OnboardingFlow.furthest(@workspace.onboarding_step, next_step))
+      next_step = OnboardingFlow.next_key(STEP, @workspace.account_type)
+      @workspace.update!(onboarding_step: OnboardingFlow.furthest(@workspace.onboarding_step, next_step, @workspace.account_type))
     end
   end
 end

@@ -8,6 +8,6 @@ module Onboarding
 
     private
 
-    def current_step_key = current_workspace.onboarding_step
+    def current_step_key = OnboardingFlow.resolve(current_workspace.onboarding_step, current_workspace.account_type)
   end
 end
