@@ -240,6 +240,62 @@
   .auth-enter, .auth-enter-2, .auth-enter-3 { animation: none; }
 }
 
+/* ── Sign-in stage ───────────────────────────────────────────────────────
+   One centred column on a full-width dark ground, rather than a split panel.
+   The scene that used to live in the left half now runs behind everything, so
+   it is still there without cutting the screen in two.
+
+   The gradient is the floor, not decoration: the canvas above it is
+   transparent and additive, so if WebGL never loads -- old GPU, blocked
+   script, narrow window -- this is still a finished screen. */
+.auth-stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh; /* fallback for anything that stumbles on dvh */
+  min-height: 100dvh;
+  padding: 3rem 1.5rem 5rem;
+  overflow: hidden;
+  background:
+    radial-gradient(58% 48% at 50% 42%, #21456F 0%, rgba(16, 43, 83, 0) 72%),
+    linear-gradient(168deg, #14315C 0%, #0C2143 46%, #060F1F 100%);
+}
+
+/* Any viewport-unit rounding that leaves a sliver below the stage shows
+   midnight rather than a white strip. */
+body:has(.auth-stage) { background: #060F1F; }
+
+.auth-stage-canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.auth-stage-content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 26rem;
+}
+
+/* Over a dark ground the footer needs light text, and it belongs inside the
+   frame rather than below the fold. */
+.auth-stage ~ footer {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 3;
+  color: rgba(255, 255, 255, 0.55);
+}
+.auth-stage ~ footer a { color: rgba(255, 255, 255, 0.7); }
+.auth-stage ~ footer a:hover { color: #FFFFFF; }
+
 /* ── Sign-in laptop ──────────────────────────────────────────────────────
    The stage is a dark room; the laptop is drawn into the canvas and the login
    card is transformed onto its screen by CSS3DRenderer.

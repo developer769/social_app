@@ -1,16 +1,18 @@
 <% content_for :title, "Create your Prachar account" %>
 
-<div class="min-h-dvh lg:grid lg:grid-cols-2">
-  <%= render "shared/brand_panel" %>
+<%# Centred, matching the sign-in screen: one column on a full-width dark
+    ground with the scene running behind it. %>
+<div class="auth-stage" data-controller="brand-scene">
+  <canvas data-brand-scene-target="canvas" aria-hidden="true" class="auth-stage-canvas"></canvas>
 
-  <main class="flex items-center justify-center px-6 py-12 lg:py-0">
-    <div class="w-full max-w-md">
-      <div class="mb-8 lg:hidden">
-        <%= render "shared/wordmark", classes: "text-2xl" %>
-      </div>
+  <div class="auth-stage-content">
+    <div class="mb-7 text-center">
+      <%= render "shared/wordmark", classes: "text-3xl", tone: :light %>
+    </div>
 
+    <div class="w-full">
       <div class="auth-enter rounded-card border border-border bg-surface p-8 shadow-card sm:p-10">
-        <div class="mb-8">
+        <div class="mb-8 text-center">
           <h1 class="font-display text-3xl font-normal">Create your account</h1>
           <p class="mt-2 text-sm text-muted">Set up your business workspace in under a minute.</p>
         </div>
@@ -58,5 +60,5 @@
         </p>
       </div>
     </div>
-  </main>
+  </div>
 </div>
