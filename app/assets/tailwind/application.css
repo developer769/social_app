@@ -285,18 +285,6 @@ body:has(.auth-stage) { background: #060F1F; }
   max-width: 21.5rem;
 }
 
-/* Over a dark ground the footer needs light text, and it belongs inside the
-   frame rather than below the fold. */
-.auth-stage ~ footer {
-  position: fixed;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  z-index: 3;
-  color: rgba(255, 255, 255, 0.55);
-}
-.auth-stage ~ footer a { color: rgba(255, 255, 255, 0.7); }
-.auth-stage ~ footer a:hover { color: #FFFFFF; }
 
 /* ── Orchid sign-in ──────────────────────────────────────────────────────
    Built to a supplied reference: a frosted card on a pink-purple gradient,
@@ -507,17 +495,6 @@ body:has(.auth-orchid) { background: #63537F; }
 .orchid-link:hover { color: #220E2C; }
 
 
-/* Dark text on a light ground, unlike the navy stage's footer. */
-.auth-orchid ~ footer {
-  position: fixed;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  z-index: 3;
-  color: rgba(45, 20, 56, 0.72);
-}
-.auth-orchid ~ footer a { color: rgba(45, 20, 56, 0.9); }
-.auth-orchid ~ footer a:hover { color: #220E2C; }
 
 /* ── Drifting platform marks ─────────────────────────────────────────────
    The layer behind the sign-in card. Decoration only: it is aria-hidden in the
@@ -750,15 +727,3 @@ body:has(.laptop-stage) {
   .is-docked .laptop-screen { animation: none; }
 }
 
-/* The layout's footer is a sibling of the stage; over a dark room it needs
-   light text and to sit inside the frame rather than below the fold. */
-.laptop-stage + footer {
-  position: fixed;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  z-index: 3;
-  color: rgba(255, 255, 255, 0.55);
-}
-.laptop-stage + footer a { color: rgba(255, 255, 255, 0.7); }
-.laptop-stage + footer a:hover { color: #FFFFFF; }

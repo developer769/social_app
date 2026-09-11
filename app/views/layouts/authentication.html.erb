@@ -18,12 +18,5 @@
       outside this layout sees it. %>
   <body class="auth-ocean min-h-dvh bg-background text-body antialiased">
     <%= yield %>
-    <footer class="pb-8 text-center text-xs text-muted">
-      <%= link_to "Privacy", privacy_path, class: "underline underline-offset-4 hover:text-heading" %>
-      &middot;
-      <%= link_to "Terms", terms_path, class: "underline underline-offset-4 hover:text-heading" %>
-      &middot;
-      <%= link_to "Delete my data", data_deletion_path, class: "underline underline-offset-4 hover:text-heading" %>
-    </footer>
   </body>
 </html>
