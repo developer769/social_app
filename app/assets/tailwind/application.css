@@ -256,7 +256,7 @@
   justify-content: center;
   min-height: 100vh; /* fallback for anything that stumbles on dvh */
   min-height: 100dvh;
-  padding: 3rem 1.5rem 5rem;
+  padding: 2rem 1.5rem 4.5rem;
   overflow: hidden;
   background:
     radial-gradient(58% 48% at 50% 42%, #21456F 0%, rgba(16, 43, 83, 0) 72%),
@@ -280,7 +280,9 @@ body:has(.auth-stage) { background: #060F1F; }
   position: relative;
   z-index: 2;
   width: 100%;
-  max-width: 26rem;
+  /* Deliberately tight. A sign-in form has four things in it and reads better
+     as a compact object than as a page-width panel. */
+  max-width: 21.5rem;
 }
 
 /* Over a dark ground the footer needs light text, and it belongs inside the
@@ -295,6 +297,205 @@ body:has(.auth-stage) { background: #060F1F; }
 }
 .auth-stage ~ footer a { color: rgba(255, 255, 255, 0.7); }
 .auth-stage ~ footer a:hover { color: #FFFFFF; }
+
+/* ── Orchid sign-in ──────────────────────────────────────────────────────
+   Built to a supplied reference: a frosted card on a pink-purple gradient,
+   underline-only fields with an icon at the right, a pill button with a
+   gradient fill, and a dark art panel beside it.
+
+   The whole thing is one centred group floating on the gradient, not a split
+   screen -- the background runs behind and around both panels.
+
+   Contrast, measured against the frosted card over its lightest point
+   (~#E9C8E1, the worst case):
+     #3D1B4A  title, field text      11.8:1
+     #5A2E68  placeholders, links     6.4:1
+     #FFFFFF  on the button's lightest stop (#7A4A8C)  5.6:1
+   The field underline is 3.1:1 against the card, over the 3:1 that WCAG 1.4.11
+   asks of a control boundary. */
+.auth-orchid {
+  --orchid-ink: #3D1B4A;
+  --orchid-ink-soft: #5A2E68;
+  --orchid-line: rgba(61, 27, 74, 0.42);
+  --orchid-line-strong: rgba(61, 27, 74, 0.85);
+
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 2.5rem 1.5rem 4.5rem;
+  overflow: hidden;
+  background:
+    linear-gradient(112deg,
+      #8B5A8A 0%, #B87AAF 18%, #DBA4CE 32%,
+      #F0CFE7 46%, #DCCBE8 58%, #B3A4CC 74%, #7E6C9B 88%, #63537F 100%);
+}
+body:has(.auth-orchid) { background: #63537F; }
+
+.orchid-layout {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  gap: 2rem;
+  width: 100%;
+  max-width: 62rem;
+  align-items: center;
+}
+@media (min-width: 1024px) {
+  .orchid-layout { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); }
+}
+
+/* The card. Frosted, with a lit top edge -- that highlight is what reads as a
+   pane of glass rather than a tinted rectangle. */
+.orchid-card {
+  border-radius: 1.75rem;
+  padding: 2.75rem 2.5rem;
+  background: rgba(255, 255, 255, 0.26);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(26px) saturate(160%);
+  -webkit-backdrop-filter: blur(26px) saturate(160%);
+  box-shadow:
+    0 28px 60px -24px rgba(60, 25, 72, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  color: var(--orchid-ink);
+  /* The wordmark and any heading inside the card are token-driven, so this is
+     all it takes to bring them onto the orchid ink. The accent is the brand
+     star, which inherited a lavender that all but vanished against pink. */
+  --color-heading: var(--orchid-ink);
+  --color-accent: #A25CB5;
+}
+
+.orchid-hint { color: var(--orchid-ink-soft); }
+/* Without backdrop-filter the card is 26% white over a moving gradient, which
+   is not enough to keep text off the background. Solid-ish is the fallback. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .orchid-card { background: rgba(247, 233, 244, 0.95); }
+}
+
+.orchid-title {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 2rem;
+  letter-spacing: -0.02em;
+  text-align: center;
+  color: var(--orchid-ink);
+}
+
+/* Underline-only fields. The label is still a real <label>, visually hidden:
+   a placeholder alone disappears the moment somebody types, which leaves a
+   filled form with no way to tell what each line was for. */
+.orchid-field {
+  width: 100%;
+  height: 2.75rem; /* keeps the 44px target the rest of the app uses */
+  padding: 0 2rem 0 0;
+  background: transparent;
+  border: 0;
+  border-bottom: 1.5px solid var(--orchid-line);
+  border-radius: 0;
+  color: var(--orchid-ink);
+  font-size: 0.975rem;
+  transition: border-color 0.18s ease;
+}
+.orchid-field::placeholder { color: var(--orchid-ink-soft); opacity: 0.85; }
+/* The focus indicator IS the underline: it doubles in weight, goes fully
+   opaque and picks up a soft glow. A ring around the row drew a box, which is
+   the one shape this design is built to avoid.
+   The change is 1.5px -> 3px plus a colour shift, comfortably a visible focus
+   indicator under 2.4.7. */
+.orchid-field:focus,
+.orchid-field:focus-visible {
+  outline: none;
+  border-bottom-width: 3px;
+  border-bottom-color: var(--orchid-line-strong);
+  box-shadow: 0 6px 12px -8px rgba(61, 27, 74, 0.75);
+}
+.orchid-field:focus + .orchid-icon,
+.orchid-field:focus-visible + .orchid-icon { opacity: 1; }
+
+.orchid-row { position: relative; }
+.orchid-row .orchid-icon {
+  position: absolute;
+  right: 0;
+  top: 0.7rem;
+  width: 1.1rem;
+  height: 1.1rem;
+  color: var(--orchid-ink);
+  opacity: 0.75;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+}
+
+/* Autofill repaints the field with the browser's own opaque background, which
+   would put a white box across an underline-only design. */
+.auth-orchid input:-webkit-autofill,
+.auth-orchid input:-webkit-autofill:hover,
+.auth-orchid input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #3D1B4A;
+  -webkit-box-shadow: 0 0 0 1000px transparent inset;
+  caret-color: #3D1B4A;
+  transition: background-color 9999s ease-out 0s;
+}
+
+.orchid-button {
+  display: block;
+  width: 100%;
+  height: 2.875rem;
+  border: 0;
+  border-radius: 9999px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #FFFFFF;
+  background: linear-gradient(90deg, #33163F 0%, #5B2E6B 52%, #8A5A9C 100%);
+  box-shadow: 0 12px 26px -12px rgba(51, 22, 63, 0.8);
+  transition: filter 0.18s ease, transform 0.18s ease;
+}
+.orchid-button:hover { filter: brightness(1.12); }
+.orchid-button:active { transform: translateY(1px); }
+
+.orchid-link {
+  color: var(--orchid-ink);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.orchid-link:hover { color: #220E2C; }
+
+/* The art panel: a dark square so the scene inside it actually glows, the way
+   the reference's illustration card does. */
+.orchid-art {
+  position: relative;
+  display: none;
+  aspect-ratio: 1 / 1;
+  border-radius: 1.75rem;
+  overflow: hidden;
+  background: radial-gradient(72% 62% at 50% 45%, #1B2F5E 0%, #0C1730 55%, #05091A 100%);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow: 0 30px 66px -26px rgba(20, 8, 30, 0.85);
+}
+@media (min-width: 1024px) { .orchid-art { display: block; } }
+.orchid-art canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* Dark text on a light ground, unlike the navy stage's footer. */
+.auth-orchid ~ footer {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 3;
+  color: rgba(45, 20, 56, 0.72);
+}
+.auth-orchid ~ footer a { color: rgba(45, 20, 56, 0.9); }
+.auth-orchid ~ footer a:hover { color: #220E2C; }
 
 /* ── Glass card ──────────────────────────────────────────────────────────
    The sign-in card, floating over the scene rather than sitting on top of it.

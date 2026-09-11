@@ -1,64 +1,68 @@
 <% content_for :title, "Create your Prachar account" %>
 
-<%# Centred, matching the sign-in screen: one column on a full-width dark
-    ground with the scene running behind it. %>
-<div class="auth-stage" data-controller="brand-scene">
-  <canvas data-brand-scene-target="canvas" aria-hidden="true" class="auth-stage-canvas"></canvas>
+<%# Matches the sign-in screen: frosted card on the gradient, underline-only
+    fields, dark art panel beside it. %>
+<div class="auth-orchid" data-controller="brand-scene">
+  <div class="orchid-layout">
 
-  <div class="auth-stage-content">
-    <div class="mb-7 text-center">
-      <%= render "shared/wordmark", classes: "text-3xl", tone: :light %>
-    </div>
+    <div class="auth-enter orchid-card">
+      <div class="mb-7 text-center">
+        <%= render "shared/wordmark", classes: "text-lg" %>
+        <h1 class="orchid-title mt-4">Sign Up</h1>
+      </div>
 
-    <div class="w-full">
-      <div class="auth-enter auth-glass rounded-card border border-border bg-surface p-8 shadow-card sm:p-10">
-        <div class="mb-8 text-center">
-          <h1 class="font-display text-3xl font-normal">Create your account</h1>
-          <p class="mt-2 text-sm text-muted">Set up your business workspace in under a minute.</p>
+      <%= render "shared/flash" %>
+      <%= render "shared/error_summary", record: @user %>
+
+      <%= form_with model: @user, url: signup_path, method: :post, scope: :user, class: "space-y-6" do |form| %>
+        <div class="orchid-row">
+          <%# Visually hidden rather than absent: a placeholder disappears the
+              moment somebody types, leaving a filled form with no way to tell
+              what each line was for. %>
+          <%= form.label :business_name, "Business name", class: "sr-only" %>
+          <%= form.text_field :business_name, value: params.dig(:user, :business_name), required: true,
+                autofocus: true, placeholder: "Business name", class: "orchid-field" %>
+          <%= render "shared/orchid_icons", icon: :user %>
         </div>
 
-        <%= render "shared/flash" %>
-        <%= render "shared/error_summary", record: @user %>
+        <div class="orchid-row">
+          <%= form.label :name, "Your name", class: "sr-only" %>
+          <%= form.text_field :name, required: true, autocomplete: "name",
+                placeholder: "Your name", class: "orchid-field" %>
+          <%= render "shared/orchid_icons", icon: :user %>
+        </div>
 
-        <%= form_with model: @user, url: signup_path, method: :post, scope: :user, class: "space-y-5" do |form| %>
-          <div>
-            <%= form.label :business_name, "Business name", class: "mb-1.5 block text-sm font-medium text-heading" %>
-            <%= form.text_field :business_name, value: params.dig(:user, :business_name), required: true,
-                  autofocus: true, placeholder: "Anaya Bakes",
-                  class: "h-11 w-full rounded-control border border-border bg-background px-3.5 text-sm text-heading placeholder:text-muted focus:border-border-strong focus:outline-none" %>
-            <p class="mt-1.5 text-xs text-muted">This becomes your workspace. You can rename it later.</p>
-          </div>
+        <div class="orchid-row">
+          <%= form.label :email, "Email address", class: "sr-only" %>
+          <%= form.email_field :email, required: true, autocomplete: "email",
+                placeholder: "Email", class: "orchid-field" %>
+          <%= render "shared/orchid_icons", icon: :mail %>
+        </div>
 
-          <div>
-            <%= form.label :name, "Your name", class: "mb-1.5 block text-sm font-medium text-heading" %>
-            <%= form.text_field :name, required: true, autocomplete: "name",
-                  class: "h-11 w-full rounded-control border border-border bg-background px-3.5 text-sm text-heading focus:border-border-strong focus:outline-none" %>
-          </div>
+        <div class="orchid-row">
+          <%= form.label :password, "Password", class: "sr-only" %>
+          <%= form.password_field :password, required: true, minlength: 12, autocomplete: "new-password",
+                aria: { describedby: "password-hint" },
+                placeholder: "Password", class: "orchid-field" %>
+          <%= render "shared/orchid_icons", icon: :lock %>
+          <p id="password-hint" class="orchid-hint mt-1.5 text-xs">
+            At least 12 characters.
+          </p>
+        </div>
 
-          <div>
-            <%= form.label :email, "Email address", class: "mb-1.5 block text-sm font-medium text-heading" %>
-            <%= form.email_field :email, required: true, autocomplete: "email",
-                  class: "h-11 w-full rounded-control border border-border bg-background px-3.5 text-sm text-heading focus:border-border-strong focus:outline-none" %>
-          </div>
+        <div class="pt-1">
+          <%= form.submit "Sign Up", class: "orchid-button" %>
+        </div>
+      <% end %>
 
-          <div>
-            <%= form.label :password, "Password", class: "mb-1.5 block text-sm font-medium text-heading" %>
-            <%= form.password_field :password, required: true, minlength: 12, autocomplete: "new-password",
-                  aria: { describedby: "password-hint" },
-                  class: "h-11 w-full rounded-control border border-border bg-background px-3.5 text-sm text-heading focus:border-border-strong focus:outline-none" %>
-            <p id="password-hint" class="mt-1.5 text-xs text-muted">At least 12 characters.</p>
-          </div>
-
-          <%= form.submit "Create account",
-                class: "h-11 w-full cursor-pointer rounded-control bg-primary px-4 text-sm font-medium text-primary-contrast transition-colors hover:bg-primary-hover" %>
-        <% end %>
-
-        <p class="mt-7 text-center text-sm text-muted">
-          Already have an account?
-          <%= link_to "Log in", login_path,
-                class: "font-medium text-primary underline underline-offset-4 hover:text-primary-hover" %>
-        </p>
-      </div>
+      <p class="mt-7 text-right text-sm">
+        <%= link_to "Already have an account?", login_path, class: "orchid-link" %>
+      </p>
     </div>
+
+    <div class="orchid-art" aria-hidden="true">
+      <canvas data-brand-scene-target="canvas"></canvas>
+    </div>
+
   </div>
 </div>
