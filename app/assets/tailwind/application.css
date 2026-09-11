@@ -296,6 +296,76 @@ body:has(.auth-stage) { background: #060F1F; }
 .auth-stage ~ footer a { color: rgba(255, 255, 255, 0.7); }
 .auth-stage ~ footer a:hover { color: #FFFFFF; }
 
+/* ── Glass card ──────────────────────────────────────────────────────────
+   The sign-in card, floating over the scene rather than sitting on top of it.
+
+   Done by redefining the design tokens inside the card rather than rewriting
+   every utility in the template, the same trick .auth-ocean uses. The card is
+   built from bg-surface / text-heading / border-border / shadow-card, so
+   changing what those mean changes the whole card -- including the flash
+   messages and the inputs -- and the markup stays honest about its intent.
+
+   Every pair re-measured against the glass over its navy ground (~#17304F):
+     #FFFFFF            13.1:1    headings
+     rgba(255,255,255,.80) 10.0:1 body
+     rgba(255,255,255,.64)  7.0:1 muted, placeholders
+     #CEB5D4             7.0:1    links, and the button's fill
+     #102B53 on #CEB5D4  7.3:1    the button's label
+   Lavender becomes the action colour because Space Cadet, the button fill on
+   the light theme, is invisible against this. */
+.auth-glass {
+  --color-surface: rgba(255, 255, 255, 0.09);
+  --color-background: rgba(255, 255, 255, 0.08);
+  --color-surface-sunk: rgba(255, 255, 255, 0.14);
+
+  --color-heading: #FFFFFF;
+  --color-body: rgba(255, 255, 255, 0.80);
+  --color-muted: rgba(255, 255, 255, 0.64);
+
+  --color-border: rgba(255, 255, 255, 0.18);
+  --color-border-strong: rgba(255, 255, 255, 0.45);
+
+  --color-primary: #CEB5D4;
+  --color-primary-hover: #E2D1E6;
+  --color-primary-contrast: #102B53;
+  --color-blue-soft: rgba(255, 255, 255, 0.14);
+
+  /* Semantic fills go translucent, so their text has to come up with them:
+     the dark greens and reds of the light theme vanish on this. */
+  --color-success: #8FE7CD;
+  --color-success-soft: rgba(19, 122, 104, 0.32);
+  --color-danger: #FFB3C1;
+  --color-danger-soft: rgba(196, 18, 63, 0.30);
+
+  /* The lit top edge is what reads as a pane rather than a tinted rectangle. */
+  --shadow-card:
+    0 26px 64px -20px rgba(2, 8, 20, 0.70),
+    inset 0 1px 0 rgba(255, 255, 255, 0.26);
+
+  backdrop-filter: blur(22px) saturate(150%);
+  -webkit-backdrop-filter: blur(22px) saturate(150%);
+}
+
+/* No backdrop-filter means no frosting, and a 9%-white card over a moving
+   scene would put text on top of whatever drifted behind it. Falling back to
+   a near-solid panel keeps it readable; it simply stops being glass. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .auth-glass { --color-surface: rgba(20, 42, 72, 0.94); }
+}
+
+/* Browsers repaint an autofilled field with their own opaque background,
+   which would drop white text onto near-white and hide a filled-in email
+   completely. box-shadow is the only way to override it, and the absurd
+   transition delay is the standard way to stop the flash of yellow. */
+.auth-glass input:-webkit-autofill,
+.auth-glass input:-webkit-autofill:hover,
+.auth-glass input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #FFFFFF;
+  -webkit-box-shadow: 0 0 0 1000px rgba(255, 255, 255, 0.10) inset;
+  caret-color: #FFFFFF;
+  transition: background-color 9999s ease-out 0s;
+}
+
 /* ── Sign-in laptop ──────────────────────────────────────────────────────
    The stage is a dark room; the laptop is drawn into the canvas and the login
    card is transformed onto its screen by CSS3DRenderer.
