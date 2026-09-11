@@ -1,17 +1,11 @@
 <% content_for :title, "Sign in to Prachar" %>
 
 <%#
-  Built to a supplied reference: a frosted card on a pink-purple gradient with
-  underline-only fields, beside a dark art panel holding the scene.
-
-  One centred group floating on the gradient rather than a split screen -- the
-  background runs behind and around both panels, and the art panel drops away
-  below the lg breakpoint, leaving the card centred on its own.
-
-  The scene is decoration: the canvas is aria-hidden, carries no content, and
-  the panel's own gradient is a finished square if WebGL never loads.
+  A frosted card on a pink-purple gradient with underline-only fields, centred
+  on its own. Moving to sign-up turns the card over rather than replacing the
+  page; see the auth-flip keyframes.
 %>
-<div class="auth-orchid" data-controller="brand-scene">
+<div class="auth-orchid">
   <div class="orchid-layout">
 
     <div class="auth-enter orchid-card">
@@ -53,10 +47,6 @@
       <p class="mt-7 text-right text-sm">
         <%= link_to "Don't have an account?", signup_path, class: "orchid-link" %>
       </p>
-    </div>
-
-    <div class="orchid-art" aria-hidden="true">
-      <canvas data-brand-scene-target="canvas"></canvas>
     </div>
 
   </div>

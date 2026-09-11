@@ -334,51 +334,56 @@ body:has(.auth-stage) { background: #060F1F; }
 }
 body:has(.auth-orchid) { background: #63537F; }
 
+/* A single centred card. The art panel that used to sit beside it is gone, so
+   there is nothing to lay out against and the column can be narrow. */
 .orchid-layout {
   position: relative;
   z-index: 2;
-  display: grid;
-  gap: 2rem;
   width: 100%;
-  max-width: 62rem;
-  align-items: center;
-}
-@media (min-width: 1024px) {
-  .orchid-layout { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); }
-
-  /* Sign-up mirrors sign-in: the form takes the right, the art takes the left.
-     Explicit grid placement rather than `order`, because a view transition
-     animates the boxes the grid actually assigns. */
-  .orchid-layout--mirrored { grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); }
-  .orchid-layout--mirrored .orchid-card { grid-column: 2; grid-row: 1; }
-  .orchid-layout--mirrored .orchid-art  { grid-column: 1; grid-row: 1; }
+  max-width: 24rem;
 }
 
 /* Naming an element hands it to the browser to morph across a navigation: it
    measures where the card was, where it lands, and tweens between the two.
    That is the whole slide -- there is no animation code. */
 .orchid-card { view-transition-name: auth-card; }
-.orchid-art  { view-transition-name: auth-art; }
 
-::view-transition-group(auth-card),
-::view-transition-group(auth-art) {
-  animation-duration: 0.62s;
-  animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+/* The card turns over in place. Sequential, not simultaneous: the outgoing
+   face rotates away to edge-on, and only then does the incoming face rotate in
+   from the opposite edge. Overlapping them would show two forms crossing
+   through each other instead of one card with two sides.
+   The perspective has to live on the transform itself -- a view transition
+   snapshot is not a child of the page, so a `perspective` property on an
+   ancestor never reaches it. */
+@keyframes auth-flip-out {
+  from { transform: perspective(1600px) rotateY(0deg); opacity: 1; }
+  to   { transform: perspective(1600px) rotateY(-92deg); opacity: 0; }
 }
-/* The cards hold different fields on each screen, so their contents cross-fade
-   while the boxes travel. Without this the old form is visible sliding into
-   place behind the new one. */
-::view-transition-old(auth-card),
+@keyframes auth-flip-in {
+  from { transform: perspective(1600px) rotateY(92deg); opacity: 0; }
+  to   { transform: perspective(1600px) rotateY(0deg); opacity: 1; }
+}
+
+::view-transition-old(auth-card) {
+  animation: auth-flip-out 0.32s cubic-bezier(0.5, 0, 0.9, 0.4) both;
+}
 ::view-transition-new(auth-card) {
-  animation-duration: 0.42s;
-  height: 100%;
-  object-fit: none;
-  object-position: top center;
+  animation: auth-flip-in 0.36s cubic-bezier(0.1, 0.6, 0.5, 1) 0.3s both;
 }
 
+/* The two forms are different heights, so the box itself still has to resize.
+   Matching the flip's full length keeps the frame and the faces in step. */
+::view-transition-group(auth-card) {
+  animation-duration: 0.66s;
+  animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+
+/* A flip is a large rotation across the whole card, which is exactly what
+   reduced motion is asking not to see. The screens still change; they simply
+   change instantly. */
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-group(auth-card),
-  ::view-transition-group(auth-art),
   ::view-transition-old(auth-card),
   ::view-transition-new(auth-card),
   ::view-transition-old(root),
@@ -501,27 +506,6 @@ body:has(.auth-orchid) { background: #63537F; }
 }
 .orchid-link:hover { color: #220E2C; }
 
-/* The art panel: a dark square so the scene inside it actually glows, the way
-   the reference's illustration card does. */
-.orchid-art {
-  position: relative;
-  display: none;
-  aspect-ratio: 1 / 1;
-  border-radius: 1.75rem;
-  overflow: hidden;
-  background: radial-gradient(72% 62% at 50% 45%, #1B2F5E 0%, #0C1730 55%, #05091A 100%);
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  box-shadow: 0 30px 66px -26px rgba(20, 8, 30, 0.85);
-}
-@media (min-width: 1024px) { .orchid-art { display: block; } }
-.orchid-art canvas {
-  position: absolute;
-  inset: 0;
-  display: block;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-}
 
 /* Dark text on a light ground, unlike the navy stage's footer. */
 .auth-orchid ~ footer {
