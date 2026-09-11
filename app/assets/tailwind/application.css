@@ -579,6 +579,97 @@ body:has(.auth-orchid) { background: #63537F; }
 
 
 
+/* ── Setup wizard ────────────────────────────────────────────────────────
+   Moving between steps slides rather than redraws.
+
+   Two named regions, not one. The step body travels; the progress bar is given
+   its own name so it is lifted out of that movement and morphs in place --
+   otherwise the one element that should stay still while the bars fill would
+   slide off with everything else, which is the opposite of what a progress
+   indicator is for.
+
+   The outgoing step leaves before the incoming one arrives. Overlapping them
+   shows two forms crossing, and these two pages look alike enough that the
+   result reads as a stutter rather than a move. */
+@keyframes wizard-step-out {
+  from { transform: translateX(0); opacity: 1; }
+  to   { transform: translateX(-46px); opacity: 0; }
+}
+@keyframes wizard-step-in {
+  from { transform: translateX(56px); opacity: 0; }
+  to   { transform: translateX(0); opacity: 1; }
+}
+
+.wizard-step { view-transition-name: wizard-step; }
+.wizard-progress { view-transition-name: wizard-progress; }
+
+::view-transition-old(wizard-step) {
+  animation: wizard-step-out 0.3s cubic-bezier(0.5, 0, 0.9, 0.4) both;
+}
+::view-transition-new(wizard-step) {
+  animation: wizard-step-in 0.42s cubic-bezier(0.1, 0.6, 0.4, 1) 0.16s both;
+}
+/* The bar morphs between positions instead of cross-fading, so the filled
+   segments visibly advance. */
+::view-transition-group(wizard-progress) {
+  animation-duration: 0.58s;
+  animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
+}
+::view-transition-old(wizard-progress),
+::view-transition-new(wizard-progress) { animation-duration: 0.3s; }
+
+/* ── Lift on hover ───────────────────────────────────────────────────────
+   Only on things that actually do something when clicked. A card that rises
+   under the pointer and then cannot be clicked is a worse lie than a card that
+   sits still. */
+.wizard-step button,
+.wizard-step input[type="submit"],
+.wizard-step a[class*="bg-primary"] {
+  transition: transform 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease;
+}
+.wizard-step button:hover,
+.wizard-step input[type="submit"]:hover,
+.wizard-step a[class*="bg-primary"]:hover {
+  transform: translateY(-1.5px);
+  box-shadow: 0 10px 20px -10px rgba(61, 27, 74, 0.55);
+}
+.wizard-step button:active,
+.wizard-step input[type="submit"]:active,
+.wizard-step a[class*="bg-primary"]:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+/* Fields settle up a touch when focused, so the one you are filling reads as
+   the active line without needing a colour the palette does not have. */
+.wizard-step input:not([type="submit"]),
+.wizard-step select,
+.wizard-step textarea {
+  transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+}
+.wizard-step input:not([type="submit"]):focus,
+.wizard-step select:focus,
+.wizard-step textarea:focus {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px -8px rgba(61, 27, 74, 0.4);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(wizard-step),
+  ::view-transition-group(wizard-progress),
+  ::view-transition-old(wizard-step),
+  ::view-transition-new(wizard-step),
+  ::view-transition-old(wizard-progress),
+  ::view-transition-new(wizard-progress) { animation: none !important; }
+
+  .wizard-step button:hover,
+  .wizard-step input[type="submit"]:hover,
+  .wizard-step a[class*="bg-primary"]:hover,
+  .wizard-step input:not([type="submit"]):focus,
+  .wizard-step select:focus,
+  .wizard-step textarea:focus { transform: none; }
+}
+
 /* ── Drifting platform marks ─────────────────────────────────────────────
    The layer behind the sign-in card. Decoration only: it is aria-hidden in the
    markup and takes no pointer events, so it can never sit between somebody and
