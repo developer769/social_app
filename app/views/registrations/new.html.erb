@@ -101,6 +101,30 @@
           </p>
         </div>
 
+        <%#
+          Typing a password you cannot see, once, and being locked out of the
+          account forever if you mistyped it. Confirmation matters more here
+          than it usually would: password reset delivers by email, and email is
+          not configured, so a typo at sign-up currently has no way back.
+        %>
+        <div class="orchid-row" data-controller="password-visibility password-confirm">
+          <%= form.label :password_confirmation, "Confirm password", class: "sr-only" %>
+          <%= form.password_field :password_confirmation, required: true, autocomplete: "new-password",
+                placeholder: "Confirm password", class: "orchid-field",
+                data: { password_visibility_target: "field", password_confirm_target: "confirmation",
+                        action: "input->password-confirm#check" } %>
+          <span data-password-visibility-target="decor"><%= render "shared/orchid_icons", icon: :lock %></span>
+          <button type="button" hidden
+                  class="orchid-toggle"
+                  data-password-visibility-target="button"
+                  data-action="password-visibility#toggle"
+                  aria-label="Show password">
+            <span data-password-visibility-target="eye"><%= render "shared/orchid_icons", icon: :eye %></span>
+            <span data-password-visibility-target="eyeOff" hidden><%= render "shared/orchid_icons", icon: :eye_off %></span>
+          </button>
+          <p class="orchid-hint mt-1.5 text-xs" data-password-confirm-target="message" hidden></p>
+        </div>
+
         <div class="pt-1">
           <%= form.submit "Sign Up", class: "orchid-button" %>
         </div>

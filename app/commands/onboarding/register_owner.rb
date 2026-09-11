@@ -12,7 +12,10 @@ module Onboarding
     end
 
     def call
-      user = User.new(name: @dto.name, email: @dto.email, password: @dto.password)
+      user = User.new(
+        name: @dto.name, email: @dto.email,
+        password: @dto.password, password_confirmation: @dto.password_confirmation
+      )
 
       ActiveRecord::Base.transaction do
         user.save!
