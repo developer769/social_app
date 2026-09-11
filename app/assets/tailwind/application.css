@@ -519,6 +519,74 @@ body:has(.auth-orchid) { background: #63537F; }
 .auth-orchid ~ footer a { color: rgba(45, 20, 56, 0.9); }
 .auth-orchid ~ footer a:hover { color: #220E2C; }
 
+/* ── Drifting platform marks ─────────────────────────────────────────────
+   The layer behind the sign-in card. Decoration only: it is aria-hidden in the
+   markup and takes no pointer events, so it can never sit between somebody and
+   the form.
+
+   The puffed look is CSS rather than artwork -- a brand gradient, a bright
+   inset along the top edge, a darker inset along the bottom, and a shadow
+   underneath. That is what turns a flat disc into something with a lit side.
+
+   Depth is what keeps ten logos from reading as a sticker sheet: the marks
+   furthest back are smaller, more transparent, blurred, and drift more slowly.
+   Their shadows are tinted toward the page's purple rather than neutral black,
+   so they sit in this scene instead of on top of it. */
+.platform-drift {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.platform-chip {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: var(--chip-size);
+  height: var(--chip-size);
+  background: var(--chip-brand);
+  color: #FFFFFF;
+  opacity: var(--chip-op);
+  filter: blur(var(--chip-blur));
+  box-shadow:
+    0 18px 30px -12px rgba(46, 18, 58, 0.55),
+    inset 0 2px 4px rgba(255, 255, 255, 0.55),
+    inset 0 -7px 12px rgba(0, 0, 0, 0.22);
+  transform: rotate(var(--chip-tilt));
+  animation: platform-drift-float var(--chip-dur) ease-in-out var(--chip-delay) infinite;
+  will-change: transform;
+}
+.platform-chip--circle { border-radius: 50%; }
+/* Not 50%, not a plain rounded corner: this is roughly the squircle the
+   platforms use for their own app tiles. */
+.platform-chip--squircle { border-radius: 29%; }
+
+.platform-chip svg {
+  width: 58%;
+  height: 58%;
+  /* A shadow under the glyph makes it sit in the chip rather than on it. */
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.28));
+}
+
+/* Rise, drift, and return. Rotation is carried through every keyframe because
+   the resting tilt lives in the same transform. */
+@keyframes platform-drift-float {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(var(--chip-tilt)); }
+  50%      { transform: translate3d(0, -22px, 0) rotate(calc(var(--chip-tilt) + 4deg)); }
+}
+
+/* Below the breakpoint the card takes most of the screen and the marks would
+   crowd it rather than sit behind it. */
+@media (max-width: 1023px) {
+  .platform-drift { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .platform-chip { animation: none; }
+}
+
 /* ── Glass card ──────────────────────────────────────────────────────────
    The sign-in card, floating over the scene rather than sitting on top of it.
 

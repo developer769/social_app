@@ -1,0 +1,79 @@
+<%#
+  The platform marks drifting behind the sign-in card.
+
+  Purely decorative: the whole layer is aria-hidden and cannot be clicked, so
+  nothing here is content and nothing is lost without it.
+
+  The marks are simplified rather than traced from the official artwork, the
+  same choice PlatformGlyphComponent makes and for the same reason -- these
+  are read as shapes at 40-70px, drawn inline so they cost no request. The
+  puffed look is CSS, not artwork: a brand gradient, a bright inset along the
+  top edge, a darker inset along the bottom, and a shadow underneath.
+
+  Position, size, blur and speed are per-mark so the layer has depth. The ones
+  furthest back are smaller, blurred and slower, which is what stops ten logos
+  reading as a sticker sheet.
+%>
+<%
+  marks = [
+    { key: "instagram", shape: "circle",   top: 13, left: 7,  size: 74, blur: 0,   op: 0.85, dur: 17, delay: 0,   tilt: -8,
+      brand: "linear-gradient(140deg,#8A3AB9 0%,#E1306C 48%,#FCAF45 100%)" },
+    { key: "whatsapp",  shape: "circle",   top: 69, left: 11, size: 60, blur: 0,   op: 0.8,  dur: 21, delay: -4,  tilt: 6,
+      brand: "linear-gradient(140deg,#5CE06A 0%,#25D366 55%,#1DA851 100%)" },
+    { key: "youtube",   shape: "circle",   top: 24, left: 79, size: 66, blur: 0,   op: 0.82, dur: 19, delay: -9,  tilt: 5,
+      brand: "linear-gradient(140deg,#FF5B5B 0%,#FF0000 55%,#C40000 100%)" },
+    { key: "telegram",  shape: "circle",   top: 75, left: 83, size: 56, blur: 0.6, op: 0.72, dur: 23, delay: -2,  tilt: -5,
+      brand: "linear-gradient(140deg,#7EC2ED 0%,#37AEE2 55%,#1E96C8 100%)" },
+    { key: "facebook",  shape: "squircle", top: 6,  left: 66, size: 46, blur: 1.4, op: 0.55, dur: 26, delay: -13, tilt: 9,
+      brand: "linear-gradient(140deg,#5B8DEF 0%,#1877F2 55%,#0E5BC4 100%)" },
+    { key: "pinterest", shape: "squircle", top: 44, left: 3,  size: 50, blur: 1.2, op: 0.6,  dur: 25, delay: -6,  tilt: -11,
+      brand: "linear-gradient(140deg,#F05B6A 0%,#E60023 55%,#B3001B 100%)" },
+    { key: "twitter",   shape: "squircle", top: 87, left: 37, size: 48, blur: 1.6, op: 0.5,  dur: 28, delay: -16, tilt: 7,
+      brand: "linear-gradient(140deg,#7FC3F5 0%,#1DA1F2 55%,#1580C4 100%)" },
+    { key: "x",         shape: "squircle", top: 9,  left: 27, size: 42, blur: 1.8, op: 0.45, dur: 30, delay: -11, tilt: -6,
+      brand: "linear-gradient(140deg,#3B3B3B 0%,#111111 60%,#000000 100%)" },
+    { key: "threads",   shape: "squircle", top: 57, left: 88, size: 46, blur: 1.4, op: 0.52, dur: 27, delay: -20, tilt: 10,
+      brand: "linear-gradient(140deg,#3B3B3B 0%,#111111 60%,#000000 100%)" },
+    { key: "snapchat",  shape: "squircle", top: 33, left: 17, size: 48, blur: 1.1, op: 0.55, dur: 32, delay: -7,  tilt: -9,
+      brand: "linear-gradient(140deg,#FFF67A 0%,#FFFC00 55%,#E0D500 100%)" }
+  ]
+%>
+
+<div class="platform-drift" aria-hidden="true">
+  <% marks.each do |m| %>
+    <span class="platform-chip platform-chip--<%= m[:shape] %>"
+          style="top:<%= m[:top] %>%; left:<%= m[:left] %>%;
+                 --chip-size:<%= m[:size] %>px; --chip-brand:<%= m[:brand] %>;
+                 --chip-blur:<%= m[:blur] %>px; --chip-op:<%= m[:op] %>;
+                 --chip-dur:<%= m[:dur] %>s; --chip-delay:<%= m[:delay] %>s;
+                 --chip-tilt:<%= m[:tilt] %>deg;">
+      <svg viewBox="0 0 24 24" fill="none">
+        <% case m[:key]
+           when "instagram" %>
+          <rect x="3.2" y="3.2" width="17.6" height="17.6" rx="5.4" stroke="currentColor" stroke-width="2.1"/>
+          <circle cx="12" cy="12" r="4.1" stroke="currentColor" stroke-width="2.1"/>
+          <circle cx="17.3" cy="6.7" r="1.35" fill="currentColor"/>
+        <% when "whatsapp" %>
+          <path fill="currentColor" d="M12 2.6A9.4 9.4 0 0 0 3.9 16.9L2.7 21.3l4.6-1.2A9.4 9.4 0 1 0 12 2.6zm5 13.3c-.2.6-1.2 1.2-1.7 1.2-.4 0-1 .2-3.3-.7-2.8-1.1-4.5-3.9-4.6-4.1-.2-.2-1-1.4-1-2.6 0-1.3.6-1.9.9-2.1.2-.2.4-.3.7-.3h.5c.2 0 .4.1.6.5l.8 2c.1.2 0 .4-.1.5l-.3.4c-.2.2-.3.3-.2.6.2.3.7 1.1 1.4 1.8 1 .8 1.8 1.1 2.1 1.2.2.1.4.1.5-.1l.8-.9c.2-.2.4-.2.6-.1l1.9.9c.2.1.4.2.4.3.1.2.1.7-.1 1z"/>
+        <% when "youtube" %>
+          <rect x="2.4" y="5.8" width="19.2" height="12.4" rx="3.8" fill="currentColor"/>
+          <path fill="#FF2020" d="M10.2 9.2v5.6l4.8-2.8z"/>
+        <% when "telegram" %>
+          <path fill="currentColor" d="M21.3 4.2 2.9 11.4c-.9.3-.9 1.6 0 1.9l4.6 1.5 1.8 5.4c.2.7 1.1.9 1.6.3l2.5-2.5 4.6 3.4c.6.4 1.5.1 1.6-.6L22.9 5.4c.2-.9-.7-1.6-1.6-1.2zm-11 10.4 8-5.2-6.4 6.2-.2 3z"/>
+        <% when "facebook" %>
+          <path fill="currentColor" d="M13.4 21.3v-8.2h2.8l.4-3.2h-3.2V7.8c0-.9.3-1.6 1.6-1.6h1.7V3.4c-.3 0-1.3-.1-2.5-.1-2.5 0-4.2 1.5-4.2 4.3v2.3H7.2v3.2h2.8v8.2z"/>
+        <% when "pinterest" %>
+          <path fill="currentColor" d="M12 2.4a9.6 9.6 0 0 0-3.5 18.5c-.1-.8-.1-2 .1-2.8l1.1-4.8s-.3-.6-.3-1.4c0-1.3.8-2.3 1.7-2.3.8 0 1.2.6 1.2 1.4 0 .8-.5 2.1-.8 3.2-.3 1 .5 1.8 1.4 1.8 1.8 0 3-2.3 3-5 0-2.1-1.4-3.6-3.9-3.6-2.9 0-4.6 2.1-4.6 4.4 0 .9.3 1.5.7 1.9.2.2.2.3.1.5l-.2.7c-.1.3-.2.4-.5.2-1.2-.5-1.8-1.9-1.8-3.4 0-2.5 2.1-5.5 6.3-5.5 3.3 0 5.5 2.4 5.5 5 0 3.4-1.9 6-4.7 6-.9 0-1.8-.5-2.1-1.1l-.6 2.3c-.2.8-.7 1.6-1 2.2A9.6 9.6 0 1 0 12 2.4z"/>
+        <% when "twitter" %>
+          <path fill="currentColor" d="M21.8 6.2c-.7.3-1.5.5-2.3.6a4 4 0 0 0 1.8-2.2c-.8.5-1.7.8-2.6 1a4 4 0 0 0-6.9 3.7A11.5 11.5 0 0 1 3.4 5a4 4 0 0 0 1.3 5.4c-.7 0-1.3-.2-1.8-.5a4 4 0 0 0 3.3 4c-.6.1-1.2.2-1.8.1a4 4 0 0 0 3.8 2.8 8.1 8.1 0 0 1-6 1.7 11.4 11.4 0 0 0 6.2 1.8c7.4 0 11.5-6.2 11.5-11.6v-.5c.8-.6 1.5-1.3 2-2z"/>
+        <% when "x" %>
+          <path fill="currentColor" d="M17.2 3h3.1l-6.8 7.8 8 10.2h-6.2l-4.9-6.4L4.7 21H1.6l7.3-8.3L1.5 3H8l4.4 5.8zm-1.1 16.1h1.7L7.8 4.8H6z"/>
+        <% when "threads" %>
+          <path fill="currentColor" d="M12.3 2.3c-5.4 0-8.8 3.5-8.8 9.7s3.4 9.7 8.8 9.7c4.6 0 7.3-2.6 7.3-5.6 0-2.3-1.4-3.9-3.6-4.5-.2-2.3-1.8-3.6-4.3-3.6-2.2 0-3.8 1.1-4.4 2.9l1.9.6c.4-1.1 1.2-1.6 2.4-1.6 1.3 0 2.1.6 2.3 1.9-.6-.1-1.3-.1-1.9-.1-3 0-4.9 1.5-4.9 3.8 0 2.1 1.7 3.5 4 3.5 2.6 0 4.2-1.6 4.7-4.1 1.1.4 1.7 1.2 1.7 2.3 0 1.9-1.9 3.6-5.2 3.6-4.2 0-6.8-2.7-6.8-7.8s2.6-7.8 6.8-7.8c2 0 3.6.6 4.8 1.7l1.4-1.4c-1.5-1.5-3.6-2.2-6.2-2.2zm-.4 11.4c.6 0 1.2 0 1.7.1-.3 1.6-1.2 2.6-2.7 2.6-1.1 0-1.9-.6-1.9-1.5s.9-1.2 2.9-1.2z"/>
+        <% when "snapchat" %>
+          <path fill="currentColor" d="M12 2.4c2.9 0 4.6 2 4.7 4.6 0 .7 0 1.3-.1 1.9.2.1.5.2.8.2.3 0 .6-.1.9-.3.2-.1.3-.1.5-.1.4 0 .8.3.8.7 0 .5-.5.8-1.2 1.1-.5.2-1 .4-1 .8 0 .2.1.4.2.6.6 1.3 1.7 2.3 2.9 2.8.4.1.6.3.6.6 0 .6-1 1-2 1.1-.2 0-.3.2-.4.5 0 .2-.1.4-.2.6-.1.2-.2.3-.5.3h-.3c-.3 0-.6-.1-1-.1-.3 0-.6 0-.9.1-.8.1-1.4.7-2.1 1.2-.5.3-1.1.6-1.7.6s-1.2-.3-1.7-.6c-.7-.5-1.3-1.1-2.1-1.2-.3-.1-.6-.1-.9-.1-.4 0-.7.1-1 .1h-.3c-.3 0-.4-.1-.5-.3-.1-.2-.2-.4-.2-.6-.1-.3-.2-.5-.4-.5-1-.1-2-.5-2-1.1 0-.3.2-.5.6-.6 1.2-.5 2.3-1.5 2.9-2.8.1-.2.2-.4.2-.6 0-.4-.5-.6-1-.8-.7-.3-1.2-.6-1.2-1.1 0-.4.4-.7.8-.7.2 0 .3 0 .5.1.3.2.6.3.9.3.3 0 .6-.1.8-.2-.1-.6-.1-1.2-.1-1.9.1-2.6 1.8-4.6 4.7-4.6z"/>
+        <% end %>
+      </svg>
+    </span>
+  <% end %>
+</div>
